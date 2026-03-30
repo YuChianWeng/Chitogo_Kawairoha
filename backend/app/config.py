@@ -9,6 +9,11 @@ class Settings(BaseSettings):
     use_llm: bool = False
     weather_cache_ttl_minutes: int = 30
 
+    # Dynamic candidate providers
+    google_places_api_key: str = ""
+    crawler_api_url: str = ""
+    candidate_cache_ttl_minutes: int = 5
+
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 
 

@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from datetime import date
 
-from app.models.db import filter_venues
 from app.models.schemas import (
     ItineraryResponse,
     ItineraryStopResponse,
     UserPreferencesRequest,
     WeatherContext,
 )
+from app.providers.aggregator import fetch_candidates
 from app.services.routing import RouteOptimizer
 from app.services.scoring import ScoringEngine
 
@@ -26,9 +26,10 @@ class ItineraryBuilder:
         if weather is None:
             weather = WeatherContext()  # neutral fallback
 
-        # 1. Fetch candidate venues
-        venues = await filter_venues(
+        # 1. Fetch candidate venues (dynamic external sources + seed fallback)
+        venues, used_fallback = await fetch_candidates(
             district=prefs.district,
+            interests=prefs.interests,
             indoor_pref=prefs.indoor_pref,
         )
 

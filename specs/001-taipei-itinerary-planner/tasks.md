@@ -105,6 +105,35 @@ description: "Task list for Taipei AI Itinerary Planner"
 
 ---
 
+## Phase 3.5: Dynamic Candidate Retrieval (Architecture Change)
+
+**Goal**: Replace static seed-only data retrieval with runtime external fetching. Candidates are dynamically fetched from Google Places and crawler/social sources, normalized, merged, deduplicated, and cached. Local seed data is kept as a fallback only.
+
+- [X] T045 [P] Create provider base protocol in `backend/app/providers/base.py`: define `CandidateProvider` protocol, district centre lookup, `stable_venue_id()`, cost/type mapping helpers
+  - **Validation**: `from app.providers.base import CandidateProvider, district_centre` imports cleanly
+
+- [X] T046 [P] Implement Google Places provider in `backend/app/providers/google_places.py`: fetch from Places API (New) Nearby Search, parse response into `Venue` objects, map Google types to internal categories/tags
+  - **Validation**: With valid `GOOGLE_PLACES_API_KEY`, `GooglePlacesProvider().fetch("Da'an", ["food"])` returns ≥ 5 venues; without key, returns `[]` gracefully
+
+- [X] T047 [P] Implement crawler provider in `backend/app/providers/crawler.py`: fetch from configurable `CRAWLER_API_URL`, parse response into `Venue` objects
+  - **Validation**: With valid URL, `CrawlerProvider().fetch(...)` returns venues; without URL, returns `[]` gracefully
+
+- [X] T048 [P] Implement TTL cache in `backend/app/providers/cache.py`: in-memory cache keyed by `(source, district, interests)`, configurable TTL via `CANDIDATE_CACHE_TTL_MINUTES`
+  - **Validation**: Second call within TTL returns cached results without HTTP call; after TTL, re-fetches
+
+- [X] T049 Implement aggregator in `backend/app/providers/aggregator.py`: fetch Google + Crawler in parallel, assign districts from coordinates, merge, deduplicate by name/proximity, apply basic filters, fallback to seed data if external results < 3
+  - **Validation**: With no API keys, `fetch_candidates()` falls back to seed data and returns ≥ 3 venues
+
+- [X] T050 Refactor `ItineraryBuilder.build()` to use `fetch_candidates()` from aggregator instead of `filter_venues()` from db.py
+  - **Validation**: `POST /api/v1/itinerary` still returns 200 with valid stops; pipeline works end-to-end
+
+- [X] T051 Update `backend/app/config.py` with `google_places_api_key`, `crawler_api_url`, `candidate_cache_ttl_minutes`; update `.env.example` with documentation
+  - **Validation**: `from app.config import get_settings; print(get_settings().google_places_api_key)` works
+
+**Checkpoint**: Candidate retrieval is now runtime-fetch based. With API keys set, venues come from Google Places / crawler. Without keys, graceful fallback to seed data.
+
+---
+
 ## Phase 4: US2 — Preference Input Form (Priority: P2)
 
 **Goal**: A polished 6-field form with sensible defaults that users can submit in under 2 minutes without instructions.
