@@ -28,7 +28,3 @@ Thumbs.db
 *.swp
 *.tmp
 
-# Speckit & Claude Code tooling (local-only config, not shared)
-.specify/
-.claude/
-CLAUDE.md
