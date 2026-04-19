@@ -1,0 +1,141 @@
+{
+  "poi_type_groups": [
+    {
+      "name": "attractions_culture",
+      "includedTypes": ["tourist_attraction", "museum", "art_gallery", "park"]
+    },
+    {
+      "name": "food_drink",
+      "includedTypes": ["restaurant", "cafe", "bakery", "bar", "coffee_shop", "pub"]
+    },
+    {
+      "name": "food_specialties",
+      "includedPrimaryTypes": [
+        "brunch_restaurant",
+        "dessert_shop",
+        "taiwanese_restaurant",
+        "japanese_restaurant",
+        "chinese_restaurant",
+        "hot_pot_restaurant",
+        "fast_food_restaurant"
+      ]
+    },
+    {
+      "name": "shopping",
+      "includedTypes": ["shopping_mall", "market", "store"]
+    },
+    {
+      "name": "lodging",
+      "includedTypes": ["hotel", "lodging"]
+    },
+    {
+      "name": "transport_rail",
+      "includedTypes": ["subway_station", "train_station"],
+      "seedPointLimit": 1
+    },
+    {
+      "name": "secondary_transport",
+      "includedTypes": ["bus_station"],
+      "seedPointLimit": 1,
+      "enabledByDefault": false
+    }
+  ],
+  "districts": [
+    {
+      "district": "中正區",
+      "seed_points": [
+        { "name": "huashan", "center": { "latitude": 25.0441, "longitude": 121.5290 }, "radius": 1200 },
+        { "name": "cks_memorial", "center": { "latitude": 25.0345, "longitude": 121.5217 }, "radius": 1200 },
+        { "name": "taipei_main_station", "center": { "latitude": 25.0478, "longitude": 121.5170 }, "radius": 1200 }
+      ]
+    },
+    {
+      "district": "大安區",
+      "seed_points": [
+        { "name": "dongmen_yongkang", "center": { "latitude": 25.0331, "longitude": 121.5298 }, "radius": 1200 },
+        { "name": "daan_forest_park", "center": { "latitude": 25.0330, "longitude": 121.5356 }, "radius": 1200 },
+        { "name": "gongguan", "center": { "latitude": 25.0142, "longitude": 121.5346 }, "radius": 1200 }
+      ]
+    },
+    {
+      "district": "信義區",
+      "seed_points": [
+        { "name": "taipei_101", "center": { "latitude": 25.0338, "longitude": 121.5645 }, "radius": 1200 },
+        { "name": "xinyi_anhe", "center": { "latitude": 25.0327, "longitude": 121.5536 }, "radius": 1200 },
+        { "name": "xiangshan", "center": { "latitude": 25.0270, "longitude": 121.5702 }, "radius": 1200 }
+      ]
+    },
+    {
+      "district": "萬華區",
+      "seed_points": [
+        { "name": "ximending", "center": { "latitude": 25.0438, "longitude": 121.5065 }, "radius": 1200 },
+        { "name": "longshan_temple", "center": { "latitude": 25.0368, "longitude": 121.4999 }, "radius": 1200 },
+        { "name": "huajiang_riverside", "center": { "latitude": 25.0316, "longitude": 121.4912 }, "radius": 1200 }
+      ]
+    },
+    {
+      "district": "松山區",
+      "seed_points": [
+        { "name": "songshan_airport", "center": { "latitude": 25.0697, "longitude": 121.5528 }, "radius": 1200 },
+        { "name": "raohe_night_market", "center": { "latitude": 25.0506, "longitude": 121.5773 }, "radius": 1200 },
+        { "name": "taipei_arena", "center": { "latitude": 25.0515, "longitude": 121.5518 }, "radius": 1200 }
+      ]
+    },
+    {
+      "district": "士林區",
+      "seed_points": [
+        { "name": "shilin_night_market", "center": { "latitude": 25.0872, "longitude": 121.5250 }, "radius": 1400 },
+        { "name": "national_palace_museum", "center": { "latitude": 25.1024, "longitude": 121.5485 }, "radius": 1400 },
+        { "name": "tianmu", "center": { "latitude": 25.1174, "longitude": 121.5300 }, "radius": 1400 }
+      ]
+    },
+    {
+      "district": "北投區",
+      "seed_points": [
+        { "name": "xinbeitou", "center": { "latitude": 25.1369, "longitude": 121.5026 }, "radius": 1400 },
+        { "name": "beitou_market", "center": { "latitude": 25.1320, "longitude": 121.4987 }, "radius": 1400 },
+        { "name": "guandu", "center": { "latitude": 25.1218, "longitude": 121.4670 }, "radius": 1400 }
+      ]
+    },
+    {
+      "district": "中山區",
+      "seed_points": [
+        { "name": "xingtian_temple", "center": { "latitude": 25.0630, "longitude": 121.5337 }, "radius": 1200 },
+        { "name": "ningxia_border", "center": { "latitude": 25.0568, "longitude": 121.5222 }, "radius": 1200 },
+        { "name": "dazhi", "center": { "latitude": 25.0837, "longitude": 121.5486 }, "radius": 1200 }
+      ]
+    },
+    {
+      "district": "大同區",
+      "seed_points": [
+        { "name": "ningxia", "center": { "latitude": 25.0567, "longitude": 121.5158 }, "radius": 1000 },
+        { "name": "dadaocheng", "center": { "latitude": 25.0581, "longitude": 121.5102 }, "radius": 1000 },
+        { "name": "taipei_bridge", "center": { "latitude": 25.0635, "longitude": 121.5139 }, "radius": 1000 }
+      ]
+    },
+    {
+      "district": "內湖區",
+      "seed_points": [
+        { "name": "meiti_riverside", "center": { "latitude": 25.0760, "longitude": 121.5679 }, "radius": 1400 },
+        { "name": "neihu_technology_park", "center": { "latitude": 25.0812, "longitude": 121.5755 }, "radius": 1400 },
+        { "name": "dahu_park", "center": { "latitude": 25.0822, "longitude": 121.6028 }, "radius": 1400 }
+      ]
+    },
+    {
+      "district": "南港區",
+      "seed_points": [
+        { "name": "nangang_station", "center": { "latitude": 25.0521, "longitude": 121.6070 }, "radius": 1200 },
+        { "name": "nangang_exhibition_center", "center": { "latitude": 25.0562, "longitude": 121.6175 }, "radius": 1200 },
+        { "name": "huishan_street", "center": { "latitude": 25.0449, "longitude": 121.6124 }, "radius": 1200 }
+      ]
+    },
+    {
+      "district": "文山區",
+      "seed_points": [
+        { "name": "maokong", "center": { "latitude": 24.9674, "longitude": 121.5738 }, "radius": 1400 },
+        { "name": "muzha_zoo", "center": { "latitude": 24.9983, "longitude": 121.5821 }, "radius": 1400 },
+        { "name": "jingmei", "center": { "latitude": 24.9937, "longitude": 121.5408 }, "radius": 1400 }
+      ]
+    }
+  ]
+}
