@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from app.api.v1.itinerary import router as itinerary_router
+from taiwanese_speech.speech import router as speech_router
 
 router = APIRouter()
 
@@ -11,3 +12,4 @@ async def health() -> dict:
 
 
 router.include_router(itinerary_router)
+router.include_router(speech_router)
