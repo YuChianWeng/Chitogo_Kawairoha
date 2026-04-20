@@ -15,7 +15,25 @@ def merge_preferences(current: Preferences, delta: Preferences) -> Preferences:
     """Merge a partial preferences update into the current preferences object."""
     merged_data = current.model_dump()
     for field_name in delta.model_fields_set:
-        merged_data[field_name] = getattr(delta, field_name)
+        value = getattr(delta, field_name)
+        if field_name in {"interest_tags", "avoid_tags"}:
+            merged_data[field_name] = list(
+                dict.fromkeys([*merged_data.get(field_name, []), *(value or [])])
+            )
+            continue
+        if field_name == "time_window" and value is not None:
+            current_time_window = current.time_window or {}
+            current_time_window_data = (
+                current_time_window.model_dump(exclude_none=True)
+                if hasattr(current_time_window, "model_dump")
+                else {}
+            )
+            merged_data[field_name] = {
+                "start_time": value.start_time or current_time_window_data.get("start_time"),
+                "end_time": value.end_time or current_time_window_data.get("end_time"),
+            }
+            continue
+        merged_data[field_name] = value
     return Preferences.model_validate(merged_data)
 
 
