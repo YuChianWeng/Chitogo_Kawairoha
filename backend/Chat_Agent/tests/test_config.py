@@ -5,8 +5,19 @@ import unittest
 from unittest.mock import patch
 
 from pydantic import ValidationError
+from pydantic_settings import SettingsConfigDict
 
 from app.core.config import Settings, clear_settings_cache
+
+
+class _IsolatedSettings(Settings):
+    model_config = SettingsConfigDict(
+        env_file=None,
+        case_sensitive=False,
+        extra="ignore",
+        enable_decoding=False,
+        populate_by_name=True,
+    )
 
 
 class SettingsTests(unittest.TestCase):
@@ -33,7 +44,7 @@ class SettingsTests(unittest.TestCase):
 
         with patch.dict(os.environ, env, clear=True):
             with self.assertRaises(ValidationError) as exc_info:
-                Settings()
+                _IsolatedSettings()
 
         message = str(exc_info.exception)
         self.assertIn("app_env", message)
@@ -56,7 +67,7 @@ class SettingsTests(unittest.TestCase):
         )
 
         with patch.dict(os.environ, env, clear=True):
-            settings = Settings()
+            settings = _IsolatedSettings()
 
         self.assertEqual(settings.app_env, "development")
         self.assertEqual(settings.port, 8100)
@@ -92,7 +103,7 @@ class SettingsTests(unittest.TestCase):
 
         with patch.dict(os.environ, env, clear=True):
             with self.assertRaises(ValidationError) as exc_info:
-                Settings()
+                _IsolatedSettings()
 
         self.assertIn("GEMINI_API_KEY is required", str(exc_info.exception))
 
@@ -115,6 +126,6 @@ class SettingsTests(unittest.TestCase):
 
         with patch.dict(os.environ, env, clear=True):
             with self.assertRaises(ValidationError) as exc_info:
-                Settings()
+                _IsolatedSettings()
 
         self.assertIn("ANTHROPIC_API_KEY is required", str(exc_info.exception))
