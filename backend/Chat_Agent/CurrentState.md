@@ -8,7 +8,7 @@
 
 ## 執行摘要
 
-Chitogo Chat Agent 是一個台北旅遊 AI 助理的後端 orchestration 服務，以 Python 3.11 + FastAPI 構建，連接外部 Data Service（場地資料）和 Google Maps（路線估算），並以 Gemini 2.5 Flash 作為主要 LLM。目前已完成 Phase 1 至 Phase 7 的全部後端實作，具備從使用者輸入到結構化行程生成、行程修改、trace 可觀測性的完整端到端流程。全套測試（87 個）目前全部通過，架構具備基本的 demo 可用性與前端整合能力。
+Chitogo Chat Agent 是一個台北旅遊 AI 助理的後端 orchestration 服務，以 Python 3.11 + FastAPI 構建，連接外部 Data Service（場地資料）和 Google Maps（路線估算），並透過統一的 `LLMClient` 支援 Gemini、Anthropic 與 OpenRouter。實作上已完成從使用者輸入到結構化行程生成、行程修改、trace 可觀測性的完整端到端流程；近期已把原本脆弱的 regex / keyword intent、preference、replan parsing 邏輯，改成以 LLM 為主、deterministic guardrail 為輔。全套測試目前為 **110 個全通過**，架構已具備 demo 與前端整合能力。
 
 ---
 
@@ -44,15 +44,15 @@ Chitogo Chat Agent 是一個台北旅遊 AI 助理的後端 orchestration 服務
 
 **API 層（`app/api/v1/`）** 負責 HTTP 路由定義，包含 health、chat message、trace 三組路由。路由層只負責入口驗證與 dependency injection，不含業務邏輯。
 
-**Orchestration 層（`app/orchestration/`）** 是本服務的智能核心。`IntentClassifier` 先以正規表達式規則快速分類（confidence ≥ 0.8 就直接使用），低信心時退回 LLM fallback。`PreferenceExtractor` 同樣採用「規則先行、LLM 補足」策略，萃取地區、預算、交通方式、時間段、興趣標籤等結構化偏好。`LanguageDetection` 透過 CJK 字元比例判斷是否為繁體中文，決定回覆語言。
+**Orchestration 層（`app/orchestration/`）** 是本服務的智能核心。`IntentClassifier` 已改成 **LLM-first**，要求模型直接回傳結構化 JSON（intent、confidence、needs_clarification、missing_fields、extracted_slots），解析失敗時才安全退回 `CHAT_GENERAL`。`PreferenceExtractor` 也改成 **LLM-first**，並在進入 `Preferences` model 前做一層 normalization，把像 `["朋友"]`、`"中等"`、`"咖啡廳"`、`null` list 欄位等常見 provider 輸出變形收斂成 canonical 值。`LanguageDetection` 透過 CJK 字元比例判斷是否為繁體中文，決定回覆語言。
 
-**Chat 層（`app/chat/`）** 包含整個對話流程：`MessageHandler` 是單一請求的 application service，對 `AgentLoop`、`ItineraryBuilder`、`Replanner`、`ResponseComposer` 作統一呼叫與錯誤處理。`TraceRecorder` 在每個步驟埋點計時，最終寫入 `TraceStore`。
+**Chat 層（`app/chat/`）** 包含整個對話流程：`MessageHandler` 是單一請求的 application service，對 `AgentLoop`、`ItineraryBuilder`、`Replanner`、`ResponseComposer` 作統一呼叫與錯誤處理。`AgentLoop` 已從純 deterministic tool selection 升級為 **LLM tool planning + deterministic validation/fallback**。`TraceRecorder` 在每個步驟埋點計時，最終寫入 `TraceStore`。
 
 **Tool 層（`app/tools/`）** 定義 `ToolRegistry` 統一管理工具清單，`PlaceToolAdapter` 封裝對外部 Data Service 的 HTTP 呼叫，`RouteToolAdapter` 先嘗試 Google Maps Directions API，失敗時以 haversine 球面公式進行估算。
 
 **Session 層（`app/session/`）** 以 `InMemorySessionStore` 管理所有對話狀態，`SessionManager` 提供型別安全的 mutation API，`sweeper.py` 每 60 秒清除超過 TTL（預設 30 分鐘）的閒置 session。
 
-**LLM 層（`app/llm/client.py`）** 提供 `LLMClient`，封裝 Gemini（預設）和 Anthropic 兩條路徑的非同步文字和 JSON 生成。
+**LLM 層（`app/llm/client.py`）** 提供 `LLMClient`，封裝 Gemini（預設）、Anthropic 與 OpenRouter 三條路徑的非同步文字和 JSON 生成。OpenRouter 路徑使用既有 `httpx`，不引入新的 SDK，並已補上較寬鬆的 read timeout 以支援較慢的模型回應。
 
 ---
 
@@ -62,21 +62,21 @@ Chitogo Chat Agent 是一個台北旅遊 AI 助理的後端 orchestration 服務
 
 健康檢查端點（`GET /api/v1/health`）會主動 probe 外部 Data Service，回傳 `ok` 或 `degraded`。`Settings`（`app/core/config.py`）以 `pydantic-settings` 管理所有環境變數，包含 LLM provider 切換、CORS 設定、路線提供商選擇等，並有 model-level cross-validation（例如選擇 Gemini 時強制要求 `GEMINI_API_KEY`）。
 
-意圖分類目前支援四種意圖：`GENERATE_ITINERARY`、`REPLAN`、`EXPLAIN`、`CHAT_GENERAL`。規則分類器以正規表達式匹配中英文關鍵字，對 REPLAN 和 GENERATE_ITINERARY 的高確信度輸入可達 0.9+ confidence，不需要呼叫 LLM，節省延遲。
+意圖分類目前支援四種意圖：`GENERATE_ITINERARY`、`REPLAN`、`EXPLAIN`、`CHAT_GENERAL`。目前不再依賴 `RuleBasedClassifier`；模型必須直接回傳 slot-aware JSON，後端再做型別修正與缺欄位檢查。這讓像「換成」、「改到」、「要去」這種過去 regex 容易漏掉的語句能正常分類。
 
 ### Phase 4：工具適配器
 
-`PlaceToolAdapter` 提供五個查詢方法：`search_places`、`recommend_places`、`nearby_places`、`batch_get_places`、`get_stats`。實作包含 500 錯誤的一次自動重試、timeout 處理、以及 malformed payload 的結構化 error result 回傳。`RouteToolAdapter` 在 Google Maps 可用時回傳精確路線時間，否則以 haversine 估算，並在 `RouteResult.status` 明確標記為 `fallback`。
+`PlaceToolAdapter` 提供 `search_places`、`recommend_places`、`nearby_places`、`batch_get_places`、`get_categories`、`get_stats`。實作包含 500 錯誤的一次自動重試、timeout 處理、以及 malformed payload 的結構化 error result 回傳。`RouteToolAdapter` 在 Google Maps 可用時回傳精確路線時間，否則以 haversine 估算，並在 `RouteResult.status` 明確標記為 `fallback`。
 
 ### Phase 5：AgentLoop 與回覆組合
 
-`AgentLoop` 是一個確定性的工具選擇器，根據 intent 與當前偏好決定呼叫哪個工具（nearby → recommend → search 優先序）。它不是 LLM-driven 的 tool-use loop，而是固定策略的 orchestration。`ResponseComposer` 負責將原始資料組成自然語言回覆，支援中文（zh-TW）和英文兩種語言路徑。
+`AgentLoop` 現在會先嘗試用 LLM 規劃 `place_search` / `place_recommend` / `place_nearby` 的工具選擇與參數，再以 deterministic validation 過濾不合法工具、錯誤 district 或錯誤 category。對於已知 `interest_tags`（例如 `cafes`），後端仍會強制使用對應的 Data Service 語彙映射（例如 `food` + `cafe`），避免 LLM 自由文字 `keyword` 把查詢帶偏。若 planned `place_search` 查空，還會自動 fallback 到 `place_recommend`。`ResponseComposer` 負責將原始資料組成自然語言回覆，支援中文（zh-TW）和英文兩種語言路徑。
 
 ### Phase 6：行程生成與修改
 
 `ItineraryBuilder`（`app/chat/itinerary_builder.py`）依照使用者的時間段長度決定站點數（時段 ≤ 3h → 2 站，≤ 5h → 3 站，其他 → 4 站），並呼叫 `route_estimate` 工具為每段腿估算時間、分配到站時間，最後產出符合 `Itinerary` schema 的完整結構。
 
-`Replanner`（`app/chat/replanner.py`）支援三種操作：`replace`（取代指定站點）、`insert`（在指定位置插入新站點）、`remove`（移除指定站點），並在可能時重用未改變腿的舊路線資料，不需要全部重新估算。操作前會先從 `session.cached_candidates` 中找未使用的備選場地，減少對外部工具的呼叫次數。
+`Replanner`（`app/chat/replanner.py`）支援三種操作：`replace`（取代指定站點）、`insert`（在指定位置插入新站點）、`remove`（移除指定站點）。解析時先走 regex fast path；若站點序號或操作意圖不清楚，再 fallback 到 LLM parsing。執行上會盡量重用未改變腿的舊路線資料，不需要全部重新估算。操作前也會優先從 `session.cached_candidates` 中找未使用的備選場地，減少對外部工具的呼叫次數。
 
 ### Phase 7：可觀測性與強化
 
@@ -128,11 +128,11 @@ Chitogo Chat Agent 是一個台北旅遊 AI 助理的後端 orchestration 服務
 
 ### 測試覆蓋範圍
 
-測試共 87 個，分布在 19 個檔案，全部通過（`pytest 8.2.2 / asyncio mode=auto`）。覆蓋層次如下：
+測試目前共 **110 個**，全部通過（`pytest 8.2.2 / asyncio mode=auto`）。覆蓋層次如下：
 
 - **單元測試**：`SessionModel`、`Itinerary` schema 驗證（Pydantic model_validator）、`extract_stop_index` 中英文序數解析、`haversine_distance_m` 計算、語言偵測邏輯
 - **適配器測試**：`PlaceToolAdapter` 以 `respx` 模擬 HTTP 回應，涵蓋 timeout、500、malformed JSON、empty 等異常路徑；`RouteToolAdapter` 同樣以 mock transport 測試 Google Maps 成功路徑與 haversine fallback
-- **邏輯測試**：`IntentClassifier` 規則路徑和 LLM fallback 路徑（以 mock LLMClient）、`PreferenceExtractor` 的 LLM + 規則合併、`ItineraryBuilder` 站點選取與 partial_fallback 標記
+- **邏輯測試**：`IntentClassifier` 的 LLM JSON parsing、slot coercion、missing-field post-processing；`PreferenceExtractor` 的 LLM normalization、district/origin 補強；`AgentLoop` 的 LLM tool planning、deterministic mapping 覆寫、`place_search -> place_recommend` fallback；`ItineraryBuilder` 站點選取與 partial_fallback 標記
 - **整合流程測試**：`MessageHandler` 完整流程，包含行程生成、行程修改（replace / remove）、clarification 路徑、tool 失敗降級、並發同 session 請求一致性
 - **API 層測試**：以 `TestClient` 測試 chat 和 trace 端點的 HTTP 行為、錯誤格式
 
@@ -148,9 +148,9 @@ PYTHONPATH=/path/to/Chat_Agent .venv/bin/pytest tests/ -v
 
 **Session 無持久化。** `InMemorySessionStore` 在程式重啟後清空，多 process 部署下 session 無法共享。目前設計完全假設單 process。
 
-**AgentLoop 不是 LLM 驅動的工具選擇。** 目前 `AgentLoop` 是根據 intent 和 preference 的固定策略選工具，決定論式、可預期，但無法動態根據使用者自然語言調整工具參數或進行多輪工具呼叫。程式碼內的 docstring 也明確說明這是「Phase 5 minimal deterministic orchestration」。
+**AgentLoop 仍然不是完整的多輪 agent。** 雖然現在已經有單輪 LLM tool planning，但它仍不是 open-ended、多步驟、自主反思式 agent loop；工具規劃仍受 deterministic validation 和既定 fallback chain 約束。
 
-**ResponseComposer 使用樣板字串，不使用 LLM 生成。** 回覆品質是固定格式的，無法因應複雜對話或回覆使用者非預期的問題。`prompt_builder.py` 中已備有 prompt 組裝函式（`build_recommendation_system_prompt`、`build_recommendation_user_prompt`），但目前尚未整合到回覆流程中。
+**ResponseComposer 使用樣板字串，不使用 LLM 生成。** 回覆品質是固定格式的，無法因應複雜對話或回覆使用者非預期的問題。`prompt_builder.py` 中已有偏好摘要等 helper，但最終回答文字仍是 deterministic composer。
 
 **`session_locks` 沒有自動清理機制。** `MessageHandler._session_locks` 字典會隨著 session 數量增長，程式碼中已有 TODO 標記，在 demo 規模下不是 blocker。
 
@@ -160,17 +160,19 @@ PYTHONPATH=/path/to/Chat_Agent .venv/bin/pytest tests/ -v
 
 **測試需手動設定 PYTHONPATH。** `pytest.ini` 未配置 `pythonpath`，裸跑 `pytest` 會全部 import error。此為文件與 CI 設定的缺口，不影響程式碼正確性。
 
-**Google Maps API key 是必要欄位。** `Settings` 中 `google_maps_api_key` 是 required field，即使設定 `route_provider=fallback` 也會在啟動時驗證失敗，對測試環境設定略有摩擦。
+**Google Maps API key 仍是必要欄位。** `Settings` 中 `google_maps_api_key` 是 required field，即使設定 `route_provider=fallback` 也會在啟動時驗證失敗，對測試環境設定略有摩擦。
+
+**README / CurrentState 這類文件容易落後。** 近期架構改動主要集中在 LLM-first classification / preferences、OpenRouter 支援、AgentLoop tool planning 與 replanner LLM fallback，因此文件需要持續跟著 code 更新。
 
 ---
 
 ## 7. 目前整體完成度判斷
 
-**判斷：Integration-ready，接近 demo-ready。**
+**判斷：Integration-ready，且已可支撐 demo 級實際對話。**
 
 從工程角度看，這個後端的架構設計清晰，模組邊界明確，各層職責分明，有完整的 error handling 和 trace 可觀測性。Pydantic v2 的 model_validator 讓資料約束明確，Itinerary 的 stop/leg 連續性驗證是工程上少見的謹慎。測試覆蓋率廣且真實覆蓋了降級路徑（tool error、empty result、classifier fallback）。
 
-目前的限制在於「功能邊界合理但深度有限」：意圖分類靠規則，回覆靠樣板，工具選擇靠靜態策略。這使得系統行為高度可預期，適合 demo 和前端整合，但在使用者輸入複雜或預期外時的回覆品質有上限。這不是 bug，而是 phase-by-phase 開發策略下的合理現況。
+目前的限制在於「功能邊界合理但深度有限」：雖然 intent / preference / replanning / tool planning 已經 LLM 化，但最後的 itinerary 組裝、候選挑選、回覆文案、fallback chain 仍以 deterministic 邏輯為主。這使得系統行為仍然可預期、方便 debug，也適合 demo 和前端整合；但在偏好細節、語意 nuance、候選排序品質上仍有進一步提升空間。
 
 ---
 
@@ -182,7 +184,7 @@ PYTHONPATH=/path/to/Chat_Agent .venv/bin/pytest tests/ -v
 
 **修正測試執行環境。** 在 `pytest.ini` 加入 `pythonpath = .` 或建立 `conftest.py` 設定 sys.path，讓測試可以不需要手動設 `PYTHONPATH` 直接執行。這同時是建立 CI 的前提。
 
-**補充 `prompt_builder.py` 整合。** `app/chat/prompt_builder.py` 已有 `build_recommendation_system_prompt` 和 `build_recommendation_user_prompt`，但目前 `ResponseComposer` 沒有呼叫它。若要提升回覆品質，這是最直接的切入點。
+**提升 itinerary 候選品質。** 目前雖然 `cafes -> food + cafe` 的 mapping 已修正，但 itinerary builder 的 stop selection 仍偏 deterministic；如果要讓「咖啡廳」需求更穩定對到真正 café 類型，下一步可以在 candidate ranking 或 itinerary selection 上再加入更明確的 type bias。
 
 **基本 CI 設定。** 以 GitHub Actions 跑 `pytest`，讓每次 PR 都有測試保護，這是從 demo-ready 走向更穩定合作的基本條件。
 

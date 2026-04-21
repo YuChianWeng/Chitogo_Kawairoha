@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from contextlib import nullcontext
+import logging
 import re
 from typing import TYPE_CHECKING, Literal
 
@@ -8,6 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from app.chat.itinerary_builder import ItineraryBuildResult, ItineraryBuilder
 from app.chat.schemas import RoutingStatus
+from app.llm.client import llm_client
 from app.orchestration.slots import extract_stop_index
 from app.session.models import Itinerary, Leg, Preferences, Stop
 from app.tools.models import ToolPlace
@@ -15,6 +17,9 @@ from app.tools.models import ToolPlace
 if TYPE_CHECKING:
     from app.chat.trace_recorder import TraceRecorder
 
+logger = logging.getLogger(__name__)
+
+_REPLACE_PATTERN = re.compile(r"(換成|換掉|改成|改到|替換|replace|swap|change|modify)", re.IGNORECASE)
 _REMOVE_PATTERN = re.compile(r"(刪|刪掉|移除|skip|remove|delete)", re.IGNORECASE)
 _INSERT_PATTERN = re.compile(r"(加入|加一個|新增|insert|add)", re.IGNORECASE)
 _AFTER_PATTERN = re.compile(r"(?:第\s*([一二三四五六七八九十兩两\d]+)\s*站後面|after\s+.+?stop)", re.IGNORECASE)
@@ -46,8 +51,24 @@ class Replanner:
 
     def __init__(self, *, itinerary_builder: ItineraryBuilder | None = None) -> None:
         self._builder = itinerary_builder or ItineraryBuilder()
+        self._client = llm_client
 
-    def parse_request(self, message: str, itinerary: Itinerary) -> ReplanRequest:
+    async def parse_request(self, message: str, itinerary: Itinerary) -> ReplanRequest:
+        regex_request = self._parse_with_regex(message, itinerary)
+        if not regex_request.needs_clarification:
+            return regex_request
+
+        llm_request = await self._parse_with_llm(message, itinerary)
+        if llm_request is not None and not llm_request.needs_clarification:
+            return llm_request
+
+        return ReplanRequest(
+            operation=regex_request.operation,
+            needs_clarification=True,
+            missing_fields=["stop_index"],
+        )
+
+    def _parse_with_regex(self, message: str, itinerary: Itinerary) -> ReplanRequest:
         operation = self._detect_operation(message)
         stop_index = extract_stop_index(message)
         if stop_index is None and _LAST_PATTERN.search(message):
@@ -67,17 +88,94 @@ class Replanner:
                 insert_index=insert_index,
             )
 
-        if stop_index is None or stop_index >= len(itinerary.stops):
+        if operation is None or stop_index is None or stop_index >= len(itinerary.stops):
             return ReplanRequest(
-                operation=operation,
+                operation=operation or "replace",
                 needs_clarification=True,
-                missing_fields=["stop_index"],
+                missing_fields=["stop_index"] if stop_index is None else ["operation"],
             )
 
         return ReplanRequest(
             operation=operation,
             target_index=stop_index,
         )
+
+    async def _parse_with_llm(
+        self,
+        message: str,
+        itinerary: Itinerary,
+    ) -> ReplanRequest | None:
+        stops_payload = [
+            {
+                "index": stop.stop_index,
+                "name": stop.venue_name,
+                "category": stop.category,
+                "arrival_time": stop.arrival_time,
+            }
+            for stop in itinerary.stops
+        ]
+        prompt = (
+            "Parse the user's itinerary replan request.\n"
+            "Current itinerary stops:\n"
+            f"{stops_payload}\n"
+            f"User message: {message}\n"
+            "Return strict JSON with keys: operation, target_index, insert_index, needs_clarification, missing_fields.\n"
+            'operation must be one of "replace", "insert", "remove".\n'
+            "target_index must be a zero-based integer or null.\n"
+            "insert_index must be a zero-based integer or null.\n"
+            "missing_fields must be an array of strings.\n"
+            "Set needs_clarification=true when the request is still ambiguous.\n"
+            "Return JSON only, without markdown."
+        )
+        try:
+            payload = await self._client.generate_json(prompt)
+        except Exception:
+            logger.warning("replanner LLM parse error", exc_info=True)
+            return None
+
+        try:
+            if not isinstance(payload, dict):
+                return None
+            operation = payload["operation"]
+            if operation not in {"replace", "insert", "remove"}:
+                return None
+            target_index = self._normalize_index(payload.get("target_index"))
+            insert_index = self._normalize_index(payload.get("insert_index"))
+            missing_fields = payload["missing_fields"]
+            needs_clarification = bool(payload["needs_clarification"])
+            if not isinstance(missing_fields, list):
+                return None
+
+            if needs_clarification:
+                return ReplanRequest(
+                    operation=operation,
+                    target_index=target_index,
+                    insert_index=insert_index,
+                    needs_clarification=True,
+                    missing_fields=[str(item) for item in missing_fields],
+                )
+
+            if operation == "insert":
+                if insert_index is None or insert_index > len(itinerary.stops):
+                    return None
+                resolved_target = target_index
+                if resolved_target is None:
+                    resolved_target = max(0, insert_index - 1) if insert_index > 0 else 0
+                return ReplanRequest(
+                    operation=operation,
+                    target_index=resolved_target,
+                    insert_index=insert_index,
+                )
+
+            if target_index is None or target_index >= len(itinerary.stops):
+                return None
+            return ReplanRequest(
+                operation=operation,
+                target_index=target_index,
+            )
+        except Exception:
+            logger.warning("replanner LLM parse error", exc_info=True)
+            return None
 
     async def apply(
         self,
@@ -141,12 +239,14 @@ class Replanner:
                 target_index=request.target_index,
             )
 
-    def _detect_operation(self, message: str) -> Literal["replace", "insert", "remove"]:
+    def _detect_operation(self, message: str) -> Literal["replace", "insert", "remove"] | None:
+        if _REPLACE_PATTERN.search(message):
+            return "replace"
         if _REMOVE_PATTERN.search(message):
             return "remove"
         if _INSERT_PATTERN.search(message):
             return "insert"
-        return "replace"
+        return None
 
     def _resolve_insert_index(self, message: str, itinerary: Itinerary) -> int | None:
         if _LAST_PATTERN.search(message):
@@ -157,6 +257,16 @@ class Replanner:
         if "前面" in message or "before" in message.lower():
             return stop_index
         return min(len(itinerary.stops), stop_index + 1)
+
+    @staticmethod
+    def _normalize_index(value: object) -> int | None:
+        if value is None or isinstance(value, bool):
+            return None
+        if isinstance(value, int):
+            return value if value >= 0 else None
+        if isinstance(value, float) and value.is_integer() and value >= 0:
+            return int(value)
+        return None
 
     def _sequence_for_replace(
         self,

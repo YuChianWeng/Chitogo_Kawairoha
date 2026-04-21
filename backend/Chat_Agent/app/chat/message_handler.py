@@ -22,7 +22,8 @@ from app.core.config import Settings, get_settings
 from app.core.logging import log_event
 from app.orchestration.classifier import IntentClassifier, detect_missing_generate_fields
 from app.orchestration.intents import Intent
-from app.orchestration.preferences import PreferenceExtractor, extract_preferences_from_text
+from app.orchestration.language import detect_language_hint
+from app.orchestration.preferences import PreferenceExtractor
 from app.orchestration.slots import ChatGeneralSlots, ClassifierResult
 from app.session.manager import SessionManager, session_manager
 from app.session.models import Itinerary, Place, Preferences, Session, Turn
@@ -308,9 +309,9 @@ class MessageHandler:
                     current_preferences=session.preferences,
                 )
             except Exception as exc:
-                preference_delta = extract_preferences_from_text(request.message)
+                preference_delta = Preferences(language=detect_language_hint(request.message))
                 step.fallback(
-                    summary="heuristic_preferences_only",
+                    summary="language_only_preferences",
                     error=exc.__class__.__name__,
                     detail={"fields": sorted(preference_delta.model_fields_set)},
                 )
@@ -556,7 +557,7 @@ class MessageHandler:
             )
 
         with trace_recorder.step("replan.parse_request") as step:
-            replan_request = self._replanner.parse_request(
+            replan_request = await self._replanner.parse_request(
                 request.message,
                 session.latest_itinerary,
             )

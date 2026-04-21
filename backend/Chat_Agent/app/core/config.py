@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     port: int = Field(..., ge=1, le=65535)
     data_service_base_url: AnyHttpUrl
     place_service_timeout_sec: int = Field(default=3, ge=1)
-    llm_provider: Literal["gemini", "anthropic"] = "gemini"
+    llm_provider: Literal["gemini", "anthropic", "openrouter"] = "gemini"
     gemini_api_key: str | None = None
     gemini_model: str = Field(default="gemini-2.5-flash", min_length=1)
     gemini_fallback_model: str = Field(default="gemini-2.5-pro", min_length=1)
@@ -25,6 +25,15 @@ class Settings(BaseSettings):
     anthropic_fallback_model: str = Field(
         default="claude-haiku-4-5-20251001",
         min_length=1,
+    )
+    openrouter_api_key: str | None = None
+    openrouter_model: str = Field(default="openai/gpt-4.1-mini", min_length=1)
+    openrouter_fallback_model: str = Field(
+        default="openai/gpt-4.1",
+        min_length=1,
+    )
+    openrouter_base_url: AnyHttpUrl = Field(
+        default="https://openrouter.ai/api/v1",
     )
     google_maps_api_key: str = Field(..., min_length=1)
     route_provider: Literal["google_maps", "fallback"] = "google_maps"
@@ -70,7 +79,12 @@ class Settings(BaseSettings):
             raise ValueError("CORS_ALLOW_ORIGINS must contain at least one origin")
         return value
 
-    @field_validator("gemini_api_key", "anthropic_api_key", "google_maps_api_key")
+    @field_validator(
+        "gemini_api_key",
+        "anthropic_api_key",
+        "openrouter_api_key",
+        "google_maps_api_key",
+    )
     @classmethod
     def validate_secret_values(cls, value: str | None, info: ValidationInfo) -> str | None:
         if value is None:
@@ -104,6 +118,8 @@ class Settings(BaseSettings):
             raise ValueError("GEMINI_API_KEY is required when LLM_PROVIDER=gemini")
         if self.llm_provider == "anthropic" and not self.anthropic_api_key:
             raise ValueError("ANTHROPIC_API_KEY is required when LLM_PROVIDER=anthropic")
+        if self.llm_provider == "openrouter" and not self.openrouter_api_key:
+            raise ValueError("OPENROUTER_API_KEY is required when LLM_PROVIDER=openrouter")
         return self
 
 

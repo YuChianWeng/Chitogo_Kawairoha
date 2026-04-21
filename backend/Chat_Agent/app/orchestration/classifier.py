@@ -1,53 +1,47 @@
 from __future__ import annotations
 
+import logging
 import re
-from typing import Any
 
 from app.llm.client import LLMClient, llm_client
 from app.orchestration.intents import Intent
-from app.orchestration.preferences import extract_preferences_from_text
-from app.session.models import Preferences
 from app.orchestration.slots import (
     ChatGeneralSlots,
     ClassifierResult,
-    ExplainSlots,
     GenerateItinerarySlots,
-    ReplanSlots,
-    extract_stop_index,
     slot_model_for_intent,
 )
+from app.session.models import Preferences
 
-_GENERATE_PATTERN = re.compile(
-    r"(行程|規劃|安排|排一下|旅遊|半日|一日遊|itinerary|plan|trip|day in|schedule)",
+_TIME_HINT_PATTERN = re.compile(
+    r"(\d{1,2}:\d{2}|今晚|今天|明天|下午|早上|晚上|tonight|tomorrow|morning|afternoon|evening)",
     re.IGNORECASE,
 )
-_REPLAN_PATTERN = re.compile(
-    r"(換掉|改掉|改成|改一下|修改|替換|重排|刪掉|移除|加一個|加入|新增|replace|swap|change|modify|replan|remove|delete|insert|add)",
-    re.IGNORECASE,
-)
-_EXPLAIN_PATTERN = re.compile(
-    r"^(?:why|how come|explain|為什麼|怎麼|為何|解釋|說明)",
-    re.IGNORECASE,
-)
-_EXPLAIN_SUBJECT_PATTERN = re.compile(
-    r"(?:pick|choose|include|安排|選|挑)\s+(.+?)(?:[?？]|$)",
-    re.IGNORECASE,
-)
-_TIME_HINT_PATTERN = re.compile(r"(\d{1,2}:\d{2}|今晚|今天|明天|下午|早上|晚上|tonight|tomorrow|morning|afternoon|evening)", re.IGNORECASE)
+logger = logging.getLogger(__name__)
 
 
-def _generate_slots_from_preferences(message: str) -> GenerateItinerarySlots:
-    preference_delta = extract_preferences_from_text(message)
-    return GenerateItinerarySlots(
-        origin=preference_delta.origin,
-        district=preference_delta.district,
-        time_window=preference_delta.time_window,
-        companions=preference_delta.companions,
-        budget_level=preference_delta.budget_level,
-        transport_mode=preference_delta.transport_mode,
-        interest_tags=list(preference_delta.interest_tags),
-        avoid_tags=list(preference_delta.avoid_tags),
-    )
+def _coerce_generate_slots(raw_slots: dict[str, object]) -> dict[str, object]:
+    normalized = dict(raw_slots)
+    scalar_fields = {"origin", "district", "companions", "budget_level", "transport_mode"}
+    list_fields = {"interest_tags", "avoid_tags"}
+
+    for field_name in scalar_fields:
+        value = normalized.get(field_name)
+        if isinstance(value, list):
+            normalized[field_name] = next(
+                (item.strip() for item in value if isinstance(item, str) and item.strip()),
+                None,
+            )
+
+    for field_name in list_fields:
+        value = normalized.get(field_name)
+        if value is None:
+            normalized[field_name] = []
+            continue
+        if isinstance(value, str):
+            normalized[field_name] = [value]
+
+    return normalized
 
 
 def _detect_missing_generate_info(message: str, slots: GenerateItinerarySlots) -> list[str]:
@@ -93,99 +87,50 @@ def detect_missing_generate_fields(
     )
 
 
-class RuleBasedClassifier:
-    """Fast rules-first classifier for obvious planner intents."""
-
-    def classify(self, message: str, has_itinerary: bool = False) -> ClassifierResult:
-        stripped = message.strip()
-        if not stripped:
-            return ClassifierResult(
-                intent=Intent.CHAT_GENERAL,
-                confidence=0.4,
-                needs_clarification=True,
-                extracted_slots=ChatGeneralSlots(topic="empty"),
-                source="rules",
-            )
-
-        if _EXPLAIN_PATTERN.search(stripped):
-            subject_match = _EXPLAIN_SUBJECT_PATTERN.search(stripped)
-            return ClassifierResult(
-                intent=Intent.EXPLAIN,
-                confidence=0.92 if has_itinerary else 0.88,
-                extracted_slots=ExplainSlots(
-                    subject=subject_match.group(1).strip() if subject_match else None
-                ),
-                source="rules",
-            )
-
-        if _REPLAN_PATTERN.search(stripped):
-            stop_index = extract_stop_index(stripped)
-            return ClassifierResult(
-                intent=Intent.REPLAN,
-                confidence=0.93 if stop_index is not None else 0.84,
-                needs_clarification=stop_index is None,
-                missing_fields=["stop_index"] if stop_index is None else [],
-                extracted_slots=ReplanSlots(
-                    stop_index=stop_index,
-                    change_request=stripped,
-                ),
-                source="rules",
-            )
-
-        if _GENERATE_PATTERN.search(stripped):
-            slots = _generate_slots_from_preferences(stripped)
-            missing_fields = _detect_missing_generate_info(stripped, slots)
-            return ClassifierResult(
-                intent=Intent.GENERATE_ITINERARY,
-                confidence=0.9,
-                needs_clarification=bool(missing_fields),
-                missing_fields=missing_fields,
-                extracted_slots=slots,
-                source="rules",
-            )
-
-        return ClassifierResult(
-            intent=Intent.CHAT_GENERAL,
-            confidence=0.55,
-            extracted_slots=ChatGeneralSlots(topic=stripped),
-            source="rules",
-        )
-
-
 def build_classifier_prompt(message: str, has_itinerary: bool) -> str:
     return (
-        "Classify the latest user message into one intent: "
-        "GENERATE_ITINERARY, REPLAN, EXPLAIN, CHAT_GENERAL.\n"
-        "Return strict JSON with keys: intent, confidence, needs_clarification, extracted_slots, missing_fields.\n"
+        "Classify the latest user message for a Taipei travel assistant.\n"
+        "Valid intents:\n"
+        "- GENERATE_ITINERARY: user wants to plan or schedule a trip itinerary\n"
+        "- REPLAN: user wants to modify an existing itinerary (replace, insert, or remove stops)\n"
+        "- EXPLAIN: user is asking why certain places were chosen\n"
+        "- CHAT_GENERAL: anything else\n"
+        "Return strict JSON with exactly these keys: intent, confidence, needs_clarification, "
+        "missing_fields, extracted_slots.\n"
+        "confidence must be a float from 0.0 to 1.0.\n"
+        "missing_fields must be an array of strings.\n"
+        "extracted_slots must match the detected intent:\n"
+        "- GENERATE_ITINERARY: {origin, district, time_window, companions, budget_level, transport_mode, interest_tags, avoid_tags}\n"
+        "- REPLAN: {stop_index, change_request}\n"
+        "- EXPLAIN: {subject}\n"
+        "- CHAT_GENERAL: {topic}\n"
         "Use stop_index as zero-based when present.\n"
+        "time_window MUST be {\"start_time\": \"HH:MM\", \"end_time\": \"HH:MM\"} or null. "
+        "Never use a plain string. Convert relative expressions: '下午' → {\"start_time\": \"13:00\", \"end_time\": \"18:00\"}, "
+        "'今晚' → {\"start_time\": \"18:00\", \"end_time\": \"22:00\"}, "
+        "'早上' → {\"start_time\": \"09:00\", \"end_time\": \"12:00\"}.\n"
+        "Return JSON only, without markdown.\n"
         f"has_current_itinerary: {has_itinerary}\n"
         f"message: {message}"
     )
 
 
 class IntentClassifier:
-    """Hybrid classifier that uses deterministic rules before LLM fallback."""
+    """LLM-first classifier with safe fallback behavior."""
 
-    def __init__(
-        self,
-        client: LLMClient | None = None,
-        *,
-        confidence_threshold: float = 0.8,
-        rules: RuleBasedClassifier | None = None,
-    ) -> None:
+    def __init__(self, client: LLMClient | None = None) -> None:
         self._client = client or llm_client
-        self._rules = rules or RuleBasedClassifier()
-        self._confidence_threshold = confidence_threshold
 
     async def classify(self, message: str, has_itinerary: bool = False) -> ClassifierResult:
-        rule_result = self._rules.classify(message, has_itinerary=has_itinerary)
-        if rule_result.confidence >= self._confidence_threshold:
-            return rule_result
-
         llm_result = await self._classify_with_llm(message, has_itinerary=has_itinerary)
         if llm_result is not None:
             return llm_result
-        return rule_result
+        return ClassifierResult(
+            intent=Intent.CHAT_GENERAL,
+            confidence=0.0,
+            extracted_slots=ChatGeneralSlots(topic=message.strip() or None),
+            source="rules",
+        )
 
     async def _classify_with_llm(
         self,
@@ -194,28 +139,35 @@ class IntentClassifier:
         has_itinerary: bool,
     ) -> ClassifierResult | None:
         try:
-            payload = await self._client.generate_json(
-                build_classifier_prompt(message, has_itinerary),
-                model=self._client.fallback_model,
-            )
+            payload = await self._client.generate_json(build_classifier_prompt(message, has_itinerary))
         except Exception:
+            logger.warning("classifier LLM error", exc_info=True)
             return None
 
         try:
+            if not isinstance(payload, dict):
+                return None
             intent = Intent(payload["intent"])
-            raw_slots = payload.get("extracted_slots") or {}
+            raw_slots = payload["extracted_slots"]
+            if not isinstance(raw_slots, dict):
+                return None
+            missing_fields = payload["missing_fields"]
+            if not isinstance(missing_fields, list):
+                return None
+
             slot_model = slot_model_for_intent(intent)
-            extracted_slots = slot_model.model_validate(raw_slots) if isinstance(raw_slots, dict) else slot_model()
-            missing_fields = payload.get("missing_fields") or []
+            if intent == Intent.GENERATE_ITINERARY:
+                raw_slots = _coerce_generate_slots(raw_slots)
             result = ClassifierResult(
                 intent=intent,
-                confidence=float(payload.get("confidence", 0.8)),
-                needs_clarification=bool(payload.get("needs_clarification", False)),
-                extracted_slots=extracted_slots,
+                confidence=float(payload["confidence"]),
+                needs_clarification=bool(payload["needs_clarification"]),
+                extracted_slots=slot_model.model_validate(raw_slots),
                 missing_fields=[str(item) for item in missing_fields],
                 source="llm",
             )
         except Exception:
+            logger.warning("classifier LLM parse error", exc_info=True)
             return None
 
         if intent == Intent.GENERATE_ITINERARY and isinstance(result.extracted_slots, GenerateItinerarySlots):
@@ -227,7 +179,6 @@ class IntentClassifier:
 
 __all__ = [
     "IntentClassifier",
-    "RuleBasedClassifier",
     "build_classifier_prompt",
     "detect_missing_generate_fields",
 ]

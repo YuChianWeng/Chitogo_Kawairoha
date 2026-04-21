@@ -15,6 +15,11 @@ from app.session.manager import SessionManager
 from app.session.store import InMemorySessionStore
 from app.tools.models import PlaceListResult, RouteResult, ToolPlace
 from app.tools.registry import ToolRegistry
+from tests.fake_llm import (
+    DisabledLLMClient,
+    ScriptedClassifierClient,
+    ScriptedPreferenceClient,
+)
 
 
 def build_env() -> dict[str, str]:
@@ -120,12 +125,10 @@ class TraceApiTests(unittest.TestCase):
                 )
             ),
         )
-
-        async def disabled_generate_json(*_: object, **__: object) -> object:
-            raise RuntimeError("disabled")
-
-        handler._classifier._client.generate_json = disabled_generate_json
-        handler._preference_extractor._client.generate_json = disabled_generate_json
+        handler._classifier._client = ScriptedClassifierClient()
+        handler._preference_extractor._client = ScriptedPreferenceClient()
+        handler._agent_loop._client = DisabledLLMClient()
+        handler._replanner._client = DisabledLLMClient()
         return handler
 
     def test_trace_endpoints_return_recent_and_detail_views(self) -> None:

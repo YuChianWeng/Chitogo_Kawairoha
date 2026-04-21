@@ -130,3 +130,56 @@ class SettingsTests(unittest.TestCase):
                 _IsolatedSettings()
 
         self.assertIn("ANTHROPIC_API_KEY is required", str(exc_info.exception))
+
+    def test_settings_accept_openrouter_environment(self) -> None:
+        env = dict(os.environ)
+        env.update(
+            {
+                "APP_ENV": "development",
+                "HOST": "0.0.0.0",
+                "PORT": "8100",
+                "LLM_PROVIDER": "openrouter",
+                "DATA_SERVICE_BASE_URL": "http://localhost:8000",
+                "OPENROUTER_API_KEY": "openrouter-test-key",
+                "OPENROUTER_MODEL": "openai/gpt-4.1-mini",
+                "OPENROUTER_FALLBACK_MODEL": "openai/gpt-4.1",
+                "GOOGLE_MAPS_API_KEY": "gmaps-key",
+                "CORS_ALLOW_ORIGINS": "http://localhost:3000",
+                "LOG_LEVEL": "INFO",
+            }
+        )
+        env.pop("GEMINI_API_KEY", None)
+        env.pop("ANTHROPIC_API_KEY", None)
+
+        with patch.dict(os.environ, env, clear=True):
+            settings = _IsolatedSettings()
+
+        self.assertEqual(settings.llm_provider, "openrouter")
+        self.assertEqual(settings.openrouter_api_key, "openrouter-test-key")
+        self.assertEqual(settings.openrouter_model, "openai/gpt-4.1-mini")
+        self.assertEqual(settings.openrouter_fallback_model, "openai/gpt-4.1")
+        self.assertEqual(str(settings.openrouter_base_url), "https://openrouter.ai/api/v1")
+
+    def test_settings_require_openrouter_key_when_provider_is_openrouter(self) -> None:
+        env = dict(os.environ)
+        env.update(
+            {
+                "APP_ENV": "development",
+                "HOST": "0.0.0.0",
+                "PORT": "8100",
+                "LLM_PROVIDER": "openrouter",
+                "DATA_SERVICE_BASE_URL": "http://localhost:8000",
+                "GOOGLE_MAPS_API_KEY": "gmaps-key",
+                "CORS_ALLOW_ORIGINS": "http://localhost:3000",
+                "LOG_LEVEL": "INFO",
+            }
+        )
+        env.pop("GEMINI_API_KEY", None)
+        env.pop("ANTHROPIC_API_KEY", None)
+        env.pop("OPENROUTER_API_KEY", None)
+
+        with patch.dict(os.environ, env, clear=True):
+            with self.assertRaises(ValidationError) as exc_info:
+                _IsolatedSettings()
+
+        self.assertIn("OPENROUTER_API_KEY is required", str(exc_info.exception))
