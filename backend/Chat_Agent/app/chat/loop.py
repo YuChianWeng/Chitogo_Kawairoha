@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+from contextlib import nullcontext
 import re
+from typing import TYPE_CHECKING
 from typing import Any
 
 from app.chat.schemas import ChatUserContext, LoopResult
@@ -9,6 +11,9 @@ from app.orchestration.intents import Intent
 from app.session.models import Preferences
 from app.tools.models import PlaceListResult, ToolPlace
 from app.tools.registry import ToolRegistry, tool_registry
+
+if TYPE_CHECKING:
+    from app.chat.trace_recorder import TraceRecorder
 
 _DISCOVERY_PATTERN = re.compile(
     r"(推薦|想找|找一下|找個|附近|有沒有|去哪|吃什麼|recommend|suggest|looking for|search|nearby|where should|what should)",
@@ -74,14 +79,22 @@ class AgentLoop:
         message: str,
         preferences: Preferences,
         user_context: ChatUserContext | None = None,
+        trace_recorder: TraceRecorder | None = None,
     ) -> LoopResult:
         allowed_tools = {tool.name for tool in self._registry.list_tools_for_intent(intent)}
         tools_used: list[str] = []
 
-        if user_context and self._should_use_nearby(message) and "place_nearby" in allowed_tools:
+        if (
+            user_context
+            and user_context.lat is not None
+            and user_context.lng is not None
+            and self._should_use_nearby(message)
+            and "place_nearby" in allowed_tools
+        ):
             result = await self._invoke_place_list_tool(
                 "place_nearby",
                 tools_used,
+                trace_recorder=trace_recorder,
                 lat=user_context.lat,
                 lng=user_context.lng,
                 radius_m=1500,
@@ -97,6 +110,7 @@ class AgentLoop:
             result = await self._invoke_place_list_tool(
                 "place_recommend",
                 tools_used,
+                trace_recorder=trace_recorder,
                 districts=[preferences.district] if preferences.district else None,
                 internal_category=self._preferred_category(preferences),
                 min_rating=None,
@@ -115,6 +129,7 @@ class AgentLoop:
         return await self._invoke_place_list_tool(
             "place_search",
             tools_used,
+            trace_recorder=trace_recorder,
             district=preferences.district,
             internal_category=self._preferred_category(preferences),
             keyword=self._search_keyword(message, preferences),
@@ -129,39 +144,73 @@ class AgentLoop:
         self,
         tool_name: str,
         tools_used: list[str],
+        trace_recorder: TraceRecorder | None = None,
         **kwargs: Any,
     ) -> LoopResult:
-        tool = self._registry.get_tool(tool_name)
-        if tool is None:
-            return LoopResult(status="error", tools_used=list(tools_used), error="tool_unavailable")
-        filtered_kwargs = {key: value for key, value in kwargs.items() if value is not None}
-        try:
-            raw_result = await tool.handler(**filtered_kwargs)
-        except Exception as exc:
-            tools_used.append(tool_name)
-            return LoopResult(
-                status="error",
-                tools_used=list(tools_used),
-                error=exc.__class__.__name__,
-            )
-        tools_used.append(tool_name)
-        if not isinstance(raw_result, PlaceListResult):
-            return LoopResult(status="error", tools_used=list(tools_used), error="malformed_tool_result")
-        if raw_result.status == "error":
-            return LoopResult(status="error", tools_used=list(tools_used), error=raw_result.error)
-        if raw_result.status == "empty":
-            return LoopResult(
-                status="empty",
-                tools_used=list(tools_used),
-                places=[],
-                summary="no_matches",
-            )
-        return LoopResult(
-            status="ok",
-            tools_used=list(tools_used),
-            places=list(raw_result.items),
-            summary=f"{len(raw_result.items)} candidates",
+        step_context = (
+            trace_recorder.step(f"tool.{tool_name}") if trace_recorder is not None else nullcontext()
         )
+        with step_context as trace_step:
+            tool = self._registry.get_tool(tool_name)
+            if tool is None:
+                if trace_step is not None:
+                    trace_step.skip(summary="tool_unavailable")
+                return LoopResult(
+                    status="error",
+                    tools_used=list(tools_used),
+                    error="tool_unavailable",
+                )
+            filtered_kwargs = {key: value for key, value in kwargs.items() if value is not None}
+            try:
+                raw_result = await tool.handler(**filtered_kwargs)
+            except Exception as exc:
+                tools_used.append(tool_name)
+                if trace_step is not None:
+                    trace_step.error(
+                        summary="tool_exception",
+                        error=exc.__class__.__name__,
+                    )
+                return LoopResult(
+                    status="error",
+                    tools_used=list(tools_used),
+                    error=exc.__class__.__name__,
+                )
+            tools_used.append(tool_name)
+            if not isinstance(raw_result, PlaceListResult):
+                if trace_step is not None:
+                    trace_step.error(summary="malformed_tool_result")
+                return LoopResult(
+                    status="error",
+                    tools_used=list(tools_used),
+                    error="malformed_tool_result",
+                )
+            if raw_result.status == "error":
+                if trace_step is not None:
+                    trace_step.error(
+                        summary=raw_result.error or "tool_error",
+                        detail={"item_count": len(raw_result.items)},
+                    )
+                return LoopResult(status="error", tools_used=list(tools_used), error=raw_result.error)
+            if raw_result.status == "empty":
+                if trace_step is not None:
+                    trace_step.success(summary="empty", detail={"item_count": 0})
+                return LoopResult(
+                    status="empty",
+                    tools_used=list(tools_used),
+                    places=[],
+                    summary="no_matches",
+                )
+            if trace_step is not None:
+                trace_step.success(
+                    summary="ok",
+                    detail={"item_count": len(raw_result.items)},
+                )
+            return LoopResult(
+                status="ok",
+                tools_used=list(tools_used),
+                places=list(raw_result.items),
+                summary=f"{len(raw_result.items)} candidates",
+            )
 
     @staticmethod
     def _preferred_category(preferences: Preferences) -> str | None:

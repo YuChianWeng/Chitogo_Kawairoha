@@ -8,7 +8,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1 import router as v1_router
 from app.chat.message_handler import MessageHandler
+from app.chat.trace_store import TraceStore
 from app.core.config import Settings, get_settings
+from app.core.logging import configure_logging
 from app.session.manager import session_manager
 from app.session.store import session_store
 from app.session.sweeper import stop_ttl_sweeper, ttl_sweeper_loop
@@ -20,6 +22,7 @@ from app.tools.route_adapter import route_tool_adapter
 def create_app(settings: Settings | None = None) -> FastAPI:
     """Application factory for the agent orchestration backend."""
     app_settings = settings or get_settings()
+    configure_logging(app_settings.log_level)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -57,7 +60,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.place_tool_adapter = place_tool_adapter
     app.state.route_tool_adapter = route_tool_adapter
     app.state.tool_registry = tool_registry
-    app.state.message_handler = MessageHandler()
+    app.state.trace_store = TraceStore(max_items=app_settings.trace_store_max_items)
+    app.state.message_handler = MessageHandler(
+        settings=app_settings,
+        trace_store=app.state.trace_store,
+    )
     app.state.ttl_sweeper_task = None
     return app
 

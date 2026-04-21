@@ -22,7 +22,7 @@ _GENERATE_PATTERN = re.compile(
     re.IGNORECASE,
 )
 _REPLAN_PATTERN = re.compile(
-    r"(換掉|改掉|修改|替換|重排|replace|swap|change|modify|replan)",
+    r"(換掉|改掉|改成|改一下|修改|替換|重排|刪掉|移除|加一個|加入|新增|replace|swap|change|modify|replan|remove|delete|insert|add)",
     re.IGNORECASE,
 )
 _EXPLAIN_PATTERN = re.compile(

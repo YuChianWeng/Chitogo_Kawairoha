@@ -38,6 +38,7 @@ class Settings(BaseSettings):
     agent_loop_max_iterations: int = Field(default=6, ge=1)
     request_timeout_s: int = Field(default=2, ge=1)
     default_start_time: str = Field(default="10:00", min_length=5, max_length=5)
+    trace_store_max_items: int = Field(default=200, ge=1, le=1000)
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 
     model_config = SettingsConfigDict(

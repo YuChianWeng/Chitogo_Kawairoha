@@ -1,12 +1,17 @@
 from __future__ import annotations
 
-from typing import Literal
+from datetime import datetime
+from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from app.orchestration.intents import Intent
-from app.session.models import Preferences
+from app.session.models import Itinerary, Preferences
 from app.tools.models import ToolPlace
+
+RoutingStatus = Literal["full", "partial_fallback", "failed"]
+TraceStepStatus = Literal["success", "error", "skipped", "fallback"]
+TraceFinalStatus = Literal["success", "clarification", "error"]
 
 
 class ChatUserContext(BaseModel):
@@ -28,6 +33,14 @@ class ChatMessageRequest(BaseModel):
     user_context: ChatUserContext | None = None
 
     model_config = ConfigDict(extra="forbid")
+
+    @field_validator("message")
+    @classmethod
+    def validate_message(cls, value: str) -> str:
+        stripped = value.strip()
+        if not stripped:
+            raise ValueError("message must not be empty")
+        return stripped
 
 
 class ChatCandidate(BaseModel):
@@ -81,6 +94,8 @@ class ChatMessageResponse(BaseModel):
     needs_clarification: bool
     message: str
     preferences: Preferences
+    itinerary: Itinerary | None = None
+    routing_status: RoutingStatus | None = None
     candidates: list[ChatCandidate] = Field(default_factory=list)
     tool_results_summary: ToolResultsSummary | None = None
     source: str | None = None
@@ -91,5 +106,71 @@ class ChatMessageResponse(BaseModel):
 class ErrorEnvelope(BaseModel):
     error: str
     detail: str | None = None
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class TraceStepRecord(BaseModel):
+    name: str = Field(..., min_length=1)
+    status: TraceStepStatus
+    duration_ms: int = Field(default=0, ge=0)
+    summary: str | None = None
+    detail: dict[str, Any] = Field(default_factory=dict)
+    warning: str | None = None
+    error: str | None = None
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class ChatTraceDetail(BaseModel):
+    trace_id: str = Field(..., min_length=1)
+    session_id: str | None = None
+    requested_at: datetime
+    intent: str | None = None
+    needs_clarification: bool | None = None
+    final_status: TraceFinalStatus
+    outcome: str | None = None
+    duration_ms: int = Field(default=0, ge=0)
+    steps: list[TraceStepRecord] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+    error_summary: str | None = None
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class ChatTraceSummary(BaseModel):
+    trace_id: str = Field(..., min_length=1)
+    session_id: str | None = None
+    requested_at: datetime
+    intent: str | None = None
+    needs_clarification: bool | None = None
+    final_status: TraceFinalStatus
+    outcome: str | None = None
+    duration_ms: int = Field(default=0, ge=0)
+    step_count: int = Field(default=0, ge=0)
+    warning_count: int = Field(default=0, ge=0)
+    error_summary: str | None = None
+
+    model_config = ConfigDict(extra="forbid")
+
+    @classmethod
+    def from_trace(cls, trace: ChatTraceDetail) -> ChatTraceSummary:
+        return cls(
+            trace_id=trace.trace_id,
+            session_id=trace.session_id,
+            requested_at=trace.requested_at,
+            intent=trace.intent,
+            needs_clarification=trace.needs_clarification,
+            final_status=trace.final_status,
+            outcome=trace.outcome,
+            duration_ms=trace.duration_ms,
+            step_count=len(trace.steps),
+            warning_count=len(trace.warnings),
+            error_summary=trace.error_summary,
+        )
+
+
+class ChatTraceListResponse(BaseModel):
+    items: list[ChatTraceSummary] = Field(default_factory=list)
 
     model_config = ConfigDict(extra="forbid")

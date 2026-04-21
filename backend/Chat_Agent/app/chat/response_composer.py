@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from app.chat.schemas import ChatCandidate
+from app.chat.schemas import ChatCandidate, RoutingStatus
 from app.orchestration.intents import Intent
-from app.session.models import Preferences
+from app.session.models import Itinerary, Preferences
 from app.tools.models import ToolPlace
 
 _TAG_LABELS = {
@@ -67,24 +67,30 @@ class ResponseComposer:
             )
         return "I’m choosing recommendations based on your current district, budget, transport, and interest preferences."
 
-    def compose_replan_placeholder(
+    def compose_replan_clarification(
         self,
         *,
-        stop_index: int | None,
         preferences: Preferences,
+        has_itinerary: bool,
+        missing_fields: list[str] | None = None,
     ) -> str:
-        if preferences.language == "zh-TW":
-            if stop_index is not None:
-                return f"我看得出你想調整第 {stop_index + 1} 站，但完整重排行程會在下一個階段實作。你可以先告訴我想換成哪種類型，我先幫你推薦候選地點。"
-            return "我能辨識這是重排行程的需求，但完整替換站點還沒在這一階段啟用。你可以先說想換成哪種類型的地點。"
-        if stop_index is not None:
+        language = preferences.language or "en"
+        if not has_itinerary:
             return (
-                f"I can see you want to change stop {stop_index + 1}, but full replanning is not enabled in Phase 5 yet. "
-                "Tell me what kind of replacement you want and I can suggest candidates."
+                "你目前還沒有可調整的行程，先告訴我出發地點、時段和想去的類型，我先幫你排一版。"
+                if language == "zh-TW"
+                else "There isn't an itinerary to edit yet. Give me a starting point, time window, and vibe first, and I'll build one."
+            )
+        if missing_fields and "stop_index" in missing_fields:
+            return (
+                "你想調整哪一站？可以直接說第一站、第二站，或最後一站。"
+                if language == "zh-TW"
+                else "Which stop do you want to change? You can say first stop, second stop, or last stop."
             )
         return (
-            "I can tell this is a replanning request, but full stop replacement is not enabled in Phase 5 yet. "
-            "Tell me what kind of replacement you want and I can suggest candidates."
+            "請再說明你想怎麼調整目前的行程。"
+            if language == "zh-TW"
+            else "Tell me a bit more about how you want to change the current itinerary."
         )
 
     def compose_no_results(
@@ -135,6 +141,72 @@ class ResponseComposer:
             elif preferences.origin:
                 reply += f" I also kept convenience from {preferences.origin} in mind."
         return reply.strip(), candidates
+
+    def compose_itinerary(
+        self,
+        *,
+        itinerary: Itinerary,
+        routing_status: RoutingStatus,
+        preferences: Preferences,
+    ) -> str:
+        language = preferences.language or "en"
+        if language == "zh-TW":
+            reply = f"我幫你排了一個 {len(itinerary.stops)} 站的行程：{itinerary.summary}。"
+            if routing_status == "partial_fallback":
+                reply += " 部分移動時間是估算值，但整體順序仍可直接參考。"
+            elif routing_status == "failed":
+                reply += " 路線時間目前抓不到完整資料，所以我先把停留順序排好了。"
+            return reply
+        reply = f"I mapped out a {len(itinerary.stops)}-stop itinerary: {itinerary.summary}."
+        if routing_status == "partial_fallback":
+            reply += " Some transfer times are estimated, but the overall order is still usable."
+        elif routing_status == "failed":
+            reply += " I couldn't get full routing data, so the visit order is grounded but leg times are limited."
+        return reply
+
+    def compose_replan(
+        self,
+        *,
+        itinerary: Itinerary,
+        routing_status: RoutingStatus,
+        preferences: Preferences,
+        operation: str,
+        target_index: int | None,
+    ) -> str:
+        language = preferences.language or "en"
+        if language == "zh-TW":
+            if operation == "remove":
+                reply = "我已經把指定站點移除，其他站點盡量保持不變。"
+            elif operation == "insert":
+                reply = "我已經把新站點插入目前的行程裡。"
+            elif target_index is not None:
+                reply = f"我已經把第 {target_index + 1} 站換掉，其他站點盡量保持不變。"
+            else:
+                reply = "我已經更新了行程。"
+            if routing_status != "full":
+                reply += " 部分移動時間是估算值。"
+            return f"{reply} {itinerary.summary}。"
+
+        if operation == "remove":
+            reply = "I removed the requested stop and kept the rest of the plan as intact as possible."
+        elif operation == "insert":
+            reply = "I inserted a new stop into the current plan."
+        elif target_index is not None:
+            reply = f"I replaced stop {target_index + 1} and kept the rest of the plan as intact as possible."
+        else:
+            reply = "I updated the itinerary."
+        if routing_status != "full":
+            reply += " Some leg times are estimated."
+        return f"{reply} {itinerary.summary}."
+
+    def compose_replan_error(
+        self,
+        *,
+        preferences: Preferences,
+    ) -> str:
+        if preferences.language == "zh-TW":
+            return "我現在沒辦法安全地更新這份行程，請稍後再試一次。"
+        return "I couldn't safely update the itinerary just now. Please try again."
 
     def _build_candidate(
         self,

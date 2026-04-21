@@ -80,6 +80,7 @@ class SettingsTests(unittest.TestCase):
         self.assertEqual(settings.agent_loop_max_iterations, 6)
         self.assertEqual(settings.request_timeout_s, 2)
         self.assertEqual(settings.default_start_time, "10:00")
+        self.assertEqual(settings.trace_store_max_items, 200)
         self.assertEqual(
             settings.cors_allow_origins,
             ["http://localhost:3000", "http://localhost:5173"],
