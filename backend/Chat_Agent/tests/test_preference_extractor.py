@@ -3,7 +3,7 @@ from __future__ import annotations
 import unittest
 from unittest.mock import AsyncMock
 
-from app.orchestration.preferences import PreferenceExtractor, combine_preference_deltas
+from app.orchestration.preferences import PreferenceExtractor, combine_preference_deltas, _detect_district
 from app.session.manager import merge_preferences
 from app.session.models import Preferences
 
@@ -46,6 +46,23 @@ class PreferenceExtractorTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(delta.transport_mode, "transit")
         self.assertEqual(delta.language, "zh-TW")
         extractor._client.generate_json.assert_awaited_once()
+
+
+class DistrictDetectionTests(unittest.TestCase):
+    def test_valid_district_extracted_from_complex_sentence(self) -> None:
+        self.assertEqual(_detect_district("幫我從大安區出發排一個下午的咖啡廳行程"), "大安區")
+
+    def test_valid_district_extracted_from_simple_sentence(self) -> None:
+        self.assertEqual(_detect_district("大安區有什麼咖啡廳"), "大安區")
+
+    def test_no_district_when_city_only(self) -> None:
+        self.assertIsNone(_detect_district("台北有什麼咖啡廳"))
+
+    def test_valid_district_with_prefix_stripped(self) -> None:
+        self.assertEqual(_detect_district("我想在中山區附近走走"), "中山區")
+
+    def test_non_taipei_district_returns_none(self) -> None:
+        self.assertIsNone(_detect_district("我想去板橋區逛逛"))
 
 
 class PreferenceDeltaCombinationTests(unittest.TestCase):

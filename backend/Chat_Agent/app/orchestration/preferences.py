@@ -8,7 +8,11 @@ from app.orchestration.language import detect_language_hint
 from app.session.models import Preferences, TimeWindow
 
 _TIME_RANGE_PATTERN = re.compile(r"(\d{1,2}:\d{2})\s*(?:-|~|to)\s*(\d{1,2}:\d{2})", re.IGNORECASE)
-_DISTRICT_PATTERN = re.compile(r"([\u4e00-\u9fff]{1,6}區)")
+_DISTRICT_PATTERN = re.compile(r"([\u4e00-\u9fff]{2,3}區)")
+_VALID_DISTRICTS = frozenset({
+    "中山區", "大安區", "中正區", "士林區", "信義區", "內湖區",
+    "萬華區", "北投區", "大同區", "南港區", "文山區", "松山區",
+})
 _ORIGIN_ZH_PATTERN = re.compile(r"從\s*([^，。,.!?！？\s]+(?:站|車站|捷運站|商圈|夜市|公園|區)?)\s*出發")
 _ORIGIN_EN_PATTERN = re.compile(
     r"\bfrom\s+([A-Za-z][A-Za-z0-9\s\-]{1,40}?)(?=(?:\s+(?:for|with|by|at|tonight|tomorrow|this|around)\b)|[,.!?]|$)",
@@ -89,11 +93,12 @@ def _detect_district(message: str) -> str | None:
     match = _DISTRICT_PATTERN.search(message)
     if match:
         district = match.group(1)
-        for prefix in ("想去", "去", "到", "在"):
+        for prefix in ("從", "想去", "去", "到", "在"):
             if district.startswith(prefix) and district.endswith("區"):
-                district = district[len(prefix) :]
+                district = district[len(prefix):]
                 break
-        return district
+        if district in _VALID_DISTRICTS:
+            return district
     return None
 
 
@@ -207,12 +212,14 @@ def build_preference_extraction_prompt(
         if current_preferences
         else {}
     )
+    valid_districts = ", ".join(sorted(_VALID_DISTRICTS))
     return (
         "Extract only the new or corrected user preference fields from the latest message.\n"
         "Return a single JSON object using only these keys when explicitly mentioned: "
         "companions, budget_level, transport_mode, indoor_preference, origin, district, "
         "time_window, interest_tags, avoid_tags, language.\n"
         "Do not invent missing fields. Prefer concise normalized values.\n"
+        f"Valid districts (use exactly as written, or null if not mentioned): {valid_districts}\n"
         f"Language hint: {language_hint}\n"
         f"Current preferences: {current_payload}\n"
         f"Latest message: {message}"
