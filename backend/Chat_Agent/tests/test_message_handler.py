@@ -15,6 +15,11 @@ from app.session.manager import SessionManager
 from app.session.store import InMemorySessionStore
 from app.tools.models import PlaceListResult, RouteResult, ToolPlace
 from app.tools.registry import ToolRegistry
+from tests.fake_llm import (
+    DisabledLLMClient,
+    ScriptedClassifierClient,
+    ScriptedPreferenceClient,
+)
 
 
 def build_env() -> dict[str, str]:
@@ -178,11 +183,10 @@ class MessageHandlerTests(unittest.IsolatedAsyncioTestCase):
             composer=composer,
             trace_store=TraceStore(max_items=20),
         )
-        async def disabled_generate_json(*_: object, **__: object) -> object:
-            raise RuntimeError("disabled")
-
-        handler._classifier._client.generate_json = disabled_generate_json
-        handler._preference_extractor._client.generate_json = disabled_generate_json
+        handler._classifier._client = ScriptedClassifierClient()
+        handler._preference_extractor._client = ScriptedPreferenceClient()
+        handler._agent_loop._client = DisabledLLMClient()
+        handler._replanner._client = DisabledLLMClient()
         return handler, adapter, route
 
     async def _latest_trace(self, handler: MessageHandler):

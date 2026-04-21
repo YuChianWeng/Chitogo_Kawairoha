@@ -20,6 +20,11 @@ from app.tools.models import PlaceListResult, RouteResult, ToolPlace
 from app.tools.registry import ToolRegistry
 from pydantic import ValidationError
 from starlette.requests import Request
+from tests.fake_llm import (
+    DisabledLLMClient,
+    ScriptedClassifierClient,
+    ScriptedPreferenceClient,
+)
 
 
 def build_env() -> dict[str, str]:
@@ -154,11 +159,10 @@ class ChatApiTests(unittest.TestCase):
                     settings=settings,
                 ),
             )
-            async def disabled_generate_json(*_: object, **__: object) -> object:
-                raise RuntimeError("disabled")
-
-            handler._classifier._client.generate_json = disabled_generate_json
-            handler._preference_extractor._client.generate_json = disabled_generate_json
+            handler._classifier._client = ScriptedClassifierClient()
+            handler._preference_extractor._client = ScriptedPreferenceClient()
+            handler._agent_loop._client = DisabledLLMClient()
+            handler._replanner._client = DisabledLLMClient()
             route_paths = {route.path for route in app.routes}
             self.assertIn("/api/v1/chat/message", route_paths)
 

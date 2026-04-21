@@ -20,9 +20,10 @@ At the moment, this project is a runnable, test-covered backend prototype. The m
 
 ### Intent Detection and Preference Understanding
 
-- `IntentClassifier` uses a rules-first approach with LLM fallback.
+- `IntentClassifier` is now LLM-first and returns structured JSON slots for `GENERATE_ITINERARY`, `REPLAN`, `EXPLAIN`, or `CHAT_GENERAL`, with a safe fallback to `CHAT_GENERAL` if parsing fails.
 - The currently supported high-level intents are `GENERATE_ITINERARY`, `REPLAN`, `EXPLAIN`, and `CHAT_GENERAL`.
-- `PreferenceExtractor` combines heuristic extraction with LLM JSON deltas while preserving existing preference fields.
+- `PreferenceExtractor` is LLM-driven and normalizes provider output into canonical session preferences, including district, origin, companions, budget, transport, time window, and interest tags.
+- District validation remains deterministic, and explicit phrases such as `從大安區出發` are normalized into usable `district` / `origin` session data.
 - The backend currently understands origin, district, time window, companions, budget, transport mode, indoor/outdoor preference, interest tags, avoid tags, and language hint.
 - Language handling is currently centered on `zh-TW` and `en`, and responses adapt accordingly.
 
@@ -30,7 +31,9 @@ At the moment, this project is a runnable, test-covered backend prototype. The m
 
 - The backend queries an external Data Service for `search`, `recommend`, and `nearby` place results and normalizes them into `ToolPlace`.
 - General chat messages that look like discovery queries such as “recommend”, “find”, or “nearby” can enter the recommendation flow and return place candidates.
-- Itinerary generation and replanning choose among `place_recommend`, `place_search`, and `place_nearby` based on current preferences and context.
+- `AgentLoop` now uses an LLM planning step for `place_recommend`, `place_search`, and `place_nearby`, with deterministic validation and fallback when the plan is invalid or the LLM call fails.
+- For known interest tags such as `cafes`, deterministic query mapping still wins over free-text tool params so the final query stays aligned with Data Service vocabulary like `food` + `cafe`.
+- Planned `place_search` requests automatically fall back to `place_recommend` when the search returns no matches.
 - The place adapter retries once on 5xx responses, and returns structured error results for timeouts or malformed payloads instead of crashing the request.
 
 ### Itinerary Generation
@@ -44,6 +47,7 @@ At the moment, this project is a runnable, test-covered backend prototype. The m
 ### Replanning and Explanation
 
 - The backend supports replacing, inserting, or removing a single stop from an existing itinerary.
+- Replan parsing keeps a regex fast path for clear ordinal references, and falls back to the LLM when the operation or stop reference is ambiguous.
 - Replanning tries to preserve unaffected stops and legs, and only rebuilds the parts that need to change.
 - `EXPLAIN` responses are based on cached session candidates and current preferences; they do not trigger fresh external tool calls.
 
@@ -65,19 +69,19 @@ At the moment, this project is a runnable, test-covered backend prototype. The m
 - `app/chat/message_handler.py`
   The main single-turn orchestration service. It ties together session access, classification, preference extraction, tool orchestration, itinerary building, replanning, response composition, and trace recording.
 - `app/chat/loop.py`
-  Deterministic tool-selection logic for `place_search`, `place_recommend`, and `place_nearby`.
+  Hybrid tool planning for `place_search`, `place_recommend`, and `place_nearby`, with LLM planning plus deterministic validation and fallback.
 - `app/chat/itinerary_builder.py`
   Builds itineraries, enriches legs with route estimates, assigns arrival times, and computes routing status.
 - `app/chat/replanner.py`
-  Parses replanning requests and applies replace / insert / remove operations.
+  Parses replanning requests with regex fast paths plus LLM fallback, then applies replace / insert / remove operations.
 - `app/orchestration/`
-  Intent classification, preference extraction, language hints, and slot parsing. This layer is intentionally decoupled from the tool layer.
+  LLM-backed intent classification, preference extraction, language hints, and slot parsing. This layer is intentionally decoupled from the tool layer.
 - `app/session/`
   Session models, in-memory store, mutation API, and TTL sweeper.
 - `app/tools/`
   Place Data Service adapter, Google Maps route adapter, and the `ToolRegistry`.
 - `app/llm/client.py`
-  Lazy Gemini / Anthropic wrapper exposing `generate_text` and `generate_json`.
+  Lazy Gemini / Anthropic / OpenRouter wrapper exposing `generate_text` and `generate_json`, with OpenRouter HTTP support and retry handling.
 - `app/core/config.py`
   Environment-variable loading and validation. The app reads settings at startup/import time.
 - `tests/`
@@ -118,7 +122,7 @@ Additional notes:
 - Python 3.11
 - Access to the external Place Data Service
 - A valid Google Maps Directions API key if using `ROUTE_PROVIDER=google_maps`
-- A Gemini or Anthropic API key for the LLM-backed paths
+- A Gemini, Anthropic, or OpenRouter API key for the LLM-backed paths
 
 ### Local Development Setup
 
@@ -160,6 +164,16 @@ CORS_ALLOW_ORIGINS=http://localhost:3000,http://localhost:5173
 LOG_LEVEL=INFO
 ```
 
+### OpenRouter `.env` Example
+
+```env
+LLM_PROVIDER=openrouter
+OPENROUTER_API_KEY=your_openrouter_api_key
+OPENROUTER_MODEL=deepseek/deepseek-v3.2
+OPENROUTER_FALLBACK_MODEL=deepseek/deepseek-v3.2
+OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
+```
+
 ## Environment Variables
 
 ### Required
@@ -175,16 +189,20 @@ LOG_LEVEL=INFO
 | `GOOGLE_MAPS_API_KEY` | Used by `RouteToolAdapter`. At the moment, the settings model still requires it even when `ROUTE_PROVIDER=fallback`. |
 | `GEMINI_API_KEY` | Required when `LLM_PROVIDER=gemini`. |
 | `ANTHROPIC_API_KEY` | Required when `LLM_PROVIDER=anthropic`. |
+| `OPENROUTER_API_KEY` | Required when `LLM_PROVIDER=openrouter`. |
 
 ### Common Optional Variables
 
 | Variable | Description |
 | --- | --- |
-| `LLM_PROVIDER` | `gemini` or `anthropic`. Defaults to `gemini`. |
+| `LLM_PROVIDER` | `gemini`, `anthropic`, or `openrouter`. Defaults to `gemini`. |
 | `GEMINI_MODEL` | Default Gemini model. Defaults to `gemini-2.5-flash`. |
 | `GEMINI_FALLBACK_MODEL` | Fallback Gemini model. Defaults to `gemini-2.5-pro`. |
 | `ANTHROPIC_MODEL` | Default Anthropic model. Defaults to `claude-sonnet-4-6`. |
 | `ANTHROPIC_FALLBACK_MODEL` | Fallback Anthropic model. Defaults to `claude-haiku-4-5-20251001`. |
+| `OPENROUTER_MODEL` | Default OpenRouter model. Defaults to `openai/gpt-4.1-mini`; the current demo setup commonly uses `deepseek/deepseek-v3.2`. |
+| `OPENROUTER_FALLBACK_MODEL` | Fallback OpenRouter model. Defaults to `openai/gpt-4.1`; the current demo setup commonly uses `deepseek/deepseek-v3.2`. |
+| `OPENROUTER_BASE_URL` | OpenRouter API base URL. Defaults to `https://openrouter.ai/api/v1`. |
 | `PLACE_SERVICE_TIMEOUT_SEC` | Timeout for Place Data Service requests. Defaults to `3`. |
 | `ROUTE_PROVIDER` | `google_maps` or `fallback`. Defaults to `google_maps`. |
 | `ROUTE_SERVICE_TIMEOUT_SEC` | Timeout for Google Maps route requests. Defaults to `3`. |
@@ -201,7 +219,7 @@ LOG_LEVEL=INFO
 
 ## Testing
 
-The test suite runs through `pytest`, while most individual tests are written in `unittest` style. Because the repo is not currently installed as a package, add the repo root to `PYTHONPATH` when running tests:
+The test suite runs through `pytest`, while most individual tests are written in `unittest` style. The current suite has 110 passing tests. Because the repo is not currently installed as a package, add the repo root to `PYTHONPATH` when running tests:
 
 ```bash
 PYTHONPATH=. .venv/bin/pytest -q
@@ -243,7 +261,7 @@ app/
   orchestration/             Intent, preference, language, and slot parsing
   session/                   In-memory session models, store, manager, TTL sweeper
   tools/                     Place Data Service and route adapters, tool registry
-  llm/                       Gemini / Anthropic wrapper
+  llm/                       Gemini / Anthropic / OpenRouter wrapper
   core/                      Settings and logging
 tests/                       Pytest test suite
 specs/003-agent-orchestration-backend/

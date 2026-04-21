@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import unittest
+from unittest.mock import AsyncMock
 
 from app.chat.itinerary_builder import ItineraryBuilder
 from app.chat.replanner import Replanner
@@ -102,7 +103,7 @@ class ReplannerTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_replace_preserves_untouched_stops_and_legs(self) -> None:
         itinerary = build_itinerary()
-        request = self.replanner.parse_request("換掉第二站", itinerary)
+        request = await self.replanner.parse_request("換掉第二站", itinerary)
 
         result = await self.replanner.apply(
             current_itinerary=itinerary,
@@ -120,14 +121,14 @@ class ReplannerTests(unittest.IsolatedAsyncioTestCase):
     async def test_insert_and_remove_keep_dense_ordering(self) -> None:
         itinerary = build_itinerary()
 
-        insert_request = self.replanner.parse_request("在第二站後面加一個咖啡廳", itinerary)
+        insert_request = await self.replanner.parse_request("在第二站後面加一個咖啡廳", itinerary)
         inserted = await self.replanner.apply(
             current_itinerary=itinerary,
             request=insert_request,
             preferences=Preferences(language="zh-TW"),
             replacement_place=build_place(10, "Inserted Cafe"),
         )
-        remove_request = self.replanner.parse_request("刪掉最後一站", inserted.itinerary)
+        remove_request = await self.replanner.parse_request("刪掉最後一站", inserted.itinerary)
         removed = await self.replanner.apply(
             current_itinerary=inserted.itinerary,
             request=remove_request,
@@ -150,7 +151,7 @@ class ReplannerTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_remove_recomputes_arrival_times_for_downstream_stops(self) -> None:
         itinerary = build_itinerary()
-        request = self.replanner.parse_request("刪掉第一站", itinerary)
+        request = await self.replanner.parse_request("刪掉第一站", itinerary)
 
         result = await self.replanner.apply(
             current_itinerary=itinerary,
@@ -169,7 +170,7 @@ class ReplannerTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_insert_recomputes_arrival_times_for_later_stops(self) -> None:
         itinerary = build_itinerary()
-        request = self.replanner.parse_request("在第二站後面加一個咖啡廳", itinerary)
+        request = await self.replanner.parse_request("在第二站後面加一個咖啡廳", itinerary)
 
         result = await self.replanner.apply(
             current_itinerary=itinerary,
@@ -183,3 +184,31 @@ class ReplannerTests(unittest.IsolatedAsyncioTestCase):
             ["10:00", "11:10", "12:19", "13:43"],
         )
         self.assertEqual(result.itinerary.stops[3].venue_id, 3)
+
+    async def test_llm_fallback_parses_ambiguous_replace_request(self) -> None:
+        itinerary = build_itinerary()
+        self.replanner._client.generate_json = AsyncMock(
+            return_value={
+                "operation": "replace",
+                "target_index": 1,
+                "insert_index": None,
+                "needs_clarification": False,
+                "missing_fields": [],
+            }
+        )
+
+        request = await self.replanner.parse_request("把第二個點換成咖啡廳", itinerary)
+
+        self.assertEqual(request.operation, "replace")
+        self.assertEqual(request.target_index, 1)
+        self.assertFalse(request.needs_clarification)
+        self.replanner._client.generate_json.assert_awaited_once()
+
+    async def test_unclear_llm_fallback_returns_stop_index_clarification(self) -> None:
+        itinerary = build_itinerary()
+        self.replanner._client.generate_json = AsyncMock(side_effect=RuntimeError("boom"))
+
+        request = await self.replanner.parse_request("幫我改一下行程", itinerary)
+
+        self.assertTrue(request.needs_clarification)
+        self.assertEqual(request.missing_fields, ["stop_index"])

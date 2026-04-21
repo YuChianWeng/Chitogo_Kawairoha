@@ -47,6 +47,56 @@ class PreferenceExtractorTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(delta.language, "zh-TW")
         extractor._client.generate_json.assert_awaited_once()
 
+    async def test_invalid_district_is_cleared(self) -> None:
+        extractor = PreferenceExtractor()
+        extractor._client.generate_json = AsyncMock(
+            return_value={
+                "district": "板橋區",
+                "language": "zh-TW",
+            }
+        )
+
+        delta = await extractor.extract("我想去板橋區逛逛", Preferences())
+
+        self.assertIsNone(delta.district)
+        self.assertEqual(delta.language, "zh-TW")
+
+    async def test_preference_extractor_normalizes_raw_llm_values(self) -> None:
+        extractor = PreferenceExtractor()
+        extractor._client.generate_json = AsyncMock(
+            return_value={
+                "companions": ["朋友"],
+                "budget_level": "中等",
+                "transport_mode": ["捷運"],
+                "interest_tags": ["咖啡廳"],
+                "avoid_tags": None,
+                "district": None,
+                "origin": None,
+            }
+        )
+
+        delta = await extractor.extract(
+            "我想從大安區出發，今天下午帶朋友去咖啡廳逛逛，預算中等",
+            Preferences(),
+        )
+
+        self.assertEqual(delta.companions, "friends")
+        self.assertEqual(delta.budget_level, "mid")
+        self.assertEqual(delta.transport_mode, "transit")
+        self.assertEqual(delta.interest_tags, ["cafes"])
+        self.assertEqual(delta.avoid_tags, [])
+        self.assertEqual(delta.district, "大安區")
+        self.assertEqual(delta.origin, "大安區")
+
+    async def test_llm_failure_returns_language_only_preferences(self) -> None:
+        extractor = PreferenceExtractor()
+        extractor._client.generate_json = AsyncMock(side_effect=RuntimeError("boom"))
+
+        delta = await extractor.extract("今晚想去咖啡廳", Preferences())
+
+        self.assertEqual(delta.language, "zh-TW")
+        self.assertEqual(delta.model_fields_set, {"language"})
+
 
 class DistrictDetectionTests(unittest.TestCase):
     def test_valid_district_extracted_from_complex_sentence(self) -> None:

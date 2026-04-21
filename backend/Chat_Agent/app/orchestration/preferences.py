@@ -5,88 +5,116 @@ from typing import Any
 
 from app.llm.client import LLMClient, llm_client
 from app.orchestration.language import detect_language_hint
-from app.session.models import Preferences, TimeWindow
+from app.session.models import Preferences
 
-_TIME_RANGE_PATTERN = re.compile(r"(\d{1,2}:\d{2})\s*(?:-|~|to)\s*(\d{1,2}:\d{2})", re.IGNORECASE)
 _DISTRICT_PATTERN = re.compile(r"([\u4e00-\u9fff]{2,3}區)")
-_VALID_DISTRICTS = frozenset({
-    "中山區", "大安區", "中正區", "士林區", "信義區", "內湖區",
-    "萬華區", "北投區", "大同區", "南港區", "文山區", "松山區",
-})
-_ORIGIN_ZH_PATTERN = re.compile(r"從\s*([^，。,.!?！？\s]+(?:站|車站|捷運站|商圈|夜市|公園|區)?)\s*出發")
-_ORIGIN_EN_PATTERN = re.compile(
-    r"\bfrom\s+([A-Za-z][A-Za-z0-9\s\-]{1,40}?)(?=(?:\s+(?:for|with|by|at|tonight|tomorrow|this|around)\b)|[,.!?]|$)",
-    re.IGNORECASE,
+_DISTRICT_DEPARTURE_PATTERN = re.compile(r"從\s*([\u4e00-\u9fff]{2,3}區)\s*出發")
+_VALID_DISTRICTS = frozenset(
+    {
+        "中山區",
+        "大安區",
+        "中正區",
+        "士林區",
+        "信義區",
+        "內湖區",
+        "萬華區",
+        "北投區",
+        "大同區",
+        "南港區",
+        "文山區",
+        "松山區",
+    }
 )
-
-_INTEREST_TAG_KEYWORDS = {
-    "cafes": ["cafe", "cafes", "coffee", "咖啡", "咖啡廳"],
-    "museums": ["museum", "museums", "博物館", "美術館"],
-    "night-market": ["night market", "night markets", "夜市"],
-    "food": ["food", "eat", "restaurant", "美食", "吃", "餐廳"],
-    "shopping": ["shopping", "shop", "逛街", "購物"],
-    "temples": ["temple", "temples", "寺", "廟"],
-    "nature": ["nature", "park", "parks", "trail", "公園", "步道", "自然"],
+_COMPANION_ALIASES = {
+    "solo": "solo",
+    "one": "solo",
+    "alone": "solo",
+    "自己": "solo",
+    "一個人": "solo",
+    "date": "date",
+    "dating": "date",
+    "couple": "date",
+    "約會": "date",
+    "情侶": "date",
+    "family": "family",
+    "families": "family",
+    "家人": "family",
+    "家庭": "family",
+    "親子": "family",
+    "friends": "friends",
+    "friend": "friends",
+    "朋友": "friends",
+    "朋友們": "friends",
 }
-_AVOID_PREFIXES = ("avoid", "no ", "skip", "不要", "避開", "別去", "不想")
-
-
-def _normalize_time(value: str) -> str:
-    hour_str, minute_str = value.split(":")
-    return f"{int(hour_str):02d}:{minute_str}"
-
-
-def _detect_companions(message_lower: str) -> str | None:
-    if any(token in message_lower for token in ("solo", "myself", "一個人", "自己")):
-        return "solo"
-    if any(token in message_lower for token in ("date", "dating", "約會", "情侶")):
-        return "date"
-    if any(token in message_lower for token in ("family", "kids", "親子", "家庭")):
-        return "family"
-    if any(token in message_lower for token in ("friends", "friend", "朋友")):
-        return "friends"
-    return None
-
-
-def _detect_budget_level(message_lower: str) -> str | None:
-    if any(token in message_lower for token in ("cheap", "budget", "省錢", "便宜", "平價")):
-        return "budget"
-    if any(token in message_lower for token in ("luxury", "high-end", "奢華", "高級")):
-        return "luxury"
-    if any(token in message_lower for token in ("mid-range", "moderate", "中等", "一般")):
-        return "mid"
-    return None
-
-
-def _detect_transport_mode(message_lower: str) -> str | None:
-    if any(token in message_lower for token in ("mrt", "metro", "transit", "public transport", "捷運", "公車", "大眾運輸")):
-        return "transit"
-    if any(token in message_lower for token in ("walk", "walking", "步行")):
-        return "walk"
-    if any(token in message_lower for token in ("uber", "taxi", "計程車")):
-        return "taxi"
-    if any(token in message_lower for token in ("drive", "driving", "car", "開車")):
-        return "drive"
-    return None
-
-
-def _detect_indoor_preference(message_lower: str) -> bool | None:
-    if any(token in message_lower for token in ("indoor", "inside", "室內", "下雨")):
-        return True
-    if any(token in message_lower for token in ("outdoor", "outside", "戶外")):
-        return False
-    return None
-
-
-def _detect_origin(message: str) -> str | None:
-    zh_match = _ORIGIN_ZH_PATTERN.search(message)
-    if zh_match:
-        return zh_match.group(1).strip()
-
-    en_match = _ORIGIN_EN_PATTERN.search(message)
-    if en_match:
-        return en_match.group(1).strip()
-    return None
+_BUDGET_ALIASES = {
+    "budget": "budget",
+    "cheap": "budget",
+    "affordable": "budget",
+    "low": "budget",
+    "便宜": "budget",
+    "省錢": "budget",
+    "平價": "budget",
+    "mid": "mid",
+    "moderate": "mid",
+    "medium": "mid",
+    "中等": "mid",
+    "中價": "mid",
+    "普通": "mid",
+    "luxury": "luxury",
+    "premium": "luxury",
+    "expensive": "luxury",
+    "高級": "luxury",
+    "高檔": "luxury",
+}
+_TRANSPORT_ALIASES = {
+    "transit": "transit",
+    "public transit": "transit",
+    "public_transport": "transit",
+    "metro": "transit",
+    "subway": "transit",
+    "train": "transit",
+    "bus": "transit",
+    "捷運": "transit",
+    "大眾運輸": "transit",
+    "公車": "transit",
+    "walk": "walk",
+    "walking": "walk",
+    "步行": "walk",
+    "走路": "walk",
+    "taxi": "taxi",
+    "cab": "taxi",
+    "計程車": "taxi",
+    "drive": "drive",
+    "driving": "drive",
+    "car": "drive",
+    "開車": "drive",
+}
+_INTEREST_TAG_ALIASES = {
+    "cafes": "cafes",
+    "cafe": "cafes",
+    "coffee": "cafes",
+    "咖啡": "cafes",
+    "咖啡廳": "cafes",
+    "museums": "museums",
+    "museum": "museums",
+    "博物館": "museums",
+    "night-market": "night-market",
+    "night market": "night-market",
+    "夜市": "night-market",
+    "food": "food",
+    "美食": "food",
+    "餐廳": "food",
+    "shopping": "shopping",
+    "shop": "shopping",
+    "購物": "shopping",
+    "temples": "temples",
+    "temple": "temples",
+    "寺廟": "temples",
+    "nature": "nature",
+    "park": "nature",
+    "自然": "nature",
+    "公園": "nature",
+}
 
 
 def _detect_district(message: str) -> str | None:
@@ -95,91 +123,89 @@ def _detect_district(message: str) -> str | None:
         district = match.group(1)
         for prefix in ("從", "想去", "去", "到", "在"):
             if district.startswith(prefix) and district.endswith("區"):
-                district = district[len(prefix):]
+                district = district[len(prefix) :]
                 break
         if district in _VALID_DISTRICTS:
             return district
     return None
 
 
-def _detect_time_window(message_lower: str) -> TimeWindow | None:
-    range_match = _TIME_RANGE_PATTERN.search(message_lower)
-    if range_match:
-        return TimeWindow(
-            start_time=_normalize_time(range_match.group(1)),
-            end_time=_normalize_time(range_match.group(2)),
-        )
+def _detect_departure_origin(message: str) -> str | None:
+    match = _DISTRICT_DEPARTURE_PATTERN.search(message)
+    if not match:
+        return None
+    district = match.group(1)
+    return district if district in _VALID_DISTRICTS else None
 
-    if "今晚" in message_lower or "tonight" in message_lower:
-        return TimeWindow(start_time="18:00", end_time="23:00")
-    if "早上" in message_lower or "morning" in message_lower:
-        return TimeWindow(start_time="09:00", end_time="12:00")
-    if "下午" in message_lower or "afternoon" in message_lower:
-        return TimeWindow(start_time="13:00", end_time="17:00")
+
+def _coerce_first_string(value: object) -> str | None:
+    if isinstance(value, str):
+        stripped = value.strip()
+        return stripped or None
+    if isinstance(value, list):
+        for item in value:
+            if isinstance(item, str) and item.strip():
+                return item.strip()
     return None
 
 
-def _collect_tags(message_lower: str, *, avoid: bool) -> list[str]:
-    tags: list[str] = []
-    for tag, keywords in _INTEREST_TAG_KEYWORDS.items():
-        has_keyword = any(keyword in message_lower for keyword in keywords)
-        if not has_keyword:
+def _normalize_alias(value: object, aliases: dict[str, str]) -> str | None:
+    normalized = _coerce_first_string(value)
+    if normalized is None:
+        return None
+    return aliases.get(normalized.casefold(), aliases.get(normalized, normalized))
+
+
+def _normalize_tag_list(value: object) -> list[str]:
+    if value is None:
+        return []
+    raw_items = value if isinstance(value, list) else [value]
+    normalized: list[str] = []
+    for item in raw_items:
+        if not isinstance(item, str):
             continue
-        if avoid:
-            if any(prefix in message_lower for prefix in _AVOID_PREFIXES):
-                tags.append(tag)
-        else:
-            tags.append(tag)
-    return list(dict.fromkeys(tags))
+        stripped = item.strip()
+        if not stripped:
+            continue
+        normalized_tag = _INTEREST_TAG_ALIASES.get(stripped.casefold(), _INTEREST_TAG_ALIASES.get(stripped))
+        if normalized_tag is None:
+            continue
+        if normalized_tag not in normalized:
+            normalized.append(normalized_tag)
+    return normalized
 
 
-def extract_preferences_from_text(message: str) -> Preferences:
-    """Deterministically extract obvious preference deltas from text."""
-    message_lower = message.lower()
-    delta: dict[str, Any] = {}
+def _normalize_preference_payload(message: str, payload: dict[str, Any]) -> dict[str, Any]:
+    normalized = dict(payload)
+    for field_name in ("origin", "district", "language"):
+        if field_name in normalized:
+            normalized[field_name] = _coerce_first_string(normalized[field_name])
 
-    companions = _detect_companions(message_lower)
-    if companions is not None:
-        delta["companions"] = companions
+    for field_name, aliases in (
+        ("companions", _COMPANION_ALIASES),
+        ("budget_level", _BUDGET_ALIASES),
+        ("transport_mode", _TRANSPORT_ALIASES),
+    ):
+        if field_name in normalized:
+            normalized[field_name] = _normalize_alias(normalized[field_name], aliases)
 
-    budget_level = _detect_budget_level(message_lower)
-    if budget_level is not None:
-        delta["budget_level"] = budget_level
+    for field_name in ("interest_tags", "avoid_tags"):
+        if field_name in normalized:
+            normalized[field_name] = _normalize_tag_list(normalized[field_name])
 
-    transport_mode = _detect_transport_mode(message_lower)
-    if transport_mode is not None:
-        delta["transport_mode"] = transport_mode
+    detected_district = _detect_district(message)
+    if normalized.get("district") not in _VALID_DISTRICTS:
+        normalized["district"] = detected_district
 
-    indoor_preference = _detect_indoor_preference(message_lower)
-    if indoor_preference is not None:
-        delta["indoor_preference"] = indoor_preference
+    if not normalized.get("origin"):
+        normalized["origin"] = _detect_departure_origin(message)
 
-    origin = _detect_origin(message)
-    if origin is not None:
-        delta["origin"] = origin
-
-    district = _detect_district(message)
-    if district is not None:
-        delta["district"] = district
-
-    time_window = _detect_time_window(message_lower)
-    if time_window is not None:
-        delta["time_window"] = time_window.model_dump(exclude_none=True)
-
-    interest_tags = _collect_tags(message_lower, avoid=False)
-    if interest_tags:
-        delta["interest_tags"] = interest_tags
-
-    avoid_tags = _collect_tags(message_lower, avoid=True)
-    if avoid_tags:
-        delta["avoid_tags"] = avoid_tags
-
-    delta["language"] = detect_language_hint(message)
-    return Preferences.model_validate(delta)
+    return normalized
 
 
 def combine_preference_deltas(*deltas: Preferences) -> Preferences:
     """Combine multiple preference deltas without wiping omitted fields."""
+
     merged: dict[str, Any] = {}
     for delta in deltas:
         for field_name in delta.model_fields_set:
@@ -212,14 +238,20 @@ def build_preference_extraction_prompt(
         if current_preferences
         else {}
     )
-    valid_districts = ", ".join(sorted(_VALID_DISTRICTS))
     return (
         "Extract only the new or corrected user preference fields from the latest message.\n"
-        "Return a single JSON object using only these keys when explicitly mentioned: "
+        "Return a single strict JSON object using only these keys when explicitly mentioned or corrected: "
         "companions, budget_level, transport_mode, indoor_preference, origin, district, "
         "time_window, interest_tags, avoid_tags, language.\n"
         "Do not invent missing fields. Prefer concise normalized values.\n"
-        f"Valid districts (use exactly as written, or null if not mentioned): {valid_districts}\n"
+        "Valid districts: 中山區, 大安區, 中正區, 士林區, 信義區, 內湖區, 萬華區, 北投區, 大同區, 南港區, 文山區, 松山區. "
+        "district must be exactly one of these or null.\n"
+        'Valid companions values: "solo", "date", "family", "friends".\n'
+        'Valid budget_level values: "budget", "mid", "luxury".\n'
+        'Valid transport_mode values: "transit", "walk", "taxi", "drive".\n'
+        'Valid interest_tags values: "cafes", "museums", "night-market", "food", "shopping", "temples", "nature".\n'
+        'time_window format: {"start_time": "HH:MM", "end_time": "HH:MM"}.\n'
+        "Return JSON only, without markdown.\n"
         f"Language hint: {language_hint}\n"
         f"Current preferences: {current_payload}\n"
         f"Latest message: {message}"
@@ -237,35 +269,38 @@ class PreferenceExtractor:
         message: str,
         current_preferences: Preferences | None = None,
     ) -> Preferences:
-        heuristic_delta = extract_preferences_from_text(message)
-        llm_delta = await self._extract_with_llm(message, current_preferences)
-        return combine_preference_deltas(llm_delta, heuristic_delta)
+        return await self._extract_with_llm(message, current_preferences)
 
     async def _extract_with_llm(
         self,
         message: str,
         current_preferences: Preferences | None,
     ) -> Preferences:
+        language_hint = detect_language_hint(message)
         prompt = build_preference_extraction_prompt(
             message=message,
             current_preferences=current_preferences,
-            language_hint=detect_language_hint(message),
+            language_hint=language_hint,
         )
         try:
-            payload = await self._client.generate_json(
-                prompt,
-                model=self._client.default_model,
-            )
+            payload = await self._client.generate_json(prompt)
         except Exception:
-            return Preferences()
-        if not isinstance(payload, dict):
-            return Preferences()
-        return Preferences.model_validate(payload)
+            return Preferences(language=language_hint)
+
+        try:
+            if not isinstance(payload, dict):
+                raise TypeError("preference payload must be an object")
+            normalized_payload = _normalize_preference_payload(message, payload)
+            if normalized_payload.get("district") not in {None, *_VALID_DISTRICTS}:
+                normalized_payload["district"] = None
+            normalized_payload.setdefault("language", language_hint)
+            return Preferences.model_validate(normalized_payload)
+        except Exception:
+            return Preferences(language=language_hint)
 
 
 __all__ = [
     "PreferenceExtractor",
     "build_preference_extraction_prompt",
     "combine_preference_deltas",
-    "extract_preferences_from_text",
 ]

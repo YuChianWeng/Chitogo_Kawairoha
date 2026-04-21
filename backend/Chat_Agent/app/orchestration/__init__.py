@@ -1,6 +1,6 @@
 """Planner and orchestration support modules."""
 
-from app.orchestration.classifier import IntentClassifier, RuleBasedClassifier
+from app.orchestration.classifier import IntentClassifier
 from app.orchestration.intents import Intent
 from app.orchestration.language import detect_language_hint
 from app.orchestration.preferences import PreferenceExtractor
@@ -11,7 +11,6 @@ __all__ = [
     "Intent",
     "IntentClassifier",
     "PreferenceExtractor",
-    "RuleBasedClassifier",
     "detect_language_hint",
     "extract_stop_index",
 ]
