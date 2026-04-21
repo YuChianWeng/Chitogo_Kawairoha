@@ -6,6 +6,7 @@ from typing import Any
 from app.llm.client import LLMClient, llm_client
 from app.orchestration.intents import Intent
 from app.orchestration.preferences import extract_preferences_from_text
+from app.session.models import Preferences
 from app.orchestration.slots import (
     ChatGeneralSlots,
     ClassifierResult,
@@ -71,6 +72,25 @@ def _detect_missing_generate_info(message: str, slots: GenerateItinerarySlots) -
     if not has_context:
         missing_fields.append("context")
     return missing_fields if len(missing_fields) >= 2 else []
+
+
+def detect_missing_generate_fields(
+    message: str,
+    preferences: Preferences,
+) -> list[str]:
+    return _detect_missing_generate_info(
+        message,
+        GenerateItinerarySlots(
+            origin=preferences.origin,
+            district=preferences.district,
+            time_window=preferences.time_window,
+            companions=preferences.companions,
+            budget_level=preferences.budget_level,
+            transport_mode=preferences.transport_mode,
+            interest_tags=list(preferences.interest_tags),
+            avoid_tags=list(preferences.avoid_tags),
+        ),
+    )
 
 
 class RuleBasedClassifier:
@@ -209,4 +229,5 @@ __all__ = [
     "IntentClassifier",
     "RuleBasedClassifier",
     "build_classifier_prompt",
+    "detect_missing_generate_fields",
 ]

@@ -88,7 +88,12 @@ def _detect_origin(message: str) -> str | None:
 def _detect_district(message: str) -> str | None:
     match = _DISTRICT_PATTERN.search(message)
     if match:
-        return match.group(1)
+        district = match.group(1)
+        for prefix in ("想去", "去", "到", "在"):
+            if district.startswith(prefix) and district.endswith("區"):
+                district = district[len(prefix) :]
+                break
+        return district
     return None
 
 

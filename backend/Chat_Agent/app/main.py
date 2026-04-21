@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1 import router as v1_router
+from app.chat.message_handler import MessageHandler
 from app.core.config import Settings, get_settings
 from app.session.manager import session_manager
 from app.session.store import session_store
@@ -56,6 +57,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.place_tool_adapter = place_tool_adapter
     app.state.route_tool_adapter = route_tool_adapter
     app.state.tool_registry = tool_registry
+    app.state.message_handler = MessageHandler()
     app.state.ttl_sweeper_task = None
     return app
 
