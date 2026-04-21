@@ -45,7 +45,7 @@ HF_ENDPOINT_URL=your_actual_endpoint_url
 * Example Request (curl):
 
 ```Bash
-curl -X POST "[http://127.0.0.1:8000/api/v1/transcribe](http://127.0.0.1:8000/api/v1/transcribe)" \
+curl -X POST "(http://127.0.0.1:8000/api/v1/transcribe](http://127.0.0.1:8000/api/v1/transcribe)" \
   -H "accept: application/json" \
   -H "Content-Type: multipart/form-data" \
   -F "file=@audio_sample.wav"
