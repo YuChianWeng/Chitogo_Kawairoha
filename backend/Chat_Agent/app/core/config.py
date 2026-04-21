@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     host: str = Field(..., min_length=1)
     port: int = Field(..., ge=1, le=65535)
     data_service_base_url: AnyHttpUrl
+    place_service_timeout_sec: int = Field(default=3, ge=1)
     llm_provider: Literal["gemini", "anthropic"] = "gemini"
     gemini_api_key: str | None = None
     gemini_model: str = Field(default="gemini-2.5-flash", min_length=1)
@@ -26,6 +27,8 @@ class Settings(BaseSettings):
         min_length=1,
     )
     google_maps_api_key: str = Field(..., min_length=1)
+    route_provider: Literal["google_maps", "fallback"] = "google_maps"
+    route_service_timeout_sec: int = Field(default=3, ge=1)
     cors_allow_origins_raw: str = Field(
         ...,
         alias="CORS_ALLOW_ORIGINS",
@@ -53,6 +56,10 @@ class Settings(BaseSettings):
             for item in self.cors_allow_origins_raw.split(",")
             if item and item.strip()
         ]
+
+    @property
+    def place_service_base_url(self) -> str:
+        return str(self.data_service_base_url).rstrip("/")
 
     @field_validator("cors_allow_origins_raw")
     @classmethod

@@ -23,6 +23,18 @@ GEMINI_FALLBACK_MODEL=gemini-2.5-pro
 
 Anthropic remains available as optional compatibility for later phases by setting `LLM_PROVIDER=anthropic` and providing `ANTHROPIC_API_KEY`.
 
+Phase 4 adds typed external tool adapters:
+- `PlaceToolAdapter` wraps the retrieval service at `DATA_SERVICE_BASE_URL`
+- `RouteToolAdapter` uses Google Maps when available and falls back to haversine estimates
+
+Optional adapter settings:
+
+```env
+PLACE_SERVICE_TIMEOUT_SEC=3
+ROUTE_PROVIDER=google_maps
+ROUTE_SERVICE_TIMEOUT_SEC=3
+```
+
 ## Tests
 
 ```bash

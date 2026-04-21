@@ -11,6 +11,9 @@ from app.core.config import Settings, get_settings
 from app.session.manager import session_manager
 from app.session.store import session_store
 from app.session.sweeper import stop_ttl_sweeper, ttl_sweeper_loop
+from app.tools.place_adapter import place_tool_adapter
+from app.tools.registry import tool_registry
+from app.tools.route_adapter import route_tool_adapter
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -50,6 +53,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.settings = app_settings
     app.state.session_store = session_store
     app.state.session_manager = session_manager
+    app.state.place_tool_adapter = place_tool_adapter
+    app.state.route_tool_adapter = route_tool_adapter
+    app.state.tool_registry = tool_registry
     app.state.ttl_sweeper_task = None
     return app
 
