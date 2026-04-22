@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from contextlib import nullcontext
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
@@ -151,16 +152,25 @@ class ItineraryBuilder:
             else nullcontext()
         )
         with step_context as trace_step:
-            estimated_legs: list[EstimatedLeg] = []
-            for index in range(len(stops) - 1):
-                estimated_legs.append(
-                    await self.estimate_leg(
-                        from_stop=stops[index],
-                        to_stop=stops[index + 1],
+            semaphore = asyncio.Semaphore(5)
+
+            async def _bounded_leg(from_stop: Stop, to_stop: Stop) -> EstimatedLeg:
+                async with semaphore:
+                    return await self.estimate_leg(
+                        from_stop=from_stop,
+                        to_stop=to_stop,
                         preferences=preferences,
                         trace_recorder=trace_recorder,
                     )
+
+            estimated_legs: list[EstimatedLeg] = list(
+                await asyncio.gather(
+                    *[
+                        _bounded_leg(stops[i], stops[i + 1])
+                        for i in range(len(stops) - 1)
+                    ]
                 )
+            )
             routing_status = self.routing_status_for(
                 [item.route_status for item in estimated_legs]
             )

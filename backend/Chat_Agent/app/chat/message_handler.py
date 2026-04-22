@@ -100,15 +100,17 @@ class MessageHandler:
                     )
                     step.success()
 
-                classifier_result = await self._classify_request(
-                    request=request,
-                    session=session,
-                    recorder=recorder,
-                )
-                preference_delta = await self._extract_preferences(
-                    request=request,
-                    session=session,
-                    recorder=recorder,
+                classifier_result, preference_delta = await asyncio.gather(
+                    self._classify_request(
+                        request=request,
+                        session=session,
+                        recorder=recorder,
+                    ),
+                    self._extract_preferences(
+                        request=request,
+                        session=session,
+                        recorder=recorder,
+                    ),
                 )
                 session = await self._merge_preferences(
                     session_id=session_id,
