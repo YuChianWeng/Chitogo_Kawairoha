@@ -1,20 +1,13 @@
 import axios from 'axios'
-import type { ItineraryRequest, ItineraryResponse } from '../types/itinerary'
+import type { ChatRequest, ChatResponse } from '../types/itinerary'
 
 const client = axios.create({
   baseURL: '/api/v1',
   headers: { 'Content-Type': 'application/json' },
-  timeout: 10000,
+  timeout: 60000,
 })
 
-export async function generateItinerary(
-  request: ItineraryRequest,
-): Promise<ItineraryResponse> {
-  const { data } = await client.post<ItineraryResponse>('/itinerary', request)
-  return data
-}
-
-export async function checkHealth(): Promise<{ status: string; version: string }> {
-  const { data } = await client.get('/health')
+export async function sendMessage(request: ChatRequest): Promise<ChatResponse> {
+  const { data } = await client.post<ChatResponse>('/chat/message', request)
   return data
 }

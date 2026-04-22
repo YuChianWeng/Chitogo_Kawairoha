@@ -1,44 +1,55 @@
-export interface ItineraryStop {
-  order: number
-  venue_id: string
+export interface ChatRequest {
+  message: string
+  session_id?: string
+  user_context?: { lat: number; lng: number } | null
+}
+
+export interface ChatCandidate {
+  place_id: string | number
   name: string
-  district: string
-  category: string
-  address: string
-  lat: number
-  lng: number
-  suggested_start: string
-  suggested_end: string
-  duration_minutes: number
-  travel_minutes_from_prev: number
-  reason: string
-  tags: string[]
-  cost_level: 'low' | 'medium' | 'high'
-  indoor: boolean
+  district?: string
+  category?: string
+  rating?: number
+  budget_level?: string
+  why_recommended?: string
 }
 
-export interface ItineraryResponse {
-  status: string
-  district: string
-  date: string
-  weather_condition: string
+export interface ItineraryLeg {
+  from_stop: number
+  to_stop: number
+  transit_method: string
+  duration_min: number
+}
+
+export interface ItineraryStop {
+  stop_index: number
+  venue_name: string
+  category?: string
+  arrival_time?: string
+  visit_duration_min?: number
+  lat?: number
+  lng?: number
+}
+
+export interface Itinerary {
+  summary?: string
+  total_duration_min?: number
   stops: ItineraryStop[]
-  total_stops: number
-  total_duration_minutes: number
+  legs: ItineraryLeg[]
 }
 
-export interface ItineraryRequest {
-  district: string
-  start_time: string
-  end_time: string
-  interests: string[]
-  budget: 'low' | 'medium' | 'high'
-  companion: 'solo' | 'couple' | 'family' | 'friends'
-  indoor_pref: 'indoor' | 'outdoor' | 'both'
+export interface ChatResponse {
+  session_id: string
+  turn_id: string
+  intent: 'GENERATE_ITINERARY' | 'REPLAN' | 'EXPLAIN' | 'CHAT_GENERAL'
+  needs_clarification: boolean
+  message: string
+  itinerary?: Itinerary | null
+  candidates: ChatCandidate[]
+  routing_status?: 'full' | 'partial_fallback' | 'failed' | null
 }
 
 export interface ApiError {
-  status: 'error'
-  code: string
-  message: string
+  error: string
+  detail?: string
 }
