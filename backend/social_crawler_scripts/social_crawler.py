@@ -3,28 +3,26 @@ import json
 import time
 import warnings
 import os
-
+import pandas as pd
 from dotenv import load_dotenv
 from apify_client import ApifyClient
-import google.generativeai as genai
+from openai import OpenAI
 
 
 warnings.filterwarnings("ignore")
 load_dotenv()
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DB_PATH = os.path.join(BASE_DIR, 'app', 'data', 'taipei_spots.db')
-
-GOOGLE_API_KEY = os.getenv("GEMINI_API_KEY")
-genai.configure(api_key=GOOGLE_API_KEY)
-model = genai.GenerativeModel('gemini-2.5-flash')
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+client_ai = OpenAI(
+    base_url="https://api.groq.com/openai/v1",
+    api_key=GROQ_API_KEY
+)
 
 APIFY_API_KEY = os.getenv("APIFY_API_KEY")
 client = ApifyClient(APIFY_API_KEY)
 
-
 # Connect SQLite 
-conn = sqlite3.connect(DB_PATH)
+conn = sqlite3.connect('taipei_spots.db')
 cursor = conn.cursor()
 
 cursor.execute('''
@@ -43,19 +41,19 @@ CREATE TABLE IF NOT EXISTS social_trends (
 conn.commit()
 
 # Get threads posts
-def fetch_threads_via_apify(keyword="台北 夜市", max_items=5):
+def fetch_threads_via_apify(keyword, max_items=5):
     print("Acquiring threads data via Apify...")
     
     # Actor setup 
     actor_id = "igview-owner/threads-search-scraper" 
     run_input = {
-        "maxPosts": 20,
-        "searchQuery": "台北 隱藏版",
+        "maxPosts": max_items,
+        "searchQuery": keyword,
         "sort": "top"
     }
     
     try:
-        run = client.actor(actor_id).call(run_input=run_input)
+        run = client.actor(actor_id).call(run_input=run_input, wait_secs=300)
         
         threads_data = []
         for item in client.dataset(run["defaultDatasetId"]).iterate_items():
@@ -82,8 +80,53 @@ def fetch_threads_via_apify(keyword="台北 夜市", max_items=5):
     return threads_data
 
 
+# Get threads comments
+def fetch_threads_comments_via_apify(post_url, max_items=5):
+    print("Acquiring threads data via Apify...")
+    
+    # Actor setup 
+    actor_id = "futurizerush/threads-replies-scraper"
+    run_input = {
+         "max_replies": 5,
+         #"before": "2025-7-15",
+        "post_urls": [
+        {
+            "url": post_url
+        }
+    ]
+}
+    try:
+        run = client.actor(actor_id).call(run_input=run_input)
+        
+        threads_data = []
+        for item in client.dataset(run["defaultDatasetId"]).iterate_items():
+            if item.get("original_post") != "comment":
+                continue
+            text_content = item.get("text_content", "")
+            url_link = item.get("reply_url", "")
+            
+            #[debug] output
+            print("commentCaption:", text_content)
+            print("URL:", url_link)
+            print("-" * 30)
+
+            if text_content:
+                threads_data.append({
+                    "platform": "Threads_comment",
+                    "content": text_content,
+                    "link": url_link
+                })
+
+    except Exception as e:
+        print(f"Apify failure: {e}")
+        return []
+    
+    print(f"Acquired {len(threads_data)} items.")
+    return threads_data
+
+
 # Get instagram posts
-def fetch_instagram_via_apify(keyword="台北 夜市", max_items=5):
+def fetch_instagram_via_apify(keyword, max_items=5):
     print("Acquiring instagram data via Apify...")
     
     # Actor setup 
@@ -91,10 +134,9 @@ def fetch_instagram_via_apify(keyword="台北 夜市", max_items=5):
     run_input = {
         "humanizeBehavior": True,
         "keywords": [
-            "台北隱藏景點",
-            "台北秘境"
+            keyword
         ],
-        "maxPosts": 5
+        "maxPosts": max_items
 }
     
     try:
@@ -106,8 +148,8 @@ def fetch_instagram_via_apify(keyword="台北 夜市", max_items=5):
             url_link = item.get("post_url", "")
             
             #[debug] output
-            print("Caption:", item.get("caption"))
-            print("URL:", item.get("post_url"))
+            print("Caption:", text_content)
+            print("URL:", url_link)
             print("-" * 30)
 
             if text_content:
@@ -125,46 +167,63 @@ def fetch_instagram_via_apify(keyword="台北 夜市", max_items=5):
     return instagram_data
 
 
-
-# Gemini extraction
-def extract_insights_with_gemini(text):
+def extract_insights_with_llm(text):
     prompt = f"""
-Analyze the following social media post and extract the urban pulse information.
-The output must be strictly in JSON format with the following fields:
-- "location": The specific location, venue, or area mentioned (return null if not mentioned).
-- "sentiment_score": A float representing the sentiment score (from -1.0 for highly negative to 1.0 for highly positive).
-- "crowdedness": A float representing the crowdedness index (from 0.0 for completely empty to 1.0 for extremely packed. Use 0.5 if not mentioned).
-- "vibe_tags": An array of strings representing the atmosphere or vibe (e.g., ["noisy", "hipster", "chill"]).
+    Analyze the following social media post and extract urban pulse information.
+
+[STRICT FILTERING RULES]:
+1. "location": Must be a SPECIFIC entity such as a business name, restaurant, tourist attraction, or landmark (e.g., "Taipei 101", "Din Tai Fung", "Daan Forest Park").
+2. DO NOT extract broad areas, districts, or cities (e.g., "Daan District", "Taipei", "East District") as the location.
+3. If no specific business or landmark is mentioned, set "location" to null.
+4. If "location" is null, you may leave other fields with default values.
+
+[OUTPUT FORMAT]:
+Return strictly in JSON format:
+{{
+  "location": "Specific name of the venue or landmark (string, or null if none)",
+  "sentiment_score": "Float between -1.0 (negative) and 1.0 (positive)",
+  "crowdedness": "Float between 0.0 (empty) and 1.0 (packed). Use 0.5 as default",
+  "vibe_tags": ["tag1", "tag2"]
+}}
 
 Post content: "{text}"
-"""
+    """
     try:
-        response = model.generate_content(
-            prompt,
-            generation_config={"response_mime_type": "application/json"}
+        response = client_ai.chat.completions.create(
+            model="llama-3.3-70b-versatile", 
+            messages=[{"role": "user", "content": prompt}],
+            response_format={"type": "json_object"}
         )
-        return json.loads(response.text)
+        return json.loads(response.choices[0].message.content)
     except Exception as e:
-        print(f"Gemini extraction failed: {e}")
+        print(f"Extraction failed: {e}")
         return None
+
+
 
 # Main pipeline
 def run_pipeline():
-    print("Start pipeline...\n")
-    
-    raw_data = fetch_threads_via_apify("台北 隱藏景點", 3)
-    #raw_data += fetch_instagram_via_apify("台北 隱藏景點", 3)
-    
+    print("Start pipeline...\n")    
+
+    # --- get thread and comments ---
+    posts = fetch_threads_via_apify("台北 隱藏景點", 20)
+    post_urls = [p['link'] for p in posts if p.get('link')]
+    comments = fetch_threads_comments_via_apify(post_urls, 5)
+    raw_data = posts + comments
+    # -- - end of get thread and comments ---
+
+    raw_data += fetch_instagram_via_apify("台北 隱藏景點", 20)
+
     for item in raw_data:
         print(f"Handling: {item['content'][:30]}...")
-        insights = extract_insights_with_gemini(item['content'])
+        insights = extract_insights_with_llm(item['content'])
         
         if insights and insights.get('location'):
             tags_str = json.dumps(insights.get('vibe_tags', []), ensure_ascii=False)
             
             # Write to SQLite
             cursor.execute('''
-            INSERT INTO social_trends (platform, location, sentiment_score, crowdedness, vibe_tags, original_text, source_url)
+           INSERT OR IGNORE INTO social_trends (platform, location, sentiment_score, crowdedness, vibe_tags, original_text, source_url)
             VALUES (?, ?, ?, ?, ?, ?, ?)
             ''', (
                 item['platform'], 
@@ -189,7 +248,6 @@ run_pipeline()
 
 # Test print
 print("\nCurrent social trends in database:")
-import pandas as pd
 df = pd.read_sql_query("SELECT * FROM social_trends", conn)
 print(df[['location', 'sentiment_score', 'crowdedness', 'vibe_tags']])
 
