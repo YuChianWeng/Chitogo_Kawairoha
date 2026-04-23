@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from app.chat.schemas import ChatCandidate, RoutingStatus
 from app.orchestration.intents import Intent
 from app.session.models import Itinerary, Preferences
@@ -13,6 +15,66 @@ _TAG_LABELS = {
     "shopping": "shopping",
     "temples": "temples",
     "nature": "nature",
+}
+_RELAXATION_LABELS_ZH = {
+    "dropped_district": "擴大到整個台北",
+    "dropped_primary_type": "放寬類型限制",
+    "dropped_max_budget_level": "不限預算",
+    "dropped_indoor_preference": "不限室內或室外",
+    "dropped_open_now": "不限營業中",
+}
+_RELAXATION_LABELS_EN = {
+    "dropped_district": "broadened the search beyond the original district",
+    "dropped_primary_type": "relaxed the place type",
+    "dropped_max_budget_level": "removed the budget cap",
+    "dropped_indoor_preference": "removed the indoor or outdoor preference",
+    "dropped_open_now": "stopped requiring places that are open right now",
+}
+_PRIMARY_TYPE_LABELS_ZH = {
+    "art_gallery": "美術館",
+    "bakery": "烘焙店",
+    "bar": "酒吧",
+    "cafe": "咖啡廳",
+    "coffee_shop": "咖啡店",
+    "dessert_shop": "甜點店",
+    "department_store": "百貨公司",
+    "hiking_area": "步道",
+    "ice_cream_shop": "冰淇淋店",
+    "japanese_restaurant": "日式餐廳",
+    "market": "市場",
+    "museum": "博物館",
+    "park": "公園",
+    "ramen_restaurant": "拉麵",
+}
+_PRIMARY_TYPE_LABELS_EN = {
+    "art_gallery": "art galleries",
+    "bakery": "bakeries",
+    "bar": "bars",
+    "cafe": "cafes",
+    "coffee_shop": "coffee shops",
+    "dessert_shop": "dessert shops",
+    "department_store": "department stores",
+    "hiking_area": "hiking areas",
+    "ice_cream_shop": "ice cream shops",
+    "japanese_restaurant": "Japanese restaurants",
+    "market": "markets",
+    "museum": "museums",
+    "park": "parks",
+    "ramen_restaurant": "ramen spots",
+}
+_CATEGORY_LABELS_ZH = {
+    "attraction": "景點",
+    "food": "餐廳",
+    "lodging": "住宿",
+    "nightlife": "夜生活去處",
+    "shopping": "購物地點",
+}
+_CATEGORY_LABELS_EN = {
+    "attraction": "attractions",
+    "food": "food spots",
+    "lodging": "places to stay",
+    "nightlife": "nightlife spots",
+    "shopping": "shopping spots",
 }
 
 
@@ -142,6 +204,41 @@ class ResponseComposer:
                 reply += f" I also kept convenience from {preferences.origin} in mind."
         return reply.strip(), candidates
 
+    def compose_recommendation_with_relaxation(
+        self,
+        *,
+        places: list[ToolPlace],
+        preferences: Preferences,
+        relaxations: list[str],
+        original_filters: dict[str, Any],
+    ) -> tuple[str, list[ChatCandidate]]:
+        candidates = [self._build_candidate(place, preferences) for place in places]
+        if not relaxations:
+            return self.compose_recommendation(places=places, preferences=preferences)
+
+        top_names = ", ".join(candidate.name for candidate in candidates[:3])
+        language = preferences.language or "en"
+        original_target = self._describe_original_filters(
+            original_filters=original_filters,
+            language=language,
+        )
+        relaxed_scope = self._describe_relaxations(relaxations=relaxations, language=language)
+
+        if language == "zh-TW":
+            reply = f"{original_target}沒有找到更貼近的結果，先幫你{relaxed_scope}"
+            if top_names:
+                reply += f"，這幾家評價不錯：{top_names}。"
+            else:
+                reply += "。"
+            return reply, candidates
+
+        reply = f"I couldn't find a strong match for {original_target}, so I {relaxed_scope}"
+        if top_names:
+            reply += f". Good options now include {top_names}."
+        else:
+            reply += "."
+        return reply, candidates
+
     def compose_itinerary(
         self,
         *,
@@ -248,6 +345,71 @@ class ResponseComposer:
                 f"{place.category} 類型" if language == "zh-TW" else f"strong {place.category} match"
             )
         return "，".join(reasons) if language == "zh-TW" else ", ".join(reasons) if reasons else None
+
+    def _describe_original_filters(
+        self,
+        *,
+        original_filters: dict[str, Any],
+        language: str,
+    ) -> str:
+        district = original_filters.get("district")
+        place_label = self._describe_place_target(original_filters=original_filters, language=language)
+
+        if language == "zh-TW":
+            if district and place_label:
+                return f"在{district}找{place_label}時"
+            if district:
+                return f"在{district}找符合條件的地方時"
+            if place_label:
+                return f"找{place_label}時"
+            return "原本的條件下"
+
+        if district and place_label:
+            return f"{place_label} in {district}"
+        if district:
+            return f"places in {district}"
+        if place_label:
+            return place_label
+        return "your original filters"
+
+    def _describe_place_target(
+        self,
+        *,
+        original_filters: dict[str, Any],
+        language: str,
+    ) -> str | None:
+        primary_type = original_filters.get("primary_type")
+        if isinstance(primary_type, str) and primary_type:
+            labels = _PRIMARY_TYPE_LABELS_ZH if language == "zh-TW" else _PRIMARY_TYPE_LABELS_EN
+            return labels.get(primary_type, primary_type.replace("_", " "))
+
+        keyword = original_filters.get("keyword")
+        if isinstance(keyword, str) and keyword:
+            return keyword
+
+        internal_category = original_filters.get("internal_category")
+        if isinstance(internal_category, str) and internal_category:
+            labels = _CATEGORY_LABELS_ZH if language == "zh-TW" else _CATEGORY_LABELS_EN
+            return labels.get(internal_category, internal_category.replace("_", " "))
+        return None
+
+    def _describe_relaxations(
+        self,
+        *,
+        relaxations: list[str],
+        language: str,
+    ) -> str:
+        labels = _RELAXATION_LABELS_ZH if language == "zh-TW" else _RELAXATION_LABELS_EN
+        parts = [labels[item] for item in relaxations if item in labels]
+        if not parts:
+            return "稍微放寬條件" if language == "zh-TW" else "slightly broadened the search"
+        if language == "zh-TW":
+            return "、".join(parts)
+        if len(parts) == 1:
+            return parts[0]
+        if len(parts) == 2:
+            return f"{parts[0]} and {parts[1]}"
+        return f"{', '.join(parts[:-1])}, and {parts[-1]}"
 
     @staticmethod
     def _matches_interest(place: ToolPlace, tag: str) -> bool:

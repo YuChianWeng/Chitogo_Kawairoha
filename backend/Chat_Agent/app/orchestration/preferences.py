@@ -115,9 +115,27 @@ _INTEREST_TAG_ALIASES = {
     "自然": "nature",
     "公園": "nature",
 }
+_MESSAGE_INTEREST_HINT_ALIASES = (
+    ("日式餐廳", "日式"),
+    ("日本料理", "日式"),
+    ("日料", "日式"),
+    ("日式", "日式"),
+    ("拉麵", "拉麵"),
+    ("壽司", "壽司"),
+    ("居酒屋", "居酒屋"),
+)
+_INTEREST_TAG_EQUIVALENTS = {
+    "日式": frozenset({"日式", "日式餐廳", "日本料理", "日料", "japanese"}),
+    "拉麵": frozenset({"拉麵", "ramen"}),
+    "壽司": frozenset({"壽司", "sushi"}),
+    "居酒屋": frozenset({"居酒屋", "izakaya"}),
+}
 
 
 def _detect_district(message: str) -> str | None:
+    for district in _VALID_DISTRICTS:
+        if district in message:
+            return district
     match = _DISTRICT_PATTERN.search(message)
     if match:
         district = match.group(1)
@@ -167,12 +185,27 @@ def _normalize_tag_list(value: object) -> list[str]:
         stripped = item.strip()
         if not stripped:
             continue
-        normalized_tag = _INTEREST_TAG_ALIASES.get(stripped.casefold(), _INTEREST_TAG_ALIASES.get(stripped))
-        if normalized_tag is None:
-            continue
+        normalized_tag = _INTEREST_TAG_ALIASES.get(
+            stripped.casefold(),
+            _INTEREST_TAG_ALIASES.get(stripped, stripped.casefold()),
+        )
         if normalized_tag not in normalized:
             normalized.append(normalized_tag)
     return normalized
+
+
+def _detect_interest_tags_from_message(message: str) -> list[str]:
+    detected: list[str] = []
+    for phrase, normalized_tag in _MESSAGE_INTEREST_HINT_ALIASES:
+        if phrase in message and normalized_tag not in detected:
+            detected.append(normalized_tag)
+    return detected
+
+
+def _has_equivalent_interest_tag(tags: list[str], candidate: str) -> bool:
+    equivalents = _INTEREST_TAG_EQUIVALENTS.get(candidate, frozenset({candidate}))
+    equivalent_casefolded = {tag.casefold() for tag in equivalents}
+    return any(tag.casefold() in equivalent_casefolded for tag in tags)
 
 
 def _normalize_preference_payload(message: str, payload: dict[str, Any]) -> dict[str, Any]:
@@ -192,6 +225,14 @@ def _normalize_preference_payload(message: str, payload: dict[str, Any]) -> dict
     for field_name in ("interest_tags", "avoid_tags"):
         if field_name in normalized:
             normalized[field_name] = _normalize_tag_list(normalized[field_name])
+
+    detected_interest_tags = _detect_interest_tags_from_message(message)
+    if detected_interest_tags:
+        existing_interest_tags = list(normalized.get("interest_tags") or [])
+        for detected_tag in detected_interest_tags:
+            if not _has_equivalent_interest_tag(existing_interest_tags, detected_tag):
+                existing_interest_tags.append(detected_tag)
+        normalized["interest_tags"] = existing_interest_tags
 
     detected_district = _detect_district(message)
     if normalized.get("district") not in _VALID_DISTRICTS:
@@ -250,6 +291,9 @@ def build_preference_extraction_prompt(
         'Valid budget_level values: "budget", "mid", "luxury".\n'
         'Valid transport_mode values: "transit", "walk", "taxi", "drive".\n'
         'Valid interest_tags values: "cafes", "museums", "night-market", "food", "shopping", "temples", "nature".\n'
+        "When the user specifies a concrete cuisine or place type, preserve that specificity in "
+        'interest_tags instead of collapsing it to a generic tag, for example: "日式", "日式餐廳", '
+        '"拉麵", "壽司", "居酒屋", "咖啡廳", "酒吧", "博物館".\n'
         'time_window format: {"start_time": "HH:MM", "end_time": "HH:MM"}.\n'
         "Return JSON only, without markdown.\n"
         f"Language hint: {language_hint}\n"

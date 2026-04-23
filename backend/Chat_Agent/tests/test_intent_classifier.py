@@ -60,6 +60,37 @@ class IntentClassifierTests(unittest.IsolatedAsyncioTestCase):
         self.assertIsInstance(result.extracted_slots, ReplanSlots)
         self.assertEqual(result.extracted_slots.stop_index, 1)
 
+    async def test_classifier_ignores_unexpected_replan_slots(self) -> None:
+        classifier = IntentClassifier()
+        classifier._client.generate_json = AsyncMock(
+            return_value={
+                "intent": "REPLAN",
+                "confidence": 0.78,
+                "needs_clarification": False,
+                "missing_fields": [],
+                "extracted_slots": {
+                    "origin": "大安區",
+                    "distance": "中等",
+                    "district": "大安區",
+                    "time_window": {"start_time": "18:00", "end_time": "20:00"},
+                    "companions": "朋友",
+                    "budget_level": "中等",
+                    "transport_mode": "交通便利",
+                    "interest_tags": ["社交", "聚會"],
+                    "avoid_tags": None,
+                    "change_request": "把第二站換成聚會餐廳",
+                },
+            }
+        )
+
+        result = await classifier.classify("把第二站換成大安區晚上朋友聚會的餐廳")
+
+        self.assertEqual(result.intent, Intent.REPLAN)
+        self.assertEqual(result.source, "llm")
+        self.assertIsInstance(result.extracted_slots, ReplanSlots)
+        self.assertEqual(result.extracted_slots.change_request, "把第二站換成聚會餐廳")
+        self.assertIsNone(result.extracted_slots.stop_index)
+
     async def test_classifier_uses_llm_for_explain(self) -> None:
         classifier = IntentClassifier()
         classifier._client.generate_json = AsyncMock(

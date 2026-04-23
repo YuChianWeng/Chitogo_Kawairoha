@@ -20,6 +20,18 @@ _TIME_HINT_PATTERN = re.compile(
 logger = logging.getLogger(__name__)
 
 
+def _normalize_slots_for_intent(intent: Intent, raw_slots: dict[str, object]) -> dict[str, object]:
+    slot_model = slot_model_for_intent(intent)
+    normalized = {
+        field_name: raw_slots[field_name]
+        for field_name in slot_model.model_fields
+        if field_name in raw_slots
+    }
+    if intent == Intent.GENERATE_ITINERARY:
+        normalized = _coerce_generate_slots(normalized)
+    return normalized
+
+
 def _coerce_generate_slots(raw_slots: dict[str, object]) -> dict[str, object]:
     normalized = dict(raw_slots)
     scalar_fields = {"origin", "district", "companions", "budget_level", "transport_mode"}
@@ -156,8 +168,7 @@ class IntentClassifier:
                 return None
 
             slot_model = slot_model_for_intent(intent)
-            if intent == Intent.GENERATE_ITINERARY:
-                raw_slots = _coerce_generate_slots(raw_slots)
+            raw_slots = _normalize_slots_for_intent(intent, raw_slots)
             result = ClassifierResult(
                 intent=intent,
                 confidence=float(payload["confidence"]),

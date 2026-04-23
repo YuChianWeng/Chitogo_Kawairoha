@@ -152,6 +152,10 @@ class FakeSession:
 
 
 def _matches_condition(item: object, condition) -> bool:
+    clauses = getattr(condition, "clauses", None)
+    if clauses is not None and condition.operator == operators.or_:
+        return any(_matches_condition(item, clause) for clause in clauses)
+
     left = condition.left
     right = condition.right
     operator = condition.operator
@@ -171,6 +175,14 @@ def _matches_condition(item: object, condition) -> bool:
         return needle in (actual_value or "").casefold()
     if operator == operators.in_op:
         return actual_value in expected_value
+    if getattr(operator, "opstring", None) == "@>":
+        if isinstance(actual_value, list) and isinstance(expected_value, list):
+            return all(value in actual_value for value in expected_value)
+        if isinstance(actual_value, dict) and isinstance(expected_value, dict):
+            return all(
+                actual_value.get(key) == value for key, value in expected_value.items()
+            )
+        return False
     if operator == operators.is_:
         if is_null_comparison:
             return actual_value is None

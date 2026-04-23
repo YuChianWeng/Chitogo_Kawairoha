@@ -364,12 +364,11 @@ class MessageHandler:
         )
         summary = self._tool_summary(loop_result)
         if loop_result.status == "ok":
-            with trace_recorder.step("response.compose_recommendation") as step:
-                reply_text, candidates = self._composer.compose_recommendation(
-                    places=loop_result.places,
-                    preferences=preferences,
-                )
-                step.success(detail={"candidate_count": len(candidates)})
+            reply_text, candidates = self._compose_place_recommendation_reply(
+                loop_result=loop_result,
+                preferences=preferences,
+                trace_recorder=trace_recorder,
+            )
             with trace_recorder.step("session.cache_candidates") as step:
                 await self._session_manager.cache_candidates(
                     session_id,
@@ -389,9 +388,18 @@ class MessageHandler:
             )
 
         if loop_result.status == "empty":
-            with trace_recorder.step("response.compose_no_results") as step:
-                reply_text = self._composer.compose_no_results(preferences=preferences)
-                step.success()
+            reply_text, candidates = self._compose_relaxed_or_no_results_reply(
+                loop_result=loop_result,
+                preferences=preferences,
+                trace_recorder=trace_recorder,
+            )
+            if candidates:
+                with trace_recorder.step("session.cache_candidates") as step:
+                    await self._session_manager.cache_candidates(
+                        session_id,
+                        [self._to_cached_place(place) for place in loop_result.places],
+                    )
+                    step.success(detail={"candidate_count": len(loop_result.places)})
             return ChatMessageResponse(
                 session_id=session_id,
                 turn_id=turn_id,
@@ -399,7 +407,7 @@ class MessageHandler:
                 needs_clarification=False,
                 message=reply_text,
                 preferences=preferences,
-                candidates=[],
+                candidates=candidates,
                 tool_results_summary=summary,
                 source=source,
             )
@@ -439,9 +447,18 @@ class MessageHandler:
         )
         summary = self._tool_summary(loop_result)
         if loop_result.status == "empty":
-            with trace_recorder.step("response.compose_no_results") as step:
-                reply_text = self._composer.compose_no_results(preferences=preferences)
-                step.success()
+            reply_text, candidates = self._compose_relaxed_or_no_results_reply(
+                loop_result=loop_result,
+                preferences=preferences,
+                trace_recorder=trace_recorder,
+            )
+            if candidates:
+                with trace_recorder.step("session.cache_candidates") as step:
+                    await self._session_manager.cache_candidates(
+                        session_id,
+                        [self._to_cached_place(place) for place in loop_result.places],
+                    )
+                    step.success(detail={"candidate_count": len(loop_result.places)})
             return ChatMessageResponse(
                 session_id=session_id,
                 turn_id=turn_id,
@@ -449,6 +466,7 @@ class MessageHandler:
                 needs_clarification=False,
                 message=reply_text,
                 preferences=preferences,
+                candidates=candidates,
                 tool_results_summary=summary,
                 source=source,
             )
@@ -641,11 +659,18 @@ class MessageHandler:
                         source=source,
                     )
                 if loop_result.status == "empty":
-                    with trace_recorder.step("response.compose_no_results") as step:
-                        reply_text = self._composer.compose_no_results(
-                            preferences=preferences,
-                        )
-                        step.success()
+                    reply_text, candidates = self._compose_relaxed_or_no_results_reply(
+                        loop_result=loop_result,
+                        preferences=preferences,
+                        trace_recorder=trace_recorder,
+                    )
+                    if candidates:
+                        with trace_recorder.step("session.cache_candidates") as step:
+                            await self._session_manager.cache_candidates(
+                                session_id,
+                                [self._to_cached_place(place) for place in loop_result.places],
+                            )
+                            step.success(detail={"candidate_count": len(loop_result.places)})
                     return ChatMessageResponse(
                         session_id=session_id,
                         turn_id=turn_id,
@@ -653,6 +678,7 @@ class MessageHandler:
                         needs_clarification=False,
                         message=reply_text,
                         preferences=preferences,
+                        candidates=candidates,
                         tool_results_summary=summary,
                         source=source,
                     )
@@ -792,6 +818,56 @@ class MessageHandler:
                     detail={"tools_used": loop_result.tools_used},
                 )
             return loop_result
+
+    def _compose_place_recommendation_reply(
+        self,
+        *,
+        loop_result: LoopResult,
+        preferences: Preferences,
+        trace_recorder: TraceRecorder,
+    ) -> tuple[str, list[ChatCandidate]]:
+        if loop_result.relaxations_applied:
+            with trace_recorder.step("response.compose_recommendation_with_relaxation") as step:
+                reply_text, candidates = self._composer.compose_recommendation_with_relaxation(
+                    places=loop_result.places,
+                    preferences=preferences,
+                    relaxations=loop_result.relaxations_applied,
+                    original_filters=loop_result.original_filters,
+                )
+                step.success(
+                    detail={
+                        "candidate_count": len(candidates),
+                        "relaxations": loop_result.relaxations_applied,
+                    }
+                )
+                return reply_text, candidates
+
+        with trace_recorder.step("response.compose_recommendation") as step:
+            reply_text, candidates = self._composer.compose_recommendation(
+                places=loop_result.places,
+                preferences=preferences,
+            )
+            step.success(detail={"candidate_count": len(candidates)})
+            return reply_text, candidates
+
+    def _compose_relaxed_or_no_results_reply(
+        self,
+        *,
+        loop_result: LoopResult,
+        preferences: Preferences,
+        trace_recorder: TraceRecorder,
+    ) -> tuple[str, list[ChatCandidate]]:
+        if loop_result.places:
+            return self._compose_place_recommendation_reply(
+                loop_result=loop_result,
+                preferences=preferences,
+                trace_recorder=trace_recorder,
+            )
+
+        with trace_recorder.step("response.compose_no_results") as step:
+            reply_text = self._composer.compose_no_results(preferences=preferences)
+            step.success()
+        return reply_text, []
 
     @staticmethod
     def _tool_summary(loop_result) -> ToolResultsSummary:
