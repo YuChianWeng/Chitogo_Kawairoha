@@ -1,4 +1,3 @@
-# backend/app/api/v1/speech.py
 import os
 import logging
 import httpx
