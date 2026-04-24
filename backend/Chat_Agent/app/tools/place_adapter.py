@@ -5,7 +5,14 @@ from typing import Any
 import httpx
 
 from app.core.config import Settings, get_settings
-from app.tools.models import CategoryItem, CategoryListResult, PlaceListResult, PlaceStatsResult, ToolPlace
+from app.tools.models import (
+    CategoryItem,
+    CategoryListResult,
+    PlaceListResult,
+    PlaceSort,
+    PlaceStatsResult,
+    ToolPlace,
+)
 
 _SEARCH_PATH = "/api/v1/places/search"
 _RECOMMEND_PATH = "/api/v1/places/recommend"
@@ -44,14 +51,16 @@ class PlaceToolAdapter:
         max_budget_level: int | None = None,
         indoor: bool | None = None,
         open_now: bool | None = None,
-        sort: str = "rating_desc",
+        vibe_tags: list[str] | None = None,
+        min_mentions: int | None = None,
+        sort: PlaceSort = "rating_desc",
         limit: int = 20,
         offset: int = 0,
     ) -> PlaceListResult:
         payload, error = await self._request_json(
             "GET",
             _SEARCH_PATH,
-            params=self._compact_dict(
+            params=self._compact_params(
                 district=district,
                 internal_category=internal_category,
                 primary_type=primary_type,
@@ -60,6 +69,8 @@ class PlaceToolAdapter:
                 max_budget_level=max_budget_level,
                 indoor=indoor,
                 open_now=open_now,
+                vibe_tag=vibe_tags,
+                min_mentions=min_mentions,
                 sort=sort,
                 limit=limit,
                 offset=offset,
@@ -176,7 +187,7 @@ class PlaceToolAdapter:
         method: str,
         path: str,
         *,
-        params: dict[str, Any] | None = None,
+        params: dict[str, Any] | list[tuple[str, Any]] | None = None,
         json_body: dict[str, Any] | None = None,
     ) -> tuple[Any | None, str | None]:
         last_error: str | None = None
@@ -276,12 +287,27 @@ class PlaceToolAdapter:
             google_maps_uri=payload.get("google_maps_uri"),
             recommendation_score=payload.get("recommendation_score"),
             distance_m=payload.get("distance_m"),
+            vibe_tags=payload.get("vibe_tags"),
+            mention_count=payload.get("mention_count"),
+            sentiment_score=payload.get("sentiment_score"),
             raw_payload=payload,
         )
 
     @staticmethod
     def _compact_dict(**kwargs: Any) -> dict[str, Any]:
         return {key: value for key, value in kwargs.items() if value is not None}
+
+    @staticmethod
+    def _compact_params(**kwargs: Any) -> list[tuple[str, Any]]:
+        params: list[tuple[str, Any]] = []
+        for key, value in kwargs.items():
+            if value is None:
+                continue
+            if isinstance(value, list):
+                params.extend((key, item) for item in value if item is not None)
+                continue
+            params.append((key, value))
+        return params
 
 
 place_tool_adapter = PlaceToolAdapter()

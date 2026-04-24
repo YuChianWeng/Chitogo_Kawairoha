@@ -17,7 +17,13 @@ InternalCategory = Literal[
     "other",
 ]
 
-PlaceSort = Literal["rating_desc", "user_rating_count_desc"]
+PlaceSort = Literal[
+    "rating_desc",
+    "user_rating_count_desc",
+    "mention_count_desc",
+    "trend_score_desc",
+    "sentiment_desc",
+]
 NearbySort = Literal["distance_asc", "rating_desc", "user_rating_count_desc"]
 RouteTransportMode = Literal["walk", "transit", "drive"]
 
@@ -42,6 +48,9 @@ class ToolPlace(BaseModel):
     google_maps_uri: str | None = None
     recommendation_score: float | None = None
     distance_m: float | None = None
+    vibe_tags: list[str] | None = None
+    mention_count: int | None = None
+    sentiment_score: float | None = None
     raw_payload: dict[str, Any] = Field(default_factory=dict)
 
     model_config = ConfigDict(extra="forbid")
