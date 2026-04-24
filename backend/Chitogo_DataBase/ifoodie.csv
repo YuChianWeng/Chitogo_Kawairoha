@@ -1,0 +1,805 @@
+﻿id,platform,location,address,google_place_id,sentiment_score,crowdedness,vibe_tags,original_text,source_url,created_at
+5,ifoodie,芙香家FUKUYA 鐵鍋鬆餅,106臺北市大安區杭州南路二段61巷39號,ChIJndoaQjSpQjQRLXsNAjVeMiM,0.8,0.5,"sweet,food,dessert,japanese",台北日式老宅甜點『芙香家FUKUYA 鐵鍋鬆餅』菜單、脆皮泡芙口感的好吃鍋餅（榕錦時光生活園區內）,,2026-04-24 02:45:42
+6,ifoodie,泰精選,100臺北市中正區北平西路3號2樓,ChIJC3Yu89GpQjQRIrUgbkJ0Kic,1.0,0.5,"Thai food,restaurant,trendy",台北最美泰式餐廳之一！還是「泰精選」認證🔥,,2026-04-24 02:45:43
+7,ifoodie,檸檬老宅拌拌麵,106臺北市大安區通安街27巷1號,ChIJ8UneH4yrQjQRSE8DTPRvShw,0.8,0.5,"trendy,foodie,refreshing",檸檬老宅拌拌麵｜老宅改建的文青麵店 巷弄裡的酸甜清新滋味｜信義安和站、通安街,,2026-04-24 02:45:45
+13,ifoodie,西門壽司丼,"1樓 No, No. 4武昌街二段82巷2弄萬華區臺北市108",ChIJ27W6NnapQjQRxoMVa9jMVIg,0.8,0.5,"food,restaurant,Japanese cuisine,recommendation",瞞著爹西門壽司丼，西門町日式餐廳推薦,,2026-04-24 02:45:51
+15,ifoodie,136海鮮麵復興店,106台北市大安区复兴南路二段148巷32弄2號1樓,ChIJl48yPjCrQjQRovSaSxCO0kE,1.0,0.5,"food,seafood,noodles","136海鮮麵復興店,激推痛風超蝦海鮮麵,視覺震撼,清燉牛肉麵也是一絕",,2026-04-24 02:45:54
+16,ifoodie,香港醉紅樓潮州菜館,10491臺北市中山區八德路二段326號2樓,ChIJwYlkUhOpQjQRuKKelkQpUuE,0.8,0.5,"food,restaurant,traditional",香港醉紅樓潮州菜館｜1975年創立的台北潮州老館子必點招牌滷水鵝、絲瓜烙,,2026-04-24 02:45:55
+22,ifoodie,老麵攤二店,104臺北市中山區四平街21號1樓,ChIJXWY6-WapQjQR7OxlqACxbw8,1.0,0.5,"delicious,value_for_money",老麵攤二店環境超美！150 元起爽吃泰式個人餐，超值雙條餐真的太犯規,,2026-04-24 02:46:02
+24,ifoodie,爸爸Kevin美式BBQ,105臺北市松山區南京東路三段303巷8弄5號,ChIJoRl0J1ypQjQRjWwMJNxhnDo,1.0,0.5,"BBQ,food,smoked meat",爸爸Kevin美式BBQ｜老美主廚煙燻牛胸肉超嫩必吃,,2026-04-24 02:46:04
+28,ifoodie,兄弟大飯店薔薇廳,105臺北市松山區南京東路三段255號號13樓,ChIJIWnhi92rQjQRTqkBPYUSQXQ,1.0,0.5,"buffet,seafood,steak,dessert",兄弟大飯店薔薇廳｜台北吃到飽Buffet推薦：海鮮牛排甜點全都有、免千元飯店自助餐 @兔兒毛毛姊妹花,,2026-04-24 02:46:08
+29,ifoodie,陳記眷村燒餅舖,116臺北市文山區興隆路一段70巷1-1號,ChIJ246wxDarQjQRUbd28AWwdd0,1.0,0.5,"delicious,local favorite",陳記眷村燒餅舖｜在地人激推的酥脆燒餅，酥脆飽滿超涮嘴的,,2026-04-24 02:46:09
+30,ifoodie,楊家手工水餃,116臺北市文山區景後街176號,ChIJFYrvtwCqQjQRWKN3x__DfPA,1.0,0.5,"food,recommended",楊家手工水餃｜飽滿多汁韭菜餃，網友激推台北最好吃韭菜水餃！,,2026-04-24 02:46:10
+32,ifoodie,吉林川客小館,10491臺北市中山區吉林路368號,ChIJ_S5QN1qpQjQRj1eTlW4M_jk,0.5,0.5,"food,private_dining",吉林川客小館，行天宮站附近的功夫私房菜,,2026-04-24 02:46:16
+33,ifoodie,招治飯店,105臺北市松山區南京東路四段133巷4弄6號1樓,ChIJs66bM0qrQjQRuJSauVGzDWM,1.0,0.5,"delicious,affordable,classic",招治飯店，經典台菜料理真的不用找一桌人來吃而且還超便宜！,,2026-04-24 02:46:20
+36,ifoodie,大膽牛腩麵,10478臺北市中山區遼寧街222號,ChIJo--aBuurQjQRyN89ig3p_vM,0.8,0.5,"food,noodle,restaurant",大膽牛腩麵｜香港人開的正宗港式牛腩麵，在地必吃人氣麵館（附菜單）,,2026-04-24 02:46:29
+37,ifoodie,樂葵法式鐵板燒承德店,103臺北市大同區承德路一段2號7樓,ChIJJfWZFM2pQjQRXfWWGmtNzEA,1.0,0.5,"romantic,scenic,gourmet",樂葵法式鐵板燒承德店，最美高樓市景鐵板燒！,,2026-04-24 02:46:32
+38,ifoodie,10MINS 十分晨食,104臺北市中山區一江街47號,ChIJjWUkqMepQjQRpoJEQ48Ch3U,0.8,0.5,"Taiwanese breakfast,Quality food",10MINS 十分晨食：願意為早餐多花十分鐘的台式質感早午餐,,2026-04-24 02:46:36
+40,ifoodie,杭州小籠湯包民生旗艦店,105臺北市松山區民生東路三段118號,ChIJDyLXkuXQDRQRfQ16QD6UkH0,1.0,0.5,"foodie,michelin,popular",杭州小籠湯包民生旗艦店｜米其林必比登推薦，小籠包控必吃人氣名店,,2026-04-24 02:46:43
+46,ifoodie,米糕日子,111臺北市士林區福華路147巷28號,ChIJDaE7KqyvQjQRCG1Io3sZYMc,0.8,0.5,"food,traditional,delicious",芝山站美食『米糕日子｜來自彰化員林的好味道』好吃香Ｑ古早味米糕、淡水鮮奶麻糬也吃得到,,2026-04-24 02:47:00
+49,ifoodie,福鼎湯包店,116臺北市文山區興隆路三段112巷2弄13號,ChIJcaceqxOqQjQRjSTp2mVr7A0,0.8,0.5,"affordable,delicious,popular",福鼎湯包店｜號稱平民版鼎泰豐！人氣湯包、蛋餅、大骨湯麵全都只要銅板價！,,2026-04-24 02:47:10
+50,ifoodie,祇園.禪院壽喜燒專門店,106臺北市大安區樂利路11巷22號,ChIJe4yZYTWrQjQRbTUK178K8GU,1.0,0.5,"food,Japanese cuisine,yakiniku",【祇園.禪院壽喜燒專門店】台北必吃京都祇園關西壽喜燒！全包廂制+桌邊服務一口入魂!台北名店橋山壽喜燒姐妹店,,2026-04-24 02:47:13
+54,ifoodie,洪樓小館,111臺北市士林區德行西路25號,ChIJ_____5auQjQRFoM9xHbmMI4,1.0,0.5,"taiwanese food,local favorite,high cp value",洪樓小館｜高CP值台菜熱炒、在地人必吃老店（菜單）,,2026-04-24 02:47:26
+56,ifoodie,大龍峒熊會長油飯,103臺北市大同區哈密街59巷18弄,ChIJgx115UmpQjQRkfIeLN2ckTw,0.8,0.5,"food,nightmarket,trendy",大龍峒熊會長油飯｜藏在大龍峒菜市場巷弄凌晨五點半就開賣的傳說級油飯,,2026-04-24 02:47:32
+57,ifoodie,葫蘆小郭鐵板燒,10491臺北市中山區錦州街166號,ChIJ1ZBNbFypQjQR4YV2KyCLi7Q,1.0,0.5,"food,restaurant",葫蘆小郭鐵板燒｜台北最強平價鐵板燒霸主,,2026-04-24 02:47:36
+60,ifoodie,小陳牛肉麵,110臺北市信義區虎林街135號,ChIJzyqO_qOrQjQR2lwRY8GcyUc,0.8,0.8,"food,popular,busy",小陳牛肉麵，每天生意都排隊的信義區牛肉麵,,2026-04-24 02:47:45
+64,ifoodie,內湖捷運西湖站,114台灣臺北市內湖區,ChIJL3Ww7W6sQjQR5Ss0Y6FH8yA,0.8,0.5,"food,delicious",環山豆漿小籠包，比手臂還大的蛋餅包油條，內湖捷運西湖站美食(姊姊食記),,2026-04-24 02:47:56
+65,ifoodie,板前屋炭烤鰻魚飯,115臺北市南港區研究院路一段88號,ChIJV-zxvVmrQjQRfuWpJ6NRLjA,1.0,1.0,"popular,delicious",板前屋炭烤鰻魚飯｜堪稱無刺鰻魚飯霸主！用餐時間總是爆滿，全台手工去刺、脆皮白燒鰻魚飯創始店,,2026-04-24 02:48:00
+67,ifoodie,港都熱炒民生東旗艦店,104臺北市中山區民生東路一段52號,ChIJLd2tf7ipQjQR7SfX0tQ30z8,0.8,0.7,"food,taiwanese cuisine,restaurant",【雙連美食餐廳推薦】港都熱炒民生東旗艦店 超人氣台北平價熱炒！內用白飯冰淇淋吃到飽,,2026-04-24 02:48:07
+69,ifoodie,金奇日式手工漢堡排,10491臺北市中山區林森北路85巷43號,ChIJbzxLfZCpQjQRNSv3g6ZUvvk,0.8,0.5,"foodie,Japanese cuisine,burger,therapeutic",金奇日式手工漢堡排．台北中山區美食｜林森北路隱藏版職人漢堡排！日本人主廚精緻呈現！爆汁手作漢堡排太療癒！驚喜辣油味噌湯！條通美食推薦！捷運中山站～中肯‧食記！,,2026-04-24 02:48:13
+71,ifoodie,輝室,100臺北市中正區南昌路二段1巷2號,ChIJb0WIIIapQjQROPsAf_O0Px0,0.8,0.5,"creative,taiwanese cuisine,historical,restaurant",浸潤在百年古蹟餘韻中的創意台式辦桌料理－輝室 餐酒辦桌／台北中正紀念堂站,,2026-04-24 02:48:21
+73,ifoodie,富善雞湯麵舖,105臺北市松山區光復北路11巷54號,ChIJJYCBUgCrQjQRpuH-CMvmjpI,1.0,0.5,"food,restaurant,delicious,recommended",富善雞湯麵舖：香菜控必吃爆量香菜雞腿湯麵！雞腿雙拼、剝皮辣椒雞湯超滿足【台北餐廳推薦】巷弄美食【松山美食】,,2026-04-24 02:48:26
+74,ifoodie,好味道臭豆腐,112臺北市北投區石牌路一段41號,ChIJq6qqqqsCaDQRUFzPhQd3PKs,1.0,1.0,"delicious,popular,crispy",好味道臭豆腐｜天天排隊的金黃酥脆臭豆腐，辣醬泡菜超加分（菜單）,,2026-04-24 02:48:30
+76,ifoodie,海鹽牛奶糖漢堡,106026臺北市大安區和平東路二段118巷4-1號1樓,ChIJhVKc3zCrQjQRgJCl4Ki0hog,1.0,0.5,"food,recommended",海鹽牛奶糖漢堡經典必吃！還有超級新品「爐烤牛三明治」！,,2026-04-24 02:48:36
+77,ifoodie,和園川味小吃,100臺北市中正區紹興南街5之2號,ChIJnXmLh3CpQjQR9QwzobICtsw,1.0,0.5,"food,restaurant,recommendation",和園川味小吃｜平價大份量川味熱炒，上班族激推超高CP值餐廳,,2026-04-24 02:48:39
+78,ifoodie,台北福華大飯店,106臺北市大安區仁愛路三段160號,ChIJU0w5SdGrQjQRYugzBai1GgU,0.8,0.5,"food,buffet,deal",台北福華大飯店港點吃到飽｜珍珠坊優惠太划算，必須吃！,,2026-04-24 02:48:43
+79,ifoodie,肥前屋,10491臺北市中山區中山北路一段121巷13號,ChIJCcqBOFSpQjQRhdT4PJhnHOc,0.8,0.8,"food,trendy,popular",肥前屋｜台北鰻魚飯名店回歸．引爆排隊熱潮．魚刺變少安心吃,,2026-04-24 02:48:46
+80,ifoodie,金魚日本料理,106臺北市大安區延吉街233巷18號,ChIJPX-C-sirQjQRIzX4sO6mgaA,0.8,0.5,"food,japanese cuisine,value for money",金魚日本料理。生魚片套餐內含白飯、湯品、小菜、清蒸魚加上滿到掉出來生魚片!一套470元2個人吃都沒有問題!,,2026-04-24 02:48:50
+81,ifoodie,雙囍家常料理,100臺北市中正區羅斯福路二段48巷2號,ChIJU09lSJqpQjQR0DsiKqtRtGY,1.0,0.5,"food,restaurant,hidden gem",雙囍家常料理｜隱身巷弄的超強平價熱炒，左宗棠雞跟蔥爆牛肉必點 (菜單),,2026-04-24 02:48:53
+83,ifoodie,釜山湯飯부산국밥,"1樓 No. 7, No. 7號南京東路五段66巷12弄松山區臺北市105",ChIJO1xUZYarQjQRllAn__NoXAU,1.0,0.5,"Delicious,Korean Food,Taipei Recommendation",釜山湯飯부산국밥 韓國老闆店員料理道地釜山美食！好吃台北韓式湯飯推薦,,2026-04-24 02:48:59
+85,ifoodie,重慶郭魚湯,103臺北市大同區蘭州街4-1號,ChIJ67s-NBWpQjQRwCEeX4caNVA,1.0,0.5,"food,restaurant,delicious",重慶郭魚湯｜這魚湯真的太強了！膠質滿滿的龍膽石斑 (菜單),,2026-04-24 02:49:05
+90,ifoodie,金山客家小館,105臺北市松山區南京東路五段250巷2弄5號1樓,ChIJW-0Vl5arQjQRnd0jVlLsV1k,0.8,0.5,"tasty,affordable,traditional",金山客家小館｜在地人從小吃到大的老字號客家菜，份量實在又不傷荷包,,2026-04-24 02:49:22
+91,ifoodie,富善雞湯麵舖萬華昆明店,108臺北市萬華區昆明街85之1號,ChIJ3efgqnWpQjQRYBMrCP68sHs,0.8,0.6,"food,popular,trendy",萬華美食【富善雞湯麵舖萬華昆明店】霜淇淋豆花飲料吃到飽，西門町人氣雞湯麵,,2026-04-24 02:49:26
+92,ifoodie,賀加小吃店,110臺北市信義區莊敬路325巷10號,ChIJO6nsBmGrQjQRWZxL1Sk1WqE,0.8,0.5,"foodie,trendy",賀加小吃店｜北醫吳興商圈爆紅旋轉煲仔飯與回甘藥燉排骨 (菜單),,2026-04-24 02:49:29
+95,ifoodie,南門市場,100臺北市中正區羅斯福路一段8號,ChIJ32YgyZ6pQjQR6FyHNxrDp44,0.8,0.5,"food,market,delicious",南門市場美食「史料味極」神之冰糖蹄花、紅油抄手、酸辣乾拌麵，菜單價位,,2026-04-24 02:49:39
+96,ifoodie,愚火披薩,106臺北市大安區忠孝東路三段251巷9弄3號1樓,ChIJoUQz2wOrQjQRxIz_wrB6-70,0.0,0.5,,愚火披薩 — 捷運忠孝復興站附近隱身巷弄內的窯烤披薩專賣店,,2026-04-24 02:49:42
+97,ifoodie,Gira Pizza,105臺北市松山區敦化北路165巷6號,ChIJkwhy1ZKrQjQR7TwgoE858CE,0.8,0.5,"food,pizza,Italian",Gira Pizza 旋轉披薩｜一定要訂位！義大利披薩職人亞軍開的店就在小巨蛋巷弄,,2026-04-24 02:49:46
+100,ifoodie,文昌宮,104臺北市中山區民生西路45巷9號,ChIJd55_FkKpQjQRzAaz_lDtVP0,0.8,0.5,"food,traditional,historical",蔡張呅蚵嗲蘿蔔糕米糕，30年老字號文昌宮炸蚵嗲！,,2026-04-24 02:49:54
+101,ifoodie,巷口船麵,110臺北市信義區虎林街57-11號,ChIJNyS6FwCrQjQRwjjD8ylu5OA,0.8,0.5,"food,Thai cuisine,night market",【台北松山信義美食】巷口船麵 店員全是泰國人的道地泰式小吃店！近饒河夜市五分埔商圈,,2026-04-24 02:49:58
+102,ifoodie,海陸海產店,10491臺北市中山區中原街40號,ChIJWc58HMSpQjQR8_g64TmlO20,0.8,0.5,"seafood,good_price,delicious",海陸海產店，預約制海鮮熱炒，價格實在好吃不貴,,2026-04-24 02:50:02
+106,ifoodie,牛肆,10491臺北市中山區吉林路422號,ChIJUcnYC1qpQjQRS3dz6A_PJ7Y,0.8,0.8,"Popular,Reservations Recommended,Beef Hot Pot",牛肆｜公認人氣最高的台北溫體牛肉火鍋一定要提早訂位,,2026-04-24 02:50:13
+107,ifoodie,華西街夜市,108臺北市萬華區華西街,ChIJa_nIQKmpQjQROfvCKC0Y7mo,0.8,0.5,"delicious,night market,tasty,affordable",客家美食小吃店．台北萬華區美食｜華西街夜市隱藏版熱炒王者！必點神級香煎豬肝！蝦仁肉絲蛋炒飯鑊氣十足！白飯免費吃到飽！萬華平價熱炒推薦～中肯‧食記！,,2026-04-24 02:50:17
+108,ifoodie,何家百年祖傳排骨酥,108臺北市萬華區貴陽街二段110號,ChIJnRubrg6pQjQRjNk11WYljsE,0.8,0.8,"food,popular,busy",港墘｜何家百年祖傳排骨酥，肉感十足蒜味香氣實在太強，最好事先預訂不然排得天荒地老,,2026-04-24 02:50:20
+109,ifoodie,黃記老牌燉肉飯,100臺北市中正區漢口街一段101號,ChIJXQfgrw6pQjQRErsuZm-3hpw,0.5,0.5,"food,revisit",黃記老牌燉肉飯搬家後再訪，捷運西門站美食(姊姊食記),,2026-04-24 02:50:24
+110,ifoodie,焰禾,104臺北市中山區吉林路128號1樓,ChIJRZDz7rypQjQRgvnj_cZDpnY,0.8,0.5,"food,restaurant,recommended",松江南京站美食｜超好吃排骨蛋炒飯『焰禾｜炒飯 雞湯麵』菜單、黏嘴蛤蠣雞湯麵推薦,,2026-04-24 02:50:27
+114,ifoodie,彭家園,106臺北市大安區東豐街60號,ChIJN1pOu82rQjQRa9l4gzGSjEQ,0.8,0.5,"Michelin,restaurant,Taiwanese cuisine",彭家園｜連續多年入選米其林必比登台北大安區廣東料理桌菜餐廳,,2026-04-24 02:50:40
+118,ifoodie,蘇杭點心店,100臺北市中正區羅斯福路二段14號,ChIJYUGWzJupQjQR30LzEzBzJFM,0.8,0.5,"food,traditional,long-standing",蘇杭點心店 - 中正紀念堂附近超過50年老店，湯包內有滿滿鮮甜湯汁,,2026-04-24 02:50:53
+119,ifoodie,萬家手工水餃,103臺北市大同區蘭州街126號,ChIJub9h4UGpQjQRTBdSwYZb_zk,1.0,0.5,"food,restaurant,Chinese cuisine",萬家手工水餃，必吃11款手工水餃＋超強神之豬肝湯,,2026-04-24 02:50:56
+120,ifoodie,ALCHEMIST大安,106臺北市大安區杭州南路二段61巷43號,ChIJfclRm-mpQjQRprJZOvX71Hk,0.8,0.5,"trendy,relaxing,hidden gem",新加坡人氣咖啡廳插旗古亭站【ALCHEMIST大安】日治老宅庭院秘境咖啡廳,,2026-04-24 02:51:00
+121,ifoodie,17食堂,100臺北市中正區羅斯福路三段316巷16號2樓,ChIJFRkxSNqpQjQRJrGl_QMUO-A,1.0,0.5,"delicious,good_value",17食堂120元高CP值美味簡餐，台大公館商圈必吃！,,2026-04-24 02:51:03
+123,ifoodie,凱撒披薩北投店,112臺北市北投區中央北路二段408號1樓,ChIJ2Utf-w6vQjQRQ8mVOO7G0Mg,0.9,0.8,"food,satisfying,popular",Google 4.9星爆棚海鮮披薩，Q彈餅皮搭炸物超滿足 凱撒披薩北投店｜復興崗站美食推薦,,2026-04-24 02:51:10
+124,ifoodie,金玉滿堂芋餃抄手麵食,10491臺北市中山區南京東路三段216巷5號,ChIJ0xk55H2rQjQREzTiBkAiHUc,0.8,0.5,"food,Taipei eats,delicious",台北美食【金玉滿堂芋餃抄手麵食】南京復興站美食，Q彈外皮芋餃,,2026-04-24 02:51:13
+126,ifoodie,侯門小館,105臺北市松山區民生東路五段180號,ChIJLeImeZKrQjQR3R5bqETvfac,0.8,0.8,"affordable,popular,traditional",侯門小館｜有夠誇張！點滿10道菜一個人不到400元，連平日中午也會客滿的民生社區中式合菜餐廳,,2026-04-24 02:51:20
+127,ifoodie,尚雯早午餐,103臺北市大同區長安西路231號,ChIJb5CtlsypQjQRStcZ1ACr6O4,1.0,0.5,"food,breakfast,local_recommended",大份量海鮮炒麵、超香高麗菜蛋餅，在地人激推 尚雯早午餐｜北門站美食推薦,,2026-04-24 02:51:24
+128,ifoodie,大山東餅舖,100臺北市中正區羅斯福路四段92號1樓13/14號攤,ChIJETD7GVKpQjQR8MNSKdVnW5Q,0.8,0.8,"food,popular,queue",公館站｜大山東餅舖，中午就完售的超強蔥肉包，水源市場排隊美食,,2026-04-24 02:51:27
+129,ifoodie,傳說水煎包,115臺北市南港區南港路一段137巷5弄1號,ChIJn-9S_1irQjQROXuZYwc9alM,0.8,0.5,"foodie,breakfast,lunch,popular",傳說水煎包｜巷弄隱藏版巨無霸辣子雞丁包，南港上班族最愛的飽足系早午餐,,2026-04-24 02:51:31
+130,ifoodie,日向洋食Hinata,11143臺北市士林區大西路35號,ChIJvYcdrlOvQjQRZ_5wNZRyEA0,0.8,0.5,"Japanese food,vintage cafe,curry,dessert",日向洋食Hinata-隱身西服一條街的昭和復古喫茶店，濃郁咖哩與大人味布丁的優雅邂逅！內含詳細菜單，捷運士林站，士林站美食,,2026-04-24 02:51:35
+131,ifoodie,味擂家日式料理,111臺北市士林區福壽街1號1樓,ChIJWW34AmGvQjQRPpdckEU-j7Q,1.0,0.5,"food,restaurant,Japanese cuisine,recommended",通化街美食 | 味擂家日式料理，御膳套餐豐富細膩，超推薦！(文末菜單),,2026-04-24 02:51:39
+133,ifoodie,金頂便當,114臺北市內湖區內湖路二段386號,ChIJ6R_XII2sQjQRFWO4vMkPw-E,0.8,0.8,"popular,affordable,delicious",【金頂便當】天天排隊的人氣便當店，實惠美味、少飯還能免費多一道配菜｜台北內湖美食推薦｜捷運內湖站/湖光市場(菜單),,2026-04-24 02:51:44
+137,ifoodie,魁力屋拉麺 台北本店,10491臺北市中山區南京西路15號B1,ChIJGZsGWACpQjQRX6uSVjDD_LE,0.5,0.5,"Japanese food,ramen,new store",京都北白川 魁力屋拉麵 台北本店 — 來自日本京都經典熟成醬油拉麵名店進駐台北新光三越南西三館,,2026-04-24 02:51:56
+138,ifoodie,Rise Bakery,10681臺北市大安區信義路四段164號,ChIJUTdh-firQjQR3vSpXpKEgHc,1.0,0.5,"delicious,hidden gem",信義安和站超隱密歐式麵包『Rise Bakery 』好吃到流淚的司康,,2026-04-24 02:51:59
+140,ifoodie,巷仔口蘿蔔絲餅吳興店,110臺北市信義區吳興街184巷,ChIJZ7sYGLWrQjQRA8qVrv80j_A,0.8,0.5,"traditional,delicious,recommended",巷仔口蘿蔔絲餅吳興店｜傳承三代50年老店連油品大廠都來找他拍廣告的清甜蘿蔔絲餅,,2026-04-24 02:52:05
+141,ifoodie,行天宮熱炒街,10491臺北市中山區吉林路254號,ChIJk0J3FFypQjQR4CxgUZVl7vg,1.0,0.5,"food,restaurant,queue",第二好吃私房菜｜吃過之後真的會讚不絕口的行天宮熱炒街排隊餐廳必點玉米雞跟豬肝,,2026-04-24 02:52:09
+142,ifoodie,焰禾炒饭鸡汤面,104臺北市中山區吉林路128號1樓,ChIJRZDz7rypQjQRgvnj_cZDpnY,0.8,0.5,"food,taipei,restaurant,delicious",台北美食【焰禾炒飯雞湯麵】有平價鼎泰豐實力，必吃雞湯麵與排骨炒飯,,2026-04-24 02:52:12
+145,ifoodie,金順牛肉麵水餃大王,103臺北市大同區民生西路205號,ChIJsfgT_pGpQjQRKj8tdSHQ9KM,1.0,0.5,"Award-winning,Handmade,Noodle Expert",金順牛肉麵水餃大王 獲獎無數純手工刀切麵專家！菜單推薦必點炒麵系列,,2026-04-24 02:52:22
+146,ifoodie,郭記牛肉麵,100臺北市中正區汀州路二段152號,ChIJ_c-S6ZCpQjQR8BqlbR-GH6o,1.0,0.5,"food,noodles,beef,popular",古亭站美食｜郭記牛肉麵．必點巨大餛飩！在地人最愛家常美味,,2026-04-24 02:52:26
+151,ifoodie,杉旅森林 Coffee Roaster,112臺北市北投區竹子湖路33之10右轉70公尺 (猴崁圳古道旁,ChIJ3YzCB4SxQjQRnkLzleOMzRc,1.0,0.5,"beautiful,secluded,coffee",【北投美食】杉旅森林 Coffee Roaster，絕美秘境，被滿滿杉木環繞的空間推薦(菜單),,2026-04-24 02:52:39
+154,ifoodie,阿仁炒飯,103臺北市大同區哈密街45巷2之4號,ChIJ8cqWc0mpQjQRZm3RZqjV0pM,1.0,0.5,"food,recommended",阿仁炒飯｜網友公認台北最好吃炒飯藏在大龍峒保安宮巷弄,,2026-04-24 02:52:50
+155,ifoodie,弎樓Thirdfloor,105臺北市松山區延吉街9-5號,ChIJv_nFcqmrQjQRpz074nY9nGM,0.5,0.5,,台北松山復古台菜餐廳『弎樓Thirdfloor』菜單、辦桌菜環境還有包廂,,2026-04-24 02:52:54
+157,ifoodie,春城釣蝦美食廣場,111臺北市士林區至善路二段471號,ChIJ-QnQLSKsQjQRXsqswWpk5a0,0.8,0.5,"food,leisure,outdoor",春城釣蝦美食廣場｜環境超優的外雙溪釣蝦首選 (菜單),,2026-04-24 02:53:00
+160,ifoodie,赤鐵廣島燒專賣店,10491臺北市中山區撫順街12號,ChIJ28-XDkSpQjQRLYV2HYCXKUA,0.8,0.5,"food,Japanese cuisine,excitement",赤鐵廣島燒專賣店 廣島燒在台灣也能吃！,,2026-04-24 02:53:09
+162,ifoodie,老漿家,106臺北市大安區延吉街110號1F,ChIJZ4TUOv2rQjQRRd-mFosJ4T0,0.5,0.5,,老漿家｜台北大巨蛋美食．黃仁勳也造訪的24小時豆漿店,,2026-04-24 02:53:16
+163,ifoodie,府岸台菜海鮮城,106臺北市大安區永康街8巷7號,ChIJHcGMToKpQjQRcWfGfKBrPIE,0.8,0.5,"food,seafood,taiwanese cuisine",府岸台菜海鮮城，老饕都知道卻不告訴你的低調美味,,2026-04-24 02:53:20
+165,ifoodie,大橋頭胡椒餅,103臺北市大同區延平北路二段272巷口號,ChIJ6S-dUj6pQjQR8rrHa5OYsJc,1.0,0.5,"food,traditional,recommended",大橋頭胡椒餅》台北大同區百年炭烤胡椒餅推薦祖傳三代老店必吃五花肉赤肉,,2026-04-24 02:53:26
+166,ifoodie,麵包廚房,108臺北市萬華區峨眉街66號,ChIJHWG97gipQjQRM4_CFNctB20,1.0,0.5,"food,dessert,taipei",麵包廚房｜超過20年西門町麵包店老字號必點台北最好吃的芋泥蛋糕與可麗露,,2026-04-24 02:53:29
+169,ifoodie,十月茶餐廳,111臺北市士林區美德街64號,ChIJC_b8SYmvQjQRAgk3qcKOIrE,0.8,0.5,"food,restaurant",十月茶餐廳｜姊妹店進化！超強乾炒牛河與公仔麵 (菜單),,2026-04-24 02:53:38
+170,ifoodie,曾家豆漿,104臺北市中山區錦州街123號,ChIJ-YfzZFypQjQRAFxGl4nV8S0,1.0,0.5,"food,recommended,breakfast",【中山區美食】曾家豆漿，蛋餅、燒餅油條和蛋塔都意外超強推薦(菜單),,2026-04-24 02:53:41
+172,ifoodie,LaLaport南港,115臺北市南港區經貿二路131號,ChIJSwPgOACtQjQREeWs_povoDw,0.5,0.5,"vegetarian,brunch",PRESERVE｜LaLaport南港超強蔬食早午餐 (菜單),,2026-04-24 02:53:48
+175,ifoodie,逸香樓,10491臺北市中山區南京東路二段69號,ChIJ63-l2mapQjQRUxHIkM5pIjw,0.8,0.5,"delicious,affordable",逸香樓｜好吃又便宜的北平烤鴨，內行人從老店吃到現在,,2026-04-24 02:53:58
+176,ifoodie,すしの魚君 統一時代台北店,110臺北市信義區忠孝東路五段8號B2F,ChIJm9az5eerQjQRJs7U8v-gP7A,0.8,0.5,"food,sale,japanese cuisine",すしの魚君 統一時代台北店，週三鮭魚半價超划算 @神農太太底家,,2026-04-24 02:54:01
+177,ifoodie,凹屋咖啡,111臺北市士林區中山北路五段505巷44弄2號,ChIJZ5vfxPOvQjQRQ4l-DizRSXk,0.8,0.5,"foodie,coffee,trendy",肉多多早午餐、桂花釀西西里，品味獨具的咖啡饗宴 凹屋咖啡｜捷運士林站必訪,,2026-04-24 02:54:05
+178,ifoodie,小漁村精緻海鮮平價快炒,100臺北市中正區中華路二段311巷19號,ChIJ83F0JbupQjQRHfl00WP-Nh0,0.8,0.7,"night_market,seafood,popular",南機場夜市美食『小漁村精緻海鮮平價快炒』夜市的人氣熱炒店,,2026-04-24 02:54:08
+180,ifoodie,喬園海鮮餐廳,112臺北市北投區大業路512號,ChIJe20-7lOuQjQRzfKxBZfB19E,0.8,0.5,"affordable,seafood,popular",喬園海鮮餐廳｜有附停車場內用還白飯免費的北投人氣平價熱炒，8道菜竟然1600元就搞定！,,2026-04-24 02:54:15
+181,ifoodie,華承軒麺館,104001臺北市中山區中山北路一段136號,ChIJnbvFuVCpQjQRaCDyrd1Wp-c,1.0,0.5,"food,restaurant",華承軒麵館｜中山站美食．必點金華火腿雞湯扯麵,,2026-04-24 02:54:19
+185,ifoodie,曹氏家司機食堂,100臺北市中正區羅斯福路四段52巷16弄11號,ChIJJTKyidOpQjQRyyd0Tv8NdFo,0.8,0.5,"Korean food,authentic cuisine",曹氏家司機食堂 韓國老闆正宗韓式料理鍋物！菜單推薦豬肉湯飯馬鈴薯排骨湯,,2026-04-24 02:59:58
+187,ifoodie,寶島百匯,106臺北市大安區建國南路一段181號,ChIJK1mIzderQjQRwv43Zm13DJM,0.8,0.5,"buffet,foodie,health,charity",【育成蕃薯藤餐廳】寶島百匯自助餐吃到飽只要688元！吃buffet還能做公益食材新鮮健康,,2026-04-24 03:00:00
+190,ifoodie,湘鼎坊,106臺北市大安區基隆路二段184巷1號,ChIJa4KblDOqQjQRA8xdL09TJUw,0.8,0.5,"food,restaurant,chinese cuisine",湘鼎坊｜蔣經國御廚掌杓的老字號湘菜！砂鍋魚頭、豬腳必點，招牌菜強到需要預訂,,2026-04-24 03:00:04
+193,ifoodie,魯肉財,104臺北市中山區興安街51-4號,ChIJWd04KQCrQjQRAycSdayd0tE,0.8,0.5,"delicious,comfortable",魯肉財 ~ 傳承三代魯肉飯，好吃的雞魯飯、紅燒肉，便當菜色豐富，用餐環境很舒適,,2026-04-24 03:00:06
+194,ifoodie,何家百年祖傳排骨酥,108臺北市萬華區貴陽街二段110號,ChIJnRubrg6pQjQRjNk11WYljsE,0.5,0.5,"food,traditional",何家百年祖傳排骨酥，家傳四代百年秘醬排骨酥！,,2026-04-24 03:00:07
+195,ifoodie,早點初發-內湖店,11474臺北市內湖區環山路二段46號,ChIJEUbm02qtQjQRXTBUmIz_a54,0.8,0.5," Delicious,Nostalgic,Affordable,Adorable",滿滿懷舊感的清爽美味又好吃的早餐 /東西平實價格划算 「早點初發-內湖店」/貓咪厚片吐司超可愛,,2026-04-24 03:00:09
+197,ifoodie,羊成小館,100臺北市中正區忠孝東路二段80號,ChIJUUgeDnupQjQRgq7eGrd-818,0.8,0.5,"food,chinese cuisine",羊成小館｜傳承廣東楓林小館的台北粵菜館必點芋泥香酥鴨與瓊山豆腐,,2026-04-24 03:00:11
+199,ifoodie,大王漢寶殿,103臺北市大同區南京西路25巷18-1號,ChIJ_bLfb2mpQjQRk7aiaqiFO88,0.8,0.8,"trendy,busy,delicious",大王漢寶殿｜看起來很文青天天客滿的中山站早餐，價格很美而美可是餐點根本是頂規,,2026-04-24 03:00:13
+200,ifoodie,毓鮨割烹 重慶南店,10046臺北市中正區重慶南路一段141號,ChIJQdyLrC-pQjQRoFoFKoif9Ss,0.8,0.5,"Japanese food,high CP value,recommended",Google4.5顆星以上評價是許多人心中的高 CP 值日料餐廳｜毓鮨割烹 重慶南店,,2026-04-24 03:00:15
+201,ifoodie,霞海城隍廟,103臺北市大同區迪化街一段61號,ChIJ58RTchSpQjQR0nPhT8U-bWk,0.8,0.5,"afternoon tea,food,relaxation",霞海城隍廟旁必吃下午茶，私推酥脆肉嗲,,2026-04-24 03:00:16
+202,ifoodie,蔥海手工蔥油餅,105臺北市松山區饒河街58號,ChIJddVUjpmrQjQRm1cHZuH4QPg,0.8,0.5,"food,recommended,generous",蔥海手工蔥油餅 老闆豪邁給蔥不手軟！菜單推薦必點牛肉捲餅脆皮蛋餅,,2026-04-24 03:00:18
+204,ifoodie,Green Door Bar,104臺北市中山區德惠街6-1號號1樓,ChIJK_qldEWpQjQRGtIGxtGbJ5c,1.0,0.5,"food,bar,drinks",Green Door Bar 綠門老酒吧 老饕封為台北最強炸雞！披薩炒蛤蜊都好吃,,2026-04-24 03:00:21
+205,ifoodie,阿源煎餅,10491臺北市中山區四平街31號,ChIJe7f61WCpQjQRk_4PWAX8s9c,0.8,0.8,"food,popular,trendy",阿源煎餅｜從路邊攤賣到開店！松江南京站人氣超狂50元爆餡煎餅,,2026-04-24 03:00:22
+206,ifoodie,吞pop 香港蛋塔專門店,104628臺北市中山區雙城街17巷16號,ChIJM3PZZACpQjQRtlSciMlC7ac,0.5,0.5,"food,dessert",吞pop 香港蛋塔專門店 曲奇蛋塔 雞肉派 晴光商圈,,2026-04-24 03:00:24
+207,ifoodie,富善雞湯麵舖,105臺北市松山區光復北路11巷54號,ChIJJYCBUgCrQjQRpuH-CMvmjpI,1.0,0.5,"food,new_opening,high_value",新開幕！富善雞湯麵舖.西門町必吃濃郁老母雞湯！八小時慢熬精華，內用竟然還有豆花、霜淇淋吃到飽？超高 CP 值!,,2026-04-24 03:00:25
+208,ifoodie,小丁豆漿店,112臺北市北投區明德路172號,ChIJ6_Hl3o6uQjQRAwnMvy6dOMY,0.8,0.5,"food,breakfast,traditional",小丁豆漿店｜必點肉餅跟韭菜盒子！開業40年的北投石牌好吃豆漿店,,2026-04-24 03:00:27
+210,ifoodie,何家百年祖傳排骨酥,108臺北市萬華區貴陽街二段110號,ChIJnRubrg6pQjQRjNk11WYljsE,0.8,0.7,"food,popular,recommended",何家百年祖傳排骨酥｜傳承四代秘製醃料神出鬼沒的排骨酥，沒預訂真的買不到！,,2026-04-24 03:00:28
+212,ifoodie,老上海包子萬華萬大店,108臺北市萬華區萬大路225號,ChIJoUOjZwCpQjQRZ9rhyixVLcw,0.8,0.8,"food,popular,traditional",老上海包子萬華萬大店｜台北老麵包子推薦，萬大路美食必吃，現包現蒸一開賣就有人排隊,,2026-04-24 03:00:33
+215,ifoodie,順園小館,100臺北市中正區汀州路三段281號,ChIJoRPjyYqpQjQRLileViO9FZw,0.5,0.5,"food,restaurant,northern cuisine",順園小館，來自北方麵食老字號家常菜館！,,2026-04-24 03:00:44
+219,ifoodie,徐淮人家姊妹店,10491臺北市中山區遼寧街45巷2號,ChIJr7qMot6rQjQRhcpmY3_C3-Q,0.8,0.5,"delicious,generous portions",徐淮人家姊妹店！爆料肉夾饃超澎湃，大份量咖哩米線兩人吃都夠,,2026-04-24 03:00:57
+220,ifoodie,華承軒 麵館,104001臺北市中山區中山北路一段136號,ChIJnbvFuVCpQjQRaCDyrd1Wp-c,1.0,0.5,"delicious,noodle,Taiwanese cuisine",華承軒 麵館．台北中山美食｜中山區最強「扯麵」！金華火腿雞湯麵濃郁爆表！椒麻擔擔麵香麻Ｑ彈！手工現扯麵條筋道十足！捷運中山站～中肯‧食記！,,2026-04-24 03:01:00
+221,ifoodie,朵頤牛排新光站前店,100507臺北市中正區忠孝西路一段66號13 樓,ChIJB7N4QSmpQjQR2RZ3aZpJpMY,0.8,0.5,"food,buffet",牛排、龍蝦主餐任選 澎湃自助吧爽吃 朵頤牛排新光站前店｜台北車站吃到飽,,2026-04-24 03:01:04
+225,ifoodie,Pastaio Noodle Cafe,105臺北市松山區敦化北路199巷2弄19號,ChIJgRcaTPerQjQRsBHoPDTQXbI,0.8,0.7,"delicious,trendy,cafe",Pastaio Noodle Cafe｜創意義大利麵＋極厚布蕾吐司，結合咖啡館與餐酒館風格的小巨蛋人氣餐廳 @兔兒毛毛姊妹花,,2026-04-24 03:01:15
+227,ifoodie,黑老闆胡椒餅,104臺北市中山區伊通街98-1號,ChIJa3rNNdivQjQRMKfFW2W5x40,0.8,0.8,"foodie,popular,new_arrival",黑老闆胡椒餅｜罕見墨西哥辣椒口味，新餅一出爐立刻被掃光,,2026-04-24 03:01:22
+228,ifoodie,饌堂黑金滷肉飯雙連店,103臺北市大同區雙連街55號1樓,ChIJK53TViCpQjQRjkSn3eRMlOo,0.8,0.5,"food,trendy",饌堂黑金滷肉飯雙連店，台北文青風滷肉飯專賣店，捷運雙連站美食，雙連站黑金滷肉飯,,2026-04-24 03:01:25
+229,ifoodie,台北車站,100臺北市中正區黎明里,ChIJcYy0Y3KpQjQRXiW_s2lGln8,0.8,0.5,"sweet,new,Taiwan",台北車站新開幕！來自台中的超人氣甜點，只賣一種檸檬千層蛋糕,,2026-04-24 03:01:29
+232,ifoodie,品司和食,10448臺北市中山區天祥路48巷1號1樓,ChIJL3HOlOypQjQRB9_Xn8T5lfs,0.8,0.8,"Busy,Popular,Japanese Food",品司和食｜民權西路站旁低調和食，平日中午也客滿的高CP名店,,2026-04-24 03:01:37
+237,ifoodie,台北福華大飯店珍珠坊,106臺北市大安區仁愛路三段160號2樓,ChIJRW2USNGrQjQRCr_458UOPX0,0.8,0.8,"food,Chinese cuisine,buffet",台北福華大飯店珍珠坊｜超過60道現點現做港點粵菜吃到飽！平日午餐竟然也坐滿滿 @布雷克的出走旅行視界,,2026-04-24 03:01:53
+238,ifoodie,趙東園排骨專賣店,108臺北市萬華區開封街二段49號,ChIJj4eX3g6pQjQR0hJSDhWJ9ro,0.9,0.5,"food,delicious",趙東園排骨專賣店，現炸的酥香排骨就是美味，西門町美食(姊姊食記),,2026-04-24 03:01:56
+239,ifoodie,仁愛魚丸冬粉,106臺北市大安區復興南路一段340巷32號,ChIJQ1VZDtSrQjQRvJ9M9EJ07f4,1.0,0.5,"food,recommendation,delicious",【大安區美食】仁愛魚丸冬粉，魚丸大顆好吃，必加辣高麗菜跟半熟蛋推薦(菜單),,2026-04-24 03:02:00
+241,ifoodie,大黑松小倆口博愛門市,100臺北市中正區博愛路99號,ChIJP0MLdAupQjQRJYAXpx2bqRA,0.8,0.5,"food,trendy",70年台北老店出爐秒殺「現烤起酥蛋糕」!超大一條只要$150!大黑松小倆口博愛門市限定,,2026-04-24 03:02:07
+243,ifoodie,六小時麵包店,112臺北市北投區尊賢街218巷23弄12號,ChIJlZiukPyvQjQRwY2JKsk7WP8,0.5,0.5,"popular,limited_time",六小時麵包店｜只賣早上六小時的高CP值麵包，晚來真的會買不到,,2026-04-24 03:02:13
+246,ifoodie,白蘭市場,106臺北市大安區安居街9巷,ChIJz-KV4TaqQjQRZ8ZF49xq70w,0.8,0.5,"food,affordable,delicious",【大安食記】生魚片專賣店，白蘭市場巷內的無名生魚片店家，低調實惠平價好吃，六張犁站走路12分鐘(菜單) – MayaWang 麻亞愛吃喝玩樂,,2026-04-24 03:02:22
+247,ifoodie,燒肉九州魂,10491臺北市中山區中山北路一段83巷16號之3號,ChIJicvHbX2pQjQRDlw6KQNU70o,0.5,0.5,"food,restaurant,japanese cuisine",中山區超值和牛燒肉套餐『燒肉九州魂』菜單、日本藝人夢多開的燒肉店、嚴選日本宮崎和牛燒肉,,2026-04-24 03:02:25
+248,ifoodie,TaSweet菓子屋,106臺北市大安區瑞安街224號,ChIJV5n90JbnZzQRKYyeqCvIPYM,0.8,0.5,"sweet treats,strawberry cake,European pastry",大安區人氣歐洲蛋糕捲『TaSweet菓子屋』一週只開三天的神級草莓蛋糕,,2026-04-24 03:02:29
+249,ifoodie,家傳美味小館,111臺北市士林區德行東路109巷90號(邊間第二間公園旁)-家傳美味小館,ChIJ74SEfRupQjQRL8nUEOoy8Q8,1.0,0.5,"delicious,hidden_gem,noodles,taipei_eats",【家傳美味小館】藏身巷弄的超猛麻醬麵，吃上一口直接納入再訪名單｜台北天母美食推薦｜士林區/捷運芝山站(菜單),,2026-04-24 03:02:33
+253,ifoodie,心潮仙宮 Taiwanese Cuisine & Wine Bar,110臺北市信義區松智路17號4樓,ChIJ3SzTNQCrQjQRtiL-V5VidmE,1.0,0.5,"trendy,recommended,creative",必比登推薦復古摩登新時尚｜心潮仙宮 Taiwanese Cuisine & Wine Bar 創意台式宴席菜,,2026-04-24 03:02:46
+254,ifoodie,惠Q潤餅,100臺北市中正區臨沂街73-1號,ChIJXTKBK3ipQjQRIKN5nqhg794,1.0,1.0,"food,queue,recommended",【東門美食】惠Q潤餅，市場內超排隊名店，極度好吃推薦(菜單),,2026-04-24 03:02:50
+255,ifoodie,老眷村煎餅,115臺北市南港區興中路56巷27號,ChIJxc4201-rQjQRHdxxBYw0-rw,0.8,0.7,"food,queuing,recommended",【南港美食】老眷村煎餅，巷弄的排隊店，大單直接訂兩百個高麗菜、紅豆超推薦(推薦),,2026-04-24 03:02:53
+260,ifoodie,仁愛魚丸冬粉,106臺北市大安區復興南路一段340巷32號,ChIJQ1VZDtSrQjQRvJ9M9EJ07f4,0.8,0.5,"food,traditional,noodle",仁愛魚丸冬粉｜巷弄內飄香數十年的古早味，半熟蛋與辣高麗菜乾是靈魂,,2026-04-24 03:03:07
+262,ifoodie,Fourninetine Bakery 南京三敏店,105臺北市松山區八德路四段245巷32弄22號ㄧ樓,ChIJK_opspWrQjQR-_5aYDxDXBw,0.8,0.5,"food,cafe,afternoon tea",台北最好吃的可頌『Fourninetine Bakery 南京三民店』品項價格、松山下午茶推薦,,2026-04-24 03:03:13
+264,ifoodie,習瑞鎮商行XJZ living firm,106臺北市大安區信義路二段196號5樓,ChIJ4evX5papQjQRArt-r5T2Vd0,0.5,0.5,"newly opened,coffee",東門站新開幕『習瑞鎮商行XJZ living firm』質感咖啡廳、菜單,,2026-04-24 03:03:20
+268,ifoodie,蔣記家薌麵,106臺北市大安區四維路208巷18之1號1樓,ChIJAWZ_6i2qQjQRqsm-OfE9RcI,0.8,0.5,"food,recommended,hidden_gem",蔣記家薌麵，低調在成功國宅巷弄內的樸實眷村美味，推薦熗鍋麵及各式小菜，科技大樓站走路8分鐘(菜單) – MayaWang 麻亞愛吃喝玩樂,,2026-04-24 03:08:52
+269,ifoodie,真福記脆皮烤鴨餐廳,105臺北市松山區健康路3巷2號,ChIJDZkyvOmrQjQRapA6A1wfqMs,1.0,0.5,"delicious,satisfying,gatherings",真福記脆皮烤鴨餐廳｜一鴨三吃超滿足，小巨蛋最強聚餐桌菜,,2026-04-24 03:08:54
+270,ifoodie,喫飯食堂,106臺北市大安區永康街8巷5號,ChIJv7oLPIypQjQRzqh7ryK1me0,0.8,0.5,"taiwanese cuisine,restaurant,foodie,delicious",喫飯食堂｜2、3人就能享受的古早味台菜餐館！又脆又嫩的煎豬肝一吃就愛上！芋泥控必點外酥內綿招牌芋頭捲！大安區美食推薦、大安區小吃推薦、大安區聚餐推薦、大安區聚餐、東門捷運站美食、大安森林公園美食、台北聚餐推薦 – 佛系旅遊筆記,,2026-04-24 03:08:55
+274,ifoodie,小肥小吃店,105臺北市松山區南京東路五段250巷2弄2號,ChIJB8lgmparQjQR7D3TbiHpOsY,0.8,0.5,"food,restaurant,hidden gem",小肥小吃店｜藏在南京三民站巷弄裡的傳說中五百萬便當是許多名人推薦,,2026-04-24 03:08:58
+277,ifoodie,富特士多早餐店 FOOTD STORE,10841臺北市萬華區昆明街274號1樓,ChIJX29JK0GpQjQRwQIqsO4CAeU,1.0,0.5,"food,breakfast,delicious",西門早餐『富特士多早餐店 FOOTD STORE』超好吃港式早餐、奶油脆朱、沙嗲牛肉、奶酥厚片都很強,,2026-04-24 03:09:01
+279,ifoodie,泰市場大直英迪格店,104053臺北市中山區植福路200號台北大直英迪格酒店4F4樓,ChIJcWK-SmatQjQRL7lvJHO0sFk,0.8,0.5,"Thai food,buffet",泰市場大直英迪格店，經典泰式吃到飽餐廳！2025價格！,,2026-04-24 03:09:03
+283,ifoodie,餡老滿南港旗艦店,115臺北市南港區經貿二路66號2 樓,ChIJ2UiM5KesQjQRVScr2ns4Dxs,0.8,0.5,"chinese food,family gathering,parking available",餃子個頭大口味特別，宮庭菜和特色中式熱炒，尾牙春酒家庭聚會聚餐好停車推薦｜餡老滿南港旗艦店,,2026-04-24 03:09:08
+284,ifoodie,雅力根坊,111臺北市士林區中山北路五段511號,ChIJMYUYe6OuQjQRAlyMtXgzNLs,0.5,0.5,"food,dessert,affordable",士林老字號蛋糕店『雅力根坊』超濃乳酪條只要32元,,2026-04-24 03:09:09
+285,ifoodie,Super Thai,108臺北市萬華區昆明街95號1樓,ChIJlxUNH0SpQjQRhCCzy1tP6qc,0.5,0.5,"Thai food,restaurant",西門美食｜超泰 泰國餐廳Super Thai food อาหารไทย｜泰國網紅私房泰式料理口袋推薦,,2026-04-24 03:09:11
+286,ifoodie,濟南鮮湯包,106臺北市大安區濟南路三段20號,ChIJFXOByn2pQjQRchJYlGYxFeU,1.0,0.5,"food,Taiwanese cuisine,popular",濟南鮮湯包｜超過三千則評價許多名人愛店必點台北最好吃的東坡肉,,2026-04-24 03:09:12
+288,ifoodie,燔之亭燒肉場,105臺北市松山區延吉街30巷4號,ChIJJy1gHHmpQjQRD7btK9kN0qA,1.0,0.5,"food,BBQ,satisfying",夠份量豬雞烤肉饗宴＋招牌烤半雞超滿足 燔之亭燒肉場｜台北東區無菜單料理,,2026-04-24 03:09:14
+289,ifoodie,台北行天宮站甜點咖啡廳,10491臺北市中山區松江路330巷1號,ChIJK5l2R1mpQjQR4zD198c6jWM,0.8,0.5,"sweet,coffee,dessert",台北行天宮站甜點咖啡廳-4K手作烘焙被提拉米蘇覆蓋的可頌,,2026-04-24 03:09:15
+297,ifoodie,老攤鐵板燒,111台北市士林区基河路101號B1美食街 35/36/37號攤位,ChIJU6YcwLGuQjQRH3TcyZO7sVA,0.8,0.5,"night_market,food,affordable",老攤鐵板燒｜近40年歷史夜市老牌平價鐵板燒，鐵板牛排外加白飯、湯、飲料無限量供應只要190元,,2026-04-24 03:09:27
+301,ifoodie,陳記米糕,"No, No. 150號吳興街信義區臺北市110",ChIJP8NZCbWrQjQRepyIHHssizs,0.8,0.5,"food,affordable,recommendation",台北爆料佛跳牆只要130元『陳記米糕』菜單、信義區吳興街小吃推薦,,2026-04-24 03:09:39
+303,ifoodie,成吉思汗烤羊肉名店,10491臺北市中山區中山北路二段74號,ChIJY5kVbQCpQjQRvwPwS-iJBOs,0.8,0.5,"food,restaurant,lamb",北海道旭川成吉思汗烤羊肉名店登台，可吃七分熟的超鮮嫩羊肉,,2026-04-24 03:09:47
+305,ifoodie,曉迪筒仔米糕,100臺北市中正區中華路二段307巷22號,ChIJy5-CzqSpQjQR0m1XOVI8Mjk,1.0,0.5,"food,local,recommended",曉迪筒仔米糕，在地人狂推滷肉飯、排骨酥湯、米糕必吃三寶,,2026-04-24 03:09:52
+308,ifoodie,就饗鐵板燒,106臺北市大安區忠孝東路四段49巷4弄10號,ChIJm2Bv02qrQjQRIQpq_XwzGOs,0.8,0.5,"food,Buffet,all-you-can-eat",就饗鐵板燒， 無限青菜飲料吃到飽，還免服務費,,2026-04-24 03:10:03
+310,ifoodie,曹氏家司機食堂,100臺北市中正區羅斯福路四段52巷16弄11號,ChIJJTKyidOpQjQRyyd0Tv8NdFo,0.8,0.5,"food,recommendation,traditional",曹氏家司機食堂，道地香濃豬肉湯飯，酥脆海鮮煎餅推薦,,2026-04-24 03:10:10
+311,ifoodie,西門町唐吉訶德,108臺北市萬華區武昌街二段56號,ChIJg3-AntmpQjQRWPdF7oc9-FM,0.8,0.5,"food,korean_cuisine,buffet",2026台北西門町美食推薦｜江陵阿嬤x甩鍋雞雙品牌韓式料理吃到飽｜50樣美食自助吧韓式料理吃到爽，西門町唐吉訶德4F美食推薦，台北萬華區吃到飽推薦,,2026-04-24 03:10:14
+317,ifoodie,林家蔬菜羊肉爐,104臺北市中山區吉林路327號,ChIJx-WJMVqpQjQRW9kBZJUgJss,1.0,0.5,"food,mutton hot pot,Michelin recommended",林家蔬菜羊肉爐，米其林推薦的好吃國產溫體羊肉爐,,2026-04-24 03:10:33
+318,ifoodie,鵝娘去骨鵝肉,104臺北市中山區建國北路二段151巷24號,ChIJ3Uhcv7arQjQRh55kvIBMbq0,0.8,0.5,"food,restaurant,delicious",台北巷弄內高CP值的「鵝娘去骨鵝肉」各種部位的鵝肉料理一次擁有！,,2026-04-24 03:10:37
+320,ifoodie,圓環魯肉飯,111臺北市士林區德行東路150號,ChIJ34R-H5uuQjQR63KcC-GkI-s,1.0,0.5,"food,popular,local",圓環魯肉飯｜在地人氣便當店，大雞腿現炸超酥脆必點,,2026-04-24 03:10:43
+321,ifoodie,朵頤牛排台北新光站前店,100507臺北市中正區忠孝西路一段66號13 樓,ChIJB7N4QSmpQjQR2RZ3aZpJpMY,0.8,0.5,"food,buffet,luxe",朵頤牛排台北新光站前店》728元起Prime牛排百匯自助吧吃到飽龍蝦海陸雙饗,,2026-04-24 03:10:46
+322,ifoodie,馮校長老火鍋台灣首店,106臺北市大安區延吉街157-1號,ChIJtwzGGmWrQjQRTO5settlAuk,0.8,0.9,"popular,trendy,delicious",馮校長老火鍋台灣首店，成都爆紅火鍋店，日均翻桌15輪，排隊5小時，連黃仁勳都吃過！,,2026-04-24 03:10:50
+325,ifoodie,蝦味鮮,105臺北市松山區八德路四段667號,ChIJR-asWZmrQjQRmXGv2D7OEeM,0.8,0.5,"food,recommended,award-winning",三訪也不膩！神級滷肉飯得獎實力，這碗真的有夠狂！⎜新北市新店區 蝦味鮮蝦仁排骨飯,,2026-04-24 03:10:59
+327,ifoodie,北門蝦仁飯·煲湯,103臺北市大同區天水路2-4號,ChIJZ8M90UqpQjQRF4SLCZnGD8Q,0.9,0.5,"food,delicious,recommended",北門蝦仁飯·煲湯｜半熟蛋蝦仁飯邪惡爆汁，一口吃下超銷魂,,2026-04-24 03:11:05
+328,ifoodie,儂安益麵館,10491臺北市中山區農安街83號,ChIJR4G1XlqpQjQRkBzOJHsTdzo,0.8,0.5,"food,noodles,tasty",【中山國小美食小吃】儂安益麵館 75年古早味麵食館！菜單推薦全套乾麵+餛飩湯老饕吃法,,2026-04-24 03:11:09
+329,ifoodie,君曜雞湯,110臺北市信義區信義路四段393號,ChIJD5nUagCrQjQRifr0hJF5Yio,1.0,0.5,"food,hot_pot,taiwanese_cuisine",最強台北雞湯火鍋 日本和牛、活龍蝦 滿滿膠質的銷魂滋味 君曜雞湯｜,,2026-04-24 03:11:12
+332,ifoodie,芙蓉燒包,115臺北市南港區昆陽街81號,ChIJO9aVdmSpQjQR9mOKpAs3CjU,0.8,0.5,"food,malaysian cuisine",大馬人認證！外香酥、內濕潤，馬來西亞「芙蓉燒包」台北就吃的到,,2026-04-24 03:11:22
+334,ifoodie,台北新光站前店,100臺北市中正區忠孝西路一段66號,ChIJcwMa3HKpQjQRDEzzZzYIn-M,0.8,0.5,"buffet,vegetarian,foodie",果然匯台北新光站前店》100多道蔬食Buffe無限供應7道新光站前限定菜色吃到飽攻略,,2026-04-24 03:11:29
+335,ifoodie,Ashin阿鑫 (阿鑫小料理),105臺北市松山區民權東路三段160巷19弄36號,ChIJt8Z3vzOrQjQRe3eOIG77rO8,0.8,0.8,"Japanese food,exclusive,trendy",Ashin阿鑫 (阿鑫小料理) | 日式無菜單料理，預約困難店感恩有揪,,2026-04-24 03:11:32
+339,ifoodie,遼寧街黑麻糬,104臺北市中山區遼寧街79號,ChIJPccehd6rQjQRv3NslF1M4NI,0.8,0.5,"sweet,foodie,dessert",黑麻糬｜遼寧街必吃甜點！超狂30種口味手工麻糬，草莓大福真的有夠腰瘦大顆,,2026-04-24 03:11:43
+341,ifoodie,高麗園韓式料理,100臺北市中正區市民大道三段2號9樓,ChIJMVLcV2OpQjQR9OML4tACUk0,0.5,0.5,"food,korean,buffet",高麗園韓式料理吃到飽三創店,,2026-04-24 03:11:49
+344,ifoodie,三味麵食,100臺北市中正區桃源街14號,ChIJAR03thmpQjQRZOTZJ5RjSDE,0.8,0.5,"food,satisfaction,delicious",三味麵食，厚實排骨配一碗餛飩湯超滿足，捷運西門站美食(姊姊食記),,2026-04-24 03:11:58
+348,ifoodie,老北一菜盒店,110臺北市信義區莊敬路407號,ChIJ11_N3UOrQjQRVwmIeU_nFWQ,1.0,0.5,"food,restaurant,taiwanese cuisine",信義區｜老北一菜盒店，隨便點都好吃的超強乾烙餅店,,2026-04-24 03:12:11
+349,ifoodie,Skylark洋食芳鄰,10046台北市中正区怀宁街90號1樓,ChIJy9yiTQupQjQRD2XanAsuQOc,0.8,0.5,"family-friendly,foodie,restaurant",家庭聚餐首選 牛排、早午餐，麵包吃到飽 Skylark洋食芳鄰｜士林站美食,,2026-04-24 03:12:15
+350,ifoodie,Gira Pizza,105臺北市松山區敦化北路165巷6號,ChIJkwhy1ZKrQjQR7TwgoE858CE,0.8,0.5,"food,Italian,Napoli pizza,restaurant",【Gira Pizza 旋轉披薩】一位難求的正宗拿坡里披薩，亞軍主廚的純正義大利風味｜台北松山美食推薦｜捷運台北小巨蛋站(菜單),,2026-04-24 03:12:18
+352,ifoodie,秦味館,106臺北市大安區延吉街138巷2號,ChIJ0_ua_cWrQjQRIbUBC-UUu_E,0.8,0.5,"restaurant,foodie,tasty",秦味館｜有夠特別‼️台北少數主打陜西菜餐廳推薦必點蒙古炸奶豆腐與手撕泡饃,,2026-04-24 03:12:25
+353,ifoodie,西門町巷仔內老牌沙茶火鍋,108臺北市萬華區西寧南路90巷3號,ChIJee9-rQmpQjQRNqBrBRoClgU,0.5,0.5,"local,hidden gem,hot pot",西門町巷仔內老牌沙茶火鍋，在地人才知道的火鍋店,,2026-04-24 03:12:29
+354,ifoodie,大舅媽鍋貼,106臺北市大安區忠孝東路三段248巷16號,ChIJiQTtvjmrQjQR5ZL7q0My7Tw,0.8,0.5,"food,hidden gem",【台北捷運忠孝復興站】大舅媽鍋貼，隱藏正義國宅裡水餃鍋貼店，台北鍋貼排名,,2026-04-24 03:12:32
+355,ifoodie,THE FLOW,104臺北市中山區中山北路一段49號,ChIJQ1PE-zWpQjQR5Zub1pjM4eI,0.8,0.5,"food,delicious,tasty",THE FLOW 超鮮甜的炭燒東北角小卷 米心感很強烈的蟹汁燉飯 皮脆肉鮮嫩的熟成和羊鞍 附菜單,,2026-04-24 03:12:36
+357,ifoodie,真福記脆皮烤鴨餐廳,105臺北市松山區健康路3巷2號,ChIJDZkyvOmrQjQRapA6A1wfqMs,1.0,0.5,"delicious,satisfying,group-friendly",真福記脆皮烤鴨餐廳｜一鴨三吃超滿足，小巨蛋最強聚餐桌菜,,2026-04-24 03:12:42
+358,ifoodie,椒心苑麻辣鍋,10491臺北市中山區南京東路三段22號,ChIJM7sJNperQjQRoI5JZkVD5eo,1.0,0.5,"food,hotpot,restaurant",椒心苑麻辣鍋｜高CP值麻辣火鍋吃到飽，台北聚餐首選！,,2026-04-24 03:12:46
+362,ifoodie,冠軍菜肉餛飩,108臺北市萬華區萬大路174號,ChIJg5EnDRGpQjQRWbzSCzUBGLU,0.8,0.5,"food,restaurant,taiwanese cuisine",萬華美食｜桃源街老店回歸！「冠軍菜肉餛飩」不只巨無霸餛飩，雙醬麵配辣高麗菜才是老饕隱藏吃法,,2026-04-24 03:12:58
+364,ifoodie,芯聚苑,110台北市信义区松仁路99號B1,ChIJLyleWQCrQjQROLcnNgBHhcw,0.5,0.5,"afternoon tea,cantonesecuisine",芯聚苑》699港點吃到飽信義區ATT Valley粵式港點中菜熱炒35道現做料理下午茶,,2026-04-24 03:13:06
+365,ifoodie,歸綏街當歸豬腳老店,103臺北市大同區歸綏街181號,ChIJpR6lOBWpQjQRkyNWjWoQpMw,0.8,0.5,"food,delicious",歸綏街當歸豬腳老店，辣椒醬油是靈魂必加，大橋頭站美食(姊姊食記),,2026-04-24 03:13:10
+368,ifoodie,阿仁炒飯,103臺北市大同區哈密街45巷2之4號,ChIJ8cqWc0mpQjQRZm3RZqjV0pM,1.0,0.5,"food,delicious",阿仁炒飯｜藏在大龍峒保安宮巷弄網友公認台北最好吃炒飯,,2026-04-24 03:13:18
+370,ifoodie,家園江浙小館,106臺北市大安區羅斯福路二段15巷2號,ChIJ9---TpqpQjQR7C643oFKTVE,1.0,0.5,"美味,江浙菜",家園江浙小館，在地人才知道的巷弄超美味江浙菜料理！,,2026-04-24 03:13:25
+373,ifoodie,湘鼎坊,106臺北市大安區基隆路二段184巷1號,ChIJa4KblDOqQjQRA8xdL09TJUw,0.8,0.5,"food,restaurant,recommended",湘鼎坊｜蔣經國御廚掌杓的老字號湘菜！砂鍋魚頭、豬腳必點，招牌菜強到需要預訂,,2026-04-24 03:13:36
+379,ifoodie,老車滷味,105臺北市松山區富錦街516號,ChIJPfAJcBerQjQRKY0llsjf1LE,0.8,0.8,"popular,traditional,foodie",老車滷味｜500碗小吃推薦名店！開門就大排長隊的民生社區巷弄40年煙燻滷味傳奇,,2026-04-24 03:13:55
+380,ifoodie,極之好味 港式燒臘飯館｜台北大安店,106臺北市大安區大安路一段16巷8號1 樓,ChIJWwWQnq-rQjQRNSokS-W_jro,1.0,0.5,"food,restaurant,Chinese cuisine",東區好吃燒臘『極之好味 港式燒臘飯館｜台北大安店』平價燒臘便當、好吃鴨腿飯,,2026-04-24 03:13:58
+387,ifoodie,有有1969,104臺北市中山區遼寧街48號,ChIJUVfSk46rQjQRjSYEdTmKW8Q,0.8,0.5,"food,restaurant",有有1969｜升級成2.0版的遼寧街50年精緻熱炒店必點惹娘燒蛋與百花油條,,2026-04-24 03:14:19
+388,ifoodie,貓將壽司,110臺北市信義區松仁路58號14樓,ChIJtzPpUgCrQjQRxwkFaDT08O0,1.0,0.5,"日本料理,景觀餐廳,幸福,美食",【台北美食遠百信義A13景觀日式料理｜貓將壽司：坐擁101美景的質感系景觀餐廳！百道現做日料太好吃，邊看風景邊吃壽司真的太幸福,,2026-04-24 03:14:22
+389,ifoodie,君品頤宮,103臺北市大同區承德路一段3號17樓,ChIJr4YudW2pQjQR6s2rQHF7d5A,0.8,0.5,"food,delicious",前君品頤宮廚師掌廚！烤鴨五吃太過癮，連Ｉ人都衝去買燒臘便當,,2026-04-24 03:14:26
+390,ifoodie,Primo Pizza,112062臺北市北投區西安街二段87號1樓,ChIJ23BqjkavQjQRdiuskERiNOc,0.8,0.5,"food,italian,pizza",Primo Pizza 布利莫義式窯烤披薩｜必吃五大招牌披薩，正宗那不勒斯風味,,2026-04-24 03:14:29
+392,ifoodie,荷李活茶街,106臺北市大安區忠孝東路四段45號2樓,ChIJR_bdUyirQjQR7R3aP8zoHyo,1.0,0.5,"recommended,Hong Kong style,delicious",荷李活茶街｜滿滿香港味！蜜汁叉燒大力推薦必點,,2026-04-24 03:14:37
+393,ifoodie,碧山岩,114臺北市內湖區碧山路24號,ChIJC3Q_e_msQjQRgEw324e0CRM,0.8,0.5,"food,restaurant,taiwanese_cuisine",內湖｜碧山岩桶仔雞，需要預訂的台北最強桶仔雞，雞油馬鈴薯必點！,,2026-04-24 03:14:40
+394,ifoodie,上順興香Q飯糰,110臺北市信義區基隆路一段53號,ChIJVVVVVRWsQjQRnwEwWqVStM0,0.8,0.5,"food,breakfast,restaurant",上順興香Q飯糰｜原本近千則評論的台北東區巨無霸飯糰早餐搬家了！必點隱藏版蔥油餅包飯糰,,2026-04-24 03:14:44
+398,ifoodie,川畝園麵食館,103臺北市大同區承德路二段120號1樓,ChIJU21B8GupQjQRRRTsNGB9Qrg,1.0,0.5,"food,michelin,chinese cuisine",川畝園麵食館｜米其林推薦中式麵點，蔥油餅、牛肉捲餅必吃,,2026-04-24 03:14:56
+399,ifoodie,沾美西餐廳,106臺北市大安區仁愛路四段77號B1,ChIJKwZSytGrQjQRzl585-Teyig,0.8,0.5,"delicious,satisfying",沾美西餐廳，台北老字號西餐廳，中午吃到飽很過癮,,2026-04-24 03:15:00
+402,ifoodie,義村羊肉爐老店,108臺北市萬華區萬大路336號,ChIJbUmSSZ6pQjQR8wmsluK-YTc,0.8,0.5,"food,restaurant,lamb hot pot",台北最佛系羊肉爐『義村羊肉爐老店』帶皮羊肉只要350元,,2026-04-24 03:15:09
+404,ifoodie,星龍鳳,106臺北市大安區金華街223之3號,ChIJ4QUlUQCpQjQRnf5t7RTC20o,1.0,0.5,"delicious,tasty,recommended",星龍鳳，台北最好吃的中華小料理，西多士、麻婆豆腐必點！,,2026-04-24 03:15:15
+406,ifoodie,西門站,100臺北市中正區寶慶路32-1號,ChIJE0ZOgAmpQjQRt-nR5SlhrYI,0.8,0.5,"romantic,vintage,foodie",上上咖啡，老派的浪漫懷舊風格，暖胃的俄式羅宋湯，西門站美食(姊姊食記),,2026-04-24 03:15:22
+410,ifoodie,秘魯烤雞Polleria,100臺北市中正區牯嶺街61-5號,ChIJj0kKq5mpQjQRVbzY6qx67Yw,0.5,0.5,"Peruvian food,Latin American cuisine",秘魯烤雞Polleria，道地拉丁美洲秘魯烤雞在台北！,,2026-04-24 03:15:33
+411,ifoodie,道食樂韓式小吃,110臺北市信義區虎林街137號,ChIJfTsB_KOrQjQRfDShmhGM7eU,0.8,0.5,"korean food,popular,trendy",道食樂韓式小吃｜永春站人氣韓餐，來吃人參雞湯X海鮮煎餅搭無限續韓式小菜！,,2026-04-24 03:15:37
+417,ifoodie,金山客家小館,105臺北市松山區南京東路五段250巷2弄5號1樓,ChIJW-0Vl5arQjQRnd0jVlLsV1k,0.8,0.5,"traditional,local,affordable",金山客家小館｜在地人從小吃到大的老字號客家菜，份量實在又不傷荷包,,2026-04-24 03:15:55
+418,ifoodie,微風信義店,110臺北市信義區忠孝東路五段68號,ChIJF56JICerQjQRTLk0TROK07g,0.8,0.5,"food,restaurant,set meal",瀧厚Set Meal 微風信義店｜不到千元的超浮誇台北信義區六道式牛排套餐！桌邊點火甜點超吸睛,,2026-04-24 03:15:59
+425,ifoodie,OKAY韓國烤肉,10491臺北市中山區南京東路一段34號2樓,ChIJjTx_y2ipQjQRsbBeE7AaDsc,0.8,0.5,"food,korean BBQ",台北中山韓式吃到飽OKAY韓國烤肉｜高CP價位、菜單、評價推薦,,2026-04-24 03:16:22
+426,ifoodie,樂食蜀川味麺館,116臺北市文山區景美街1-8號,ChIJG12ijLerQjQRlSIcOK1t2Qs,0.5,0.5,"food,night market",樂食蜀川味麵館-成都擔擔麵、口水雞、景美夜市美食、文山區小吃,,2026-04-24 03:16:25
+429,ifoodie,Dream Plaza,110臺北市信義區松高路11號,ChIJJVngMACrQjQRwo409l3ttvw,0.8,0.5,"food,buffet,nightlife",Urban Paradise 餐酒吃到飽真實心得平日晚餐，位於Dream Plaza 近捷運市政府站(Buffet價錢/訂位方式) – MayaWang 麻亞愛吃喝玩樂,,2026-04-24 03:16:35
+430,ifoodie,無一物海產粥,106臺北市大安區金華街183巷22號,ChIJIRNb73OpQjQRVmI3iE_whtw,0.8,0.8,"seafood,popular,queue",無一物海產粥｜六種海鮮超澎湃．東門站排隊人氣小吃店(菜單),,2026-04-24 03:16:39
+433,ifoodie,陸光小館,105臺北市松山區敦化北路165巷4號,ChIJ9TjtLgCrQjQRpyCHskGb5BQ,0.8,0.5,"taiwanese_cuisine,local_eats,hidden_gem",【松山區美食】陸光小館，不是網美店卻超有味道！絕對會再訪的眷村系台菜推薦(菜單),,2026-04-24 03:16:47
+434,ifoodie,和記豆漿店,110臺北市信義區和平東路三段463巷2之2號,ChIJVVVVVWWqQjQRmpqH5sBiy1U,1.0,1.0,"traditional,popular,breakfast",和記豆漿店｜炭火厚燒餅夾蛋超狂必吃！在地人每天排爆的傳統人氣早餐店,,2026-04-24 03:16:51
+437,ifoodie,以雪爾韓食堂,10074臺北市中正區南海路2巷14號,ChIJu13Gr-CpQjQRfd1bHjYwv7w,0.8,0.5,"Korean Food,Taipei,Affordable,Delicious",以雪爾韓食堂：中正紀念堂巷弄平價韓食，家常烤肉與炒冬粉，台北道地韓式料理,,2026-04-24 03:17:01
+438,ifoodie,Lost and Found 信義店,106臺北市大安區敦化南路二段11巷50號,ChIJj9j7W2WrQjQR_UgmSg_0jkw,0.8,0.5,"cafe,foodie,relaxing",土石流阿芙佳朵、鮭魚三明治，讓你從早午餐吃到下午茶 Lost and Found 信義店｜信義安和站咖啡廳推薦,,2026-04-24 03:17:05
+439,ifoodie,福鼎湯包店,116臺北市文山區興隆路三段112巷2弄13號,ChIJcaceqxOqQjQRjSTp2mVr7A0,1.0,0.5,"food,affordable,popular",福鼎湯包店｜號稱平民版鼎泰豐！人氣湯包、蛋餅、大骨湯麵全都只要銅板價！,,2026-04-24 03:17:06
+443,ifoodie,市場二樓的家庭小炒,"樓132攤, 2, No. 100號士東路士林區臺北市111",ChIJhRb7WoSuQjQR0kAKMuHCEvA,0.8,0.5,"food,restaurant,popular",家庭小炒｜藏身市場二樓的平價人氣熱炒店，蔥爆牛肉必點超下飯！,,2026-04-24 03:17:18
+445,ifoodie,三合麵,108臺北市萬華區長泰街39號,ChIJX5DHBbepQjQRQA6ihSO9A3g,1.0,0.5,"food,hidden gem",沒人介紹絕對不會知道的萬華低調神祕麵店，三合麵配卜肉就是讚,,2026-04-24 03:17:24
+451,ifoodie,羅家擔仔麵,108臺北市萬華區環河南路二段125巷9號,ChIJGd7DCK2pQjQRuJb_zTeXx_8,0.5,0.8,"food,hidden gem,limited availability",羅家擔仔麵｜無招牌隱藏版早午餐，太晚來就吃不到,,2026-04-24 03:17:42
+453,ifoodie,父子廚房,111臺北市士林區格致路22號1F,ChIJM4ZKiOetQjQR2JECqWDxcrA,0.8,0.5,"food,Korean-Chinese cuisine,recommended",《台北‧士林》父子廚房-韓式中華料理藏身山仔后 最道地炸醬麵乾燒蝦就在這,,2026-04-24 03:17:49
+454,ifoodie,順園小館,100臺北市中正區汀州路三段281號,ChIJoRPjyYqpQjQRLileViO9FZw,0.8,0.8,"delicious,popular,Recommended",順園小館｜在地人激推北方家常菜，公館生意超好小吃餐廳,,2026-04-24 03:17:52
+456,ifoodie,五草車中華食館南昌店,100臺北市中正區南昌路二段188號,ChIJlS1DbJCpQjQRjniDanw6900,0.8,0.5,"food,restaurant,Taiwanese cuisine",古亭美食│五草車中華食館南昌店│炒飯控注意！粒粒分明排骨蛋炒飯登場！古亭炒飯、台北排骨蛋炒飯,,2026-04-24 03:17:59
+457,ifoodie,國父紀念館站,11072臺北市信義區忠孝東路四段400號,ChIJgTD0CMerQjQRuEohy9I5Jz4,0.8,0.5,"popular,food",歐式可頌、丹麥、酸種麵包專賣，國父紀念館站人氣名店！,,2026-04-24 03:18:02
+459,ifoodie,九記何燒臘,10491臺北市中山區吉林路124號,ChIJRVU8XWepQjQRQ1hab_XX9VQ,1.0,0.5,"food,restaurant,delicious",九記何燒臘｜六十年港式燒臘老店，燒肉皮脆爆香、鴨腿好吃，動漫風便當盒也超吸睛！,,2026-04-24 03:18:09
+460,ifoodie,廖家牛肉麵,106臺北市大安區金華街98號,ChIJgbwEgJypQjQR6zkPQ6rpaNI,1.0,0.5,"food,beef noodle,taiwanese cuisine",廖家牛肉麵｜台北必吃清燉牛肉麵除了牛肉麵必點豆干跟牛尾巴,,2026-04-24 03:18:12
+462,ifoodie,南山炸豬排남산돈까스,103臺北市大同區南京西路18巷6弄8-2號2樓,ChIJu93FIyapQjQRLto-gJ-WMus,0.8,0.5,"Korean food,newly opened,hidden gem",南山炸豬排남산돈까스 神還原韓劇爆紅美食！隱身二樓新開幕韓國料理餐廳,,2026-04-24 03:18:19
+463,ifoodie,台北寒舍艾美探索廚房,110臺北市信義區松仁路38號,ChIJewvXULqrQjQR6zpjEk5Nj0E,0.8,0.5,"food,luxury,bufet",帝王蟹、龍蝦吃到飽 改裝後大升級，奢華爽吃去 台北寒舍艾美探索廚房｜,,2026-04-24 03:18:23
+465,ifoodie,小公園牛肉麵,106臺北市大安區泰順街35號,ChIJ2T7KxyuqQjQRLytZgS9RYeU,1.0,0.5,"food,noodles,restaurant",小公園牛肉麵｜不起眼鐵皮屋牛肉麵搬家後環境變好了味道還是一樣棒,,2026-04-24 03:18:30
+467,ifoodie,萬華,臺北市萬華區,ChIJyR5dkLGpQjQRuNNGn4w3vSo,0.8,0.5,"food,dim sum",萬華現蒸有整隻蝦的蒸餃、小籠湯包，香菜控別漏掉香菜蒸餃,,2026-04-24 03:18:37
+470,ifoodie,萬家手工水餃,103臺北市大同區蘭州街126號,ChIJub9h4UGpQjQRTBdSwYZb_zk,1.0,0.5,"food,restaurant,dumplings",萬家手工水餃，必吃11款手工水餃＋超強神之豬肝湯,,2026-04-24 03:18:48
+472,ifoodie,總統牌雞腿、排骨便當,108臺北市萬華區中華路一段114巷9號,ChIJd3H_WwmpQjQRaMQJiD3WFeQ,0.5,0.5,"food,restaurant,traditional",70年老店總統牌雞腿、排骨便當一試成主顧,,2026-04-24 03:18:54
+473,ifoodie,福餃FUKGYO,104臺北市中山區中山北路二段65巷17號1樓,ChIJcciJrOKpQjQRN3quCfv37wc,0.8,0.8,"delicious,popular,queue",中山站的人氣爆量香菜紫蘇煎餃，連平日都在排隊｜福餃FUKGYO,,2026-04-24 03:18:58
+476,ifoodie,隱食家 Inns+,104臺北市中山區雙城街28巷8號,ChIJQffxkOipQjQRabwA1GkxMMU,0.8,0.5,"Michelin recommended,Chinese cuisine,wine bar",隱食家 Inns+，連年米其林推薦的中式餐酒館,,2026-04-24 03:19:07
+480,ifoodie,麟德殿,104臺北市中山區南京東路一段138號1樓,ChIJl8agwRapQjQRZdZlFz20B2k,0.8,0.5,"new brand,beef noodle,Chinese food",築間新品牌！嚴選牛尾牛腱心，紅燒湯頭濃香不膩！結合山焙打造新派中式風味｜麟德殿牛肉麵,,2026-04-24 03:19:19
+482,ifoodie,老東北家鄉特色料理,10491臺北市中山區民權東路一段12巷13號1樓,ChIJASoxV0OpQjQR5APDQ67ACok,0.8,0.5,"food,northeastern cuisine,restaurant",老東北家鄉特色料理｜隱身巷弄的道地東北菜，鍋包肉、酸菜白肉鍋、拔絲地瓜必點！,,2026-04-24 03:19:26
+485,ifoodie,Purebread Bakery,106臺北市大安區光復南路308巷21號,ChIJYYvaudKrQjQRYRUYOaK9lJU,0.8,0.5,"food,bakery,European",Purebread Bakery｜超強的可頌跟酸麵包就在網路評價破千則台北東區歐式麵包店,,2026-04-24 03:19:35
+487,ifoodie,溢香園天母店,111臺北市士林區天母東路41號,ChIJSYikpICuQjQRpY6eZ4R1rQg,0.8,0.5,"traditional,recommended,delicious",溢香園天母店｜在地超過40年的經典老字號，招牌鱔糊、蒸臭豆腐必點！,,2026-04-24 03:19:41
+491,ifoodie,左爺爺風味小館,112臺北市北投區明德路59號,ChIJ6RR3U3GvQjQRmFa2ScNW-xY,1.0,0.5,"delicious,recommended,foodie",左爺爺風味小館-家常菜紅燒獅子頭超下飯！南洋咖哩雞、法式牛粒都必點～近捷運明德站、附停車資訊 – 北投明德站美食,,2026-04-24 03:19:54
+492,ifoodie,行天宮,10491臺北市中山區民權東路二段109號,ChIJG3jOqVmpQjQRlMAW5wvvwrA,0.5,0.5,"food,recommendation",行天宮美食吃那家？｜精選30+家行天宮站美食推薦從老字號蒙古烤肉吃到米其林早餐,,2026-04-24 03:19:57
+493,ifoodie,板前屋炭烤鰻魚飯,115臺北市南港區研究院路一段88號,ChIJV-zxvVmrQjQRfuWpJ6NRLjA,1.0,1.0,"delicious,popular",板前屋炭烤鰻魚飯｜堪稱無刺鰻魚飯霸主！用餐時間總是爆滿，全台手工去刺、脆皮白燒鰻魚飯創始店,,2026-04-24 03:20:01
+494,ifoodie,富順樓後山埤店,115臺北市南港區中坡北路6號,ChIJRwWxxf2rQjQR6HnBaIYlA8g,0.8,0.5,"food,restaurant,delicious",富順樓後山埤店｜有夠便宜的平價北平烤鴨三吃，台北聚餐必吃合菜餐廳,,2026-04-24 03:20:04
+495,ifoodie,劍潭蔥油餅,111臺北市士林區劍潭路98號,ChIJSaSftCmvQjQRpxSWus7ree4,1.0,0.5,"food,Taiwanese cuisine,delicious",劍潭蔥油餅，超讚的高麗菜水煎包以及無敵的蘿蔔絲餅,,2026-04-24 03:20:08
+496,ifoodie,壽星餃子,106台北市大安区忠孝东路四段177號2樓之2,ChIJ9fR92e-rQjQRzpZ68cCiSJE,0.8,0.5,"food,restaurant",壽星餃子免費吃！幾歲送幾顆，雞絲拌麵也是必點,,2026-04-24 03:20:12
+497,ifoodie,山上豆花,116臺北市文山區指南路三段38巷22號,ChIJDUL9bdEBaDQR5e270ga1l3U,0.8,0.8,"popular,delicious,busy",山上豆花｜周休三天生意好到爆炸想吃還要先抽號碼牌的貓空美食甜點,,2026-04-24 03:20:16
+500,ifoodie,麗馥小吃,106臺北市大安區安居街34巷8號,ChIJySVU1TaqQjQR6LQChR1deSc,1.0,0.5,"delicious,trendy",麗馥小吃｜牛肉麵湯頭濃郁好吃，滷味必點超人氣！,,2026-04-24 03:20:26
+502,ifoodie,張記韭菜水煎包,108臺北市萬華區中華路一段200號,ChIJE2_XFqepQjQRpp_tUVmLju0,0.8,0.5,"food,restaurant,traditional",張記韭菜水煎包｜能內用的超大顆西門町水煎包老店必點眷村風小菜配綠豆粥！,,2026-04-24 03:20:32
+504,ifoodie,甜先生,108臺北市萬華區和平西路三段109巷9號,ChIJ3R-aLa-pQjQRAa-RIxEumvw,1.0,0.5,"relaxing,foodie,dessert",甜先生｜招牌桂花冰釀湯圓、四色圓、豆花冰超療癒！,,2026-04-24 03:20:38
+506,ifoodie,小樂沙茶火鍋,108臺北市萬華區西寧南路90巷3號,ChIJee9-rQmpQjQRNqBrBRoClgU,0.8,0.5,"food,restaurant,hotpot",小樂沙茶火鍋｜藏在巷子裡‼️西門町老牌沙茶火鍋店必點芹菜丸、豬肝與排骨酥,,2026-04-24 03:20:44
+509,ifoodie,屾淼苑,100臺北市中正區北平東路36號1、2樓,ChIJ93FPkLSpQjQRo_y1dAQY3S4,1.0,0.5,"food,recommendation",【善導寺美食推薦】屾淼苑：最新必點推薦看這篇(附菜單),,2026-04-24 03:20:53
+510,ifoodie,ABV南洋餐酒館 國館店,106臺北市大安區光復南路280巷39號,ChIJ99gARwqrQjQR-pzvBeatnDQ,0.5,0.5,"food,restaurant,beer",台北大安｜ABV南洋餐酒館 國館店．泰式料理搭配精釀啤酒，國父紀念館周邊美食,,2026-04-24 03:20:56
+511,ifoodie,SHARE LOUNGE,"3樓, No. 11號松山路信義區臺北市110",ChIJb_CS4v-rQjQR2XKWbeH5Jm0,0.8,0.5,"cafe,buffet,relaxing",SHARE LOUNGE-90元起享50多種咖啡點心麵包吃到飽及任選書看 – 莎莉哈小姐,,2026-04-24 03:21:00
+512,ifoodie,松滿樓,106臺北市大安區濟南路三段26號,ChIJT91JuH2pQjQReBnuL1zoca0,0.8,0.5,"middle_eastern,cuisine,chinese_food",松滿樓｜必點蝦仁絲瓜湯包與椒香爆牛柳的超過20年的濟南路平價中式合菜桌菜餐廳,,2026-04-24 03:21:03
+514,ifoodie,小巷子清燉牛肉麵四平店,104472臺北市中山區四平街40號,ChIJt_-mmfOpQjQRxCF22lb5vsU,1.0,0.5,"food,restaurant,noodles",小巷子清燉牛肉麵四平店，台北人氣牛肉麵必吃名店,,2026-04-24 03:21:10
+515,ifoodie,曾家豆漿,104臺北市中山區錦州街123號,ChIJ-YfzZFypQjQRAFxGl4nV8S0,0.5,0.5,"night market,food,trendy",曾家豆漿｜在地20年宵夜豆漿點心老字號網友笑說被豆漿耽誤的蛋塔店,,2026-04-24 03:21:13
+517,ifoodie,BON MEINGERDA,111臺北市士林區劍潭路78號無訂位服務，需現場候位,ChIJvzYMgyyqQjQRd83ndWISbaY,0.8,1.0,"trendy,popular,creative",BON MEINGERDA 手工麵疙瘩｜文青系人氣排隊名店！創意異國風麵疙瘩一開門就秒客滿,,2026-04-24 03:21:21
+522,ifoodie,麵包廚房,108臺北市萬華區峨眉街66號,ChIJHWG97gipQjQRM4_CFNctB20,0.8,0.5,"food,cake,taipei",麵包廚房｜台北最好吃的芋泥蛋糕與可麗露出自於超過20年西門町麵包店老字號,,2026-04-24 03:21:36
+524,ifoodie,豚門厚切豬排專門店,105臺北市松山區八德路二段366巷30號1樓,ChIJbcghRxKrQjQRf48Pn25JlFc,0.8,0.5,"food,pork_cutlet,Taiwanese_cuisine",超厚豬排，這是我吃過台北前三名的豬排飯｜豚門厚切豬排專門店,,2026-04-24 03:21:42
+526,ifoodie,いくら蛋所,106臺北市大安區信義路二段198巷8號,ChIJb5E4fwCpQjQR8e16LKU1TDA,0.5,0.5,"new store,popular,Japanese food",日本福岡超人氣蛋包飯專門店 いくら蛋所首度登台,,2026-04-24 03:21:48
+528,ifoodie,136海鮮麵,106臺北市大安區瑞安街75號,ChIJWZRy5karQjQR2PvcLyZt5QY,1.0,0.5,"food,seafood,noodles,delicious",136海鮮麵，科技大樓站美食，小卷麵與鮮蚵豬油拌飯必吃!! (2025/10/13更新),,2026-04-24 03:22:02
+529,ifoodie,陳記眷村燒餅舖,116臺北市文山區興隆路一段70巷1-1號,ChIJ246wxDarQjQRUbd28AWwdd0,1.0,0.5,"food,local,delicious",陳記眷村燒餅舖｜在地人激推的酥脆燒餅，酥脆飽滿超涮嘴的,,2026-04-24 03:29:34
+530,ifoodie,汆牛溫體牛肉火鍋西門店,108臺北市萬華區成都路141號,ChIJY2ONLcupQjQRYr_cRA1MpU4,0.8,0.5,"food,hot pot",汆牛溫體牛肉火鍋西門店，自助吧蔬菜牛雜吃到飽,,2026-04-24 03:29:36
+532,ifoodie,香而廉小館,10491臺北市中山區合江街17巷2號,ChIJXdoi8OCrQjQRv7XFyS-_O0w,0.8,1.0,"Popular,Delicious,Crowded",香而廉小館｜人氣爆棚平價熱炒，開兩店面還是天天客滿！,,2026-04-24 03:29:39
+533,ifoodie,初海和牛鐵板燒,106臺北市大安區永康街1號4樓,ChIJJR_IPACpQjQRW_QDrXL2UAE,0.8,0.5,"luxury,foodie,entertainment",初海和牛鐵板燒｜台北鐵板燒新天花板，$1680 起 14 品奢華饗宴+震撼火焰秀!,,2026-04-24 03:29:40
+535,ifoodie,侯門小館,105臺北市松山區民生東路五段180號,ChIJLeImeZKrQjQR3R5bqETvfac,1.0,1.0,"popular,affordable,busy",侯門小館｜有夠誇張！連平日中午也會客滿的民生社區中式合菜餐廳點滿10道菜一個人不到400元,,2026-04-24 03:29:43
+536,ifoodie,我家川菜,108臺北市萬華區成都路105巷7號,ChIJqXe38wipQjQRimcHAyFPjwU,0.8,0.5,"delicious,affordable,traditional",我家川菜｜在地30年老店便宜美味，台北川菜合菜推薦,,2026-04-24 03:29:45
+538,ifoodie,台北寒舍艾美,110臺北市信義區松仁路38號,ChIJewvXULqrQjQRZ4KcKM5lPTE,0.8,0.5,"foodie,restaurant,seafood",帝王蟹、龍蝦、鮑魚、生蠔、干貝、松葉蟹 一次到位台北寒舍艾美探索廚房強勢回歸,,2026-04-24 03:29:48
+543,ifoodie,品冠客家小館,105臺北市松山區南京東路五段23巷9弄4號,ChIJW795EeurQjQRAhp-PqZhheA,0.8,0.5,"food,restaurant,affordable",品冠客家小館｜老闆到底有沒有賺？有夠便宜的南京三民平價客家菜,,2026-04-24 03:29:53
+545,ifoodie,湘民小館,105臺北市松山區八德路三段155巷24號,ChIJYzKdXeqrQjQRXga3f1NvrHI,1.0,0.5,"food,restaurant,taipei,chinese cuisine",湘民小館｜好評破千則小巨蛋站巷弄台北平價湘菜餐廳必點左宗棠雞,,2026-04-24 03:29:56
+546,ifoodie,陸光小館,105臺北市松山區敦化北路165巷4號,ChIJ9TjtLgCrQjQRpyCHskGb5BQ,0.8,0.5,"food,restaurant,vintage",陸光小館｜這滷味刀工也太強了吧！小巨蛋巷弄裡的懷舊眷村餐廳,,2026-04-24 03:29:57
+548,ifoodie,極禾家抄手麵食,105臺北市松山區南京東路五段123巷1弄6號,ChIJ72sFz5SrQjQRw6EXLa12yq4,0.8,0.6,"delicious,popular,noodles",極禾家抄手麵食｜上班族必訪！南京東路巷弄人氣麵館必點怪味抄手乾麵,,2026-04-24 03:29:59
+549,ifoodie,泰和樓,106臺北市大安區杭州南路二段61-20號,ChIJbyUU8imqQjQRUvC4IivLW4A,0.8,0.5,"food,restaurant,taiwanese cuisine",【騷煲新台潮羊肉湯】羊小排太過癮、松露滷肉飯更是滿足，泰和樓打造的人氣新品牌｜台北中山區美食推薦｜捷運忠孝復興站小吃(菜單),,2026-04-24 03:30:00
+550,ifoodie,佛跳牆,10848臺北市萬華區華西街觀光夜市185、186攤位,ChIJXfbioampQjQRBZpJiPzYeL0,0.8,0.5,"food,satisfaction,value_for_money",佛跳牆只賣80元！CP值高到離譜，再來碗油飯讓人超滿足,,2026-04-24 03:30:02
+552,ifoodie,越越新越南料理,10466臺北市中山區植福路8號2F,ChIJ802-aK-tQjQRs37UxqN8_84,1.0,0.5,"food,vietnamese cuisine,restaurant",越越新越南料理》台北大直必吃越南美食餐廳推薦捷運劍南路站美食餐廳,,2026-04-24 03:30:04
+554,ifoodie,海味豐海產店,108臺北市萬華區內江街140-2號,ChIJcc7NDwipQjQR4IOXBoKra8E,0.8,0.8,"night market,popular,busy",海味豐海產店｜連平日晚上竟然預約，天天客滿的西門町熱炒宵夜場老字號,,2026-04-24 03:30:05
+555,ifoodie,捷運忠義站,112台灣臺北市北投區,ChIJJUcBGAqvQjQRUlb3wBvS0UU,1.0,0.5,"food,noodles,popular",河南手工扯麵｜捷運忠義站超人氣外省麵，牛肉麵、炸醬麵都好吃（菜單）,,2026-04-24 03:30:07
+557,ifoodie,燒鳩 刺身‧串燒‧夜食,105臺北市松山區市民大道四段85號,ChIJCRZIUiqrQjQRw1czIWk4iDI,0.8,0.5,"food,drinks,nightlife",Joeman愛店曝光！「燒鳩 刺身‧串燒‧夜食」台北居酒屋神級炭火燒鳥，生魚片媲美Omakase，宵夜聚餐必收藏！壽星還能調酒無限暢飲！(台北居酒屋推薦),,2026-04-24 03:30:10
+558,ifoodie,濱江市場,10491臺北市中山區民族東路336號,ChIJia3QRv2rQjQRR24UgeLjW0s,0.8,0.5,"seafood,traditional",安安海鮮生魚片｜超過35年的濱江市場旁平價海鮮生魚片老字號,,2026-04-24 03:30:11
+559,ifoodie,雞泰炒,10485臺北市中山區南京東路二段163號,ChIJT4KnlrapQjQRXX-2crB-I-8,0.8,0.5,"food,popular,comfortable",雞泰炒 超人氣老麵攤隱藏版料理專賣店！全天候營業用餐環境更寬敞舒適,,2026-04-24 03:30:15
+560,ifoodie,喫飯食堂,106臺北市大安區永康街8巷5號,ChIJv7oLPIypQjQRzqh7ryK1me0,0.8,0.5,"food,restaurant,Taiwanese cuisine",永康街美食-喫飯食堂｜招牌煎豬肝、封肉必點菜單，兩人也能吃大菜的台北台菜餐廳推薦,,2026-04-24 03:30:18
+563,ifoodie,二空眷村小館,105臺北市松山區敦化北路155巷14號,ChIJwT5n4eirQjQR61O6GdGHTGg,0.8,0.5,"traditional,restaurant,taiwanese cuisine",二空眷村小館｜連知名導演跟製作人都有來過開業超過20年台北眷村菜餐廳必點老菜脯雞湯,,2026-04-24 03:30:27
+565,ifoodie,忠孝敦化站｜台韓民國韓式燒肉店,106臺北市大安區敦化南路一段187巷70號,ChIJh9zsZ8WrQjQROj1_EJ9moMs,0.8,0.5,"Korean food,all-you-can-eat,bar",忠孝敦化站｜台韓民國韓式燒肉店，韓式小菜吃到飽，霸氣水果燒酒端上桌！,,2026-04-24 03:30:34
+569,ifoodie,北平楊順順小館,104臺北市中山區合江街43號,ChIJ2YcTUuCrQjQRgw02G9mwgzQ,0.8,0.5,"food,restaurant,northern chinese cuisine",北平楊順順小館｜台北平價北方麵點熱炒推薦酸菜白肉鍋牛肉捲餅蒸餃必點,,2026-04-24 03:30:47
+571,ifoodie,麗華古早味麵攤,112臺北市北投區裕民三路,ChIJsXJrioyuQjQRuSE620eonkw,0.8,0.5,"delicious,breakfast,local favorite",麗華古早味麵攤｜北投在地人最愛的早午餐，超強滷味搭配乾麵餛飩必點,,2026-04-24 03:30:54
+573,ifoodie,巷仔內大腸煎,103臺北市大同區南京西路25巷20號,ChIJ7QPYjWmpQjQR7PzLnJQLbAo,1.0,0.5,"food, Taiwanese cuisine,street food",巷仔內大腸煎｜來這必吃限量大腸頭圈與肉羹麵的台北雙連站生意最好美食小吃,,2026-04-24 03:31:00
+574,ifoodie,五畝禾創始店,10078臺北市中正區和平西路一段28號,ChIJfXaHdwupQjQRm57X8ykQPns,0.8,0.5,"food,healthy,restaurant",【台北美食】五畝禾創始店～中正區新開幕餐盒專賣店，少油少鹽更健康，必點青蔥舒肥雞、玉脂東坡肉，捷運古亭站美食推薦,,2026-04-24 03:31:04
+577,ifoodie,台北車站,100臺北市中正區黎明里,ChIJcYy0Y3KpQjQRXiW_s2lGln8,0.8,0.5,"food,satisfying",紅米砂鍋粥｜台北車站聚餐必吃紅米蟹膏砂鍋粥搭配熱炒超滿足,,2026-04-24 03:31:14
+581,ifoodie,老童小吃部,106臺北市大安區安居街80號1樓,ChIJdYjHunWpQjQR7-iV4cEMf5E,0.5,0.5,"food,taiwanese cuisine",台北滷肉飯推薦｜老童小吃部搬新址,,2026-04-24 03:31:25
+582,ifoodie,蘇記餃子館,100臺北市中正區延平南路101巷5號,ChIJSa8UoQupQjQRo7Be_TyJhyw,0.8,0.5,"food,restaurant,delicious",蘇記餃子館，山東燒雞、糖醋排骨平價份量足，西門站中山堂美食(姊姊食記),,2026-04-24 03:31:28
+583,ifoodie,萬華雙和市場,108臺北市萬華區雙和街,ChIJWfLwfrCpQjQRjY315Q492IE,0.8,0.5,"food,market",老郭舖山東蔥油餅》每天賣不到5小時就收工的萬華雙和市場美食外帶,,2026-04-24 03:31:32
+591,ifoodie,大膽牛腩麵,10478臺北市中山區遼寧街222號,ChIJo--aBuurQjQRyN89ig3p_vM,0.8,0.5,"food,popular,authentic",大膽牛腩麵｜香港人開的正宗港式牛腩麵，在地必吃人氣麵館（附菜單）,,2026-04-24 03:31:55
+592,ifoodie,龐德羅莎台大店,106臺北市大安區羅斯福路四段85號台大管理學院第二活動中心二樓,ChIJldrqooqpQjQRl4bCVhVRvuI,0.8,0.5,"food,buffet",龐德羅莎台大店，高CP值老字號自助吧吃到飽 @神農太太底家,,2026-04-24 03:31:58
+595,ifoodie,川雨パン屋 (川雨麵包香坊),106臺北市大安區復興南路二段345號,ChIJM4t8eYypQjQRmNY8EBXguY0,1.0,0.5,"food,bakery,natural,handmade",【科技大樓麵包店】川雨パン屋 (川雨麵包香坊) 好吃台北鹽可頌推薦！天然酵母手工製作,,2026-04-24 03:32:07
+596,ifoodie,王記水煎包,105臺北市松山區南京東路五段291巷4之1號,ChIJR_8CpZarQjQRkZjIQKUfkh4,1.0,0.5,"food,local,hidden gem",王記水煎包｜隱藏版小吃、銅板價美食，在地人激推的手工好味道!!!,,2026-04-24 03:32:10
+597,ifoodie,B&B STEAK福德店,110臺北市信義區福德街302號,ChIJq7lceIarQjQRB4nATBhhze0,0.5,0.5,"steak,trendy,popular",B&B STEAK福德店｜後山埤高人氣牛排館（完整菜單）,,2026-04-24 03:32:14
+598,ifoodie,越越・新越南料理,10466臺北市中山區植福路8號2F,ChIJ802-aK-tQjQRs37UxqN8_84,0.8,0.5,"food,vietnamese,taipei",「越越・新越南料理」台北最美越式料理，典華最新品牌(菜單價位),,2026-04-24 03:32:18
+601,ifoodie,六米麻辣滷味,108臺北市萬華區武昌街二段100號1樓,ChIJP2YcLBqpQjQRy6eqsBzSP3k,0.8,0.5,"food,recommendation,delicious",【台北美食】六米麻辣滷味台北西門町門市～鼎王麻辣鍋旗下最新滷味品牌，香麻夠味外帶即食超過癮。西門町美食推薦、捷運西門站美食,,2026-04-24 03:32:29
+602,ifoodie,師大分部臭豆腐,116臺北市文山區羅斯福路五段87號,ChIJTfEyyFGpQjQR1fXJT3vjMoU,1.0,0.5,"food,stinky tofu,recommendation",萬隆站美食『師大分部臭豆腐』外酥內多汁的超好吃臭豆腐推薦、500盤推薦,,2026-04-24 03:32:31
+603,ifoodie,九記何燒臘,10491臺北市中山區吉林路124號,ChIJRVU8XWepQjQRQ1hab_XX9VQ,1.0,0.5,"delicious,traditional,Hong Kong style",九記何燒臘｜六十年港式燒臘老店，燒肉皮脆爆香、鴨腿好吃，動漫風便當盒也超吸睛！,,2026-04-24 03:32:34
+608,ifoodie,安東食園,106臺北市大安區瑞安街75號安東巿場138~141位,ChIJWXq3vSuqQjQRoIswVUWlOzc,1.0,0.5,"food,delicious,limited_time_offer",安東食園｜台北最強沒有之一的限量蜜汁雞腿!!超好吃熟菜！！,,2026-04-24 03:32:49
+610,ifoodie,丸麵鋪,105臺北市松山區復興北路313巷32號,ChIJN5DeBgCrQjQRCP_P2_X81Ws,1.0,0.5,"food,restaurant,recommendation",丸麵鋪｜承襲徐家私廚記憶與媽媽手藝．台北必吃炸醬麵推薦,,2026-04-24 03:32:56
+612,ifoodie,蜀魚館老店,106臺北市大安區建國南路一段198號,ChIJD1IOJtarQjQRVa_X6HydmNc,0.8,0.5,"food,traditional,affordable",蜀魚館老店，市中心在地60年老店平價現撈活魚份量超大！,,2026-04-24 03:33:02
+616,ifoodie,越越・新越南料理,10466臺北市中山區植福路8號2F,ChIJ802-aK-tQjQRs37UxqN8_84,1.0,0.5,"food,vietnamese cuisine,restaurant",《越越・新越南料理》迎接飲食新時代，經典傳承跨越文化邊界 打造越南料理第一品牌！,,2026-04-24 03:33:14
+618,ifoodie,上引水產,10491臺北市中山區民族東路410巷2弄18號,ChIJ_3AKcP2rQjQRG-FBsLE_NWY,0.8,0.5,"food,affordable",上引水產健康便當｜一次吃到雞腿與糖醋排骨再配五種菜的超大盒台北便當只要150元,,2026-04-24 03:33:22
+621,ifoodie,"BREAD, ESPRESSO &",10042臺北市中正區寶慶路69號,ChIJlQSwHM2pQjQR0uTLs7McnF8,0.8,0.5,"trendy,cafe,foodie","【BREAD, ESPRESSO &】超人氣東京表參道麵包咖啡店！菜單推薦必點Mou鐵板法式吐司",,2026-04-24 03:33:30
+623,ifoodie,老童小吃部,106臺北市大安區安居街80號1樓,ChIJdYjHunWpQjQR7-iV4cEMf5E,1.0,0.5,"delicious,comfortable,recommended",入選2025年500碗之一的老童小吃部，滷肉飯超好吃，舒服雞肉飯像台版的日式叉燒飯,,2026-04-24 03:33:38
+624,ifoodie,今日魚市光華三創,100臺北市中正區八德路一段39號,ChIJH-SRBpapQjQRY4G3p-n4vD0,0.8,0.5,"seafood,affordable,delicious",今日魚市光華三創：海鮮控天堂CP值超高，超浮誇綜合生魚片船只要400元、蒜香烤螃蟹五隻只要299元，還有鮮魚味噌湯、檸檬水免費取用,,2026-04-24 03:33:39
+625,ifoodie,政江號合好號,108臺北市萬華區萬大路423巷42號,ChIJy4rgQoOpQjQRXqxro79-yTE,0.8,0.5,"food,dessert,restaurant",政江號合好號，台北湯圓名店搬家到萬華再訪，吃飽吃巧冰品都有(姊姊食記),,2026-04-24 03:33:43
+626,ifoodie,萬家手工水餃,103臺北市大同區蘭州街126號,ChIJub9h4UGpQjQRTBdSwYZb_zk,1.0,0.5,"food,restaurant,recommended",萬家手工水餃，必吃11款手工水餃＋超強神之豬肝湯,,2026-04-24 03:33:46
+630,ifoodie,龍記炒燴,100臺北市中正區羅斯福路四段92號,ChIJ_fgu74qpQjQRSOvT-G7mkdI,1.0,0.5,"food,recommended,market",龍記炒燴 水源市場必吃美食推薦！菜單三鮮炒飯干炒牛河皆一絕鑊氣十足,,2026-04-24 03:33:59
+631,ifoodie,滿庭香魯肉飯,103臺北市大同區雙連街23號,ChIJ38Eu40GpQjQRnDnYZQslUYk,0.8,0.5,"traditional,local,food",滿庭香魯肉飯，在地60年魯肉飯老店！,,2026-04-24 03:34:02
+633,ifoodie,SHEN MIAO YUAN,100臺北市中正區北平東路36號1、2樓,ChIJ93FPkLSpQjQRo_y1dAQY3S4,0.8,0.5,"food,restaurant,Chinese cuisine",屾淼苑 SHEN MIAO YUAN｜江浙粵菜餐酒館，招牌港點超厲害,,2026-04-24 03:34:08
+638,ifoodie,清真中國牛肉麵食館,106臺北市大安區延吉街137巷7弄1號,ChIJ13TOiMarQjQRGCtxcxV5rUo,0.8,0.5,"Michelin-recommended,noodle shop,traditional",清真中國牛肉麵食館 (大安)｜連續七年米其林必比登推薦的大安老字號牛肉麵,,2026-04-24 03:34:24
+639,ifoodie,龍城市場,105臺北市松山區光復北路190巷39號,ChIJS_CRWemrQjQROXiJCIGbiFI,0.8,0.8,"food,traditional,popular",龍城市場上海小籠包｜每天排隊的上海小籠包現包現炊老麵發酵麵皮吃起來真Q,,2026-04-24 03:34:28
+640,ifoodie,貴族世家mini 士林承德店,111臺北市士林區承德路四段56號,ChIJeyzj6havQjQREX5sIpNMUYM,0.8,0.5,"food,buffet,steak",貴族世家mini 士林承德店，299元起牛排吃到飽,,2026-04-24 03:34:31
+641,ifoodie,麟德殿,104臺北市中山區南京東路一段138號1樓,ChIJl8agwRapQjQRZdZlFz20B2k,0.8,0.5,"food,restaurant,delicious",麟德殿 • 牛肉麵｜牛肉麵也能吃得像西餐料理！？澎湃五福一次到齊 還有百年茶行山焙,,2026-04-24 03:34:35
+642,ifoodie,NAGOMI雅 新光A8店,110臺北市信義區松高路12號台北信義新天地A8館七樓,ChIJlwQIHxWrQjQRqHmvCy8mBxo,0.8,0.5,"japanese food,relaxing atmosphere",台北日本料理吃到飽 精緻京料理 生魚片握壽司爽吃，和風質感空間，一秒到日本 NAGOMI雅 新光A8店｜,,2026-04-24 03:34:38
+643,ifoodie,大烹小饌,103臺北市大同區民生西路146-1號,ChIJm_pGd5arQjQRsD_vJMWg8Cc,0.8,0.5,"food,restaurant,pet-friendly",雙連站聚餐熱炒『大烹小饌』50年平價台菜老店、寵物友善餐廳,,2026-04-24 03:34:42
+645,ifoodie,基隆麵食館青島東路,100臺北市中正區青島東路7-3號,ChIJJVbgA3GpQjQR6VhEPnLA69w,0.8,0.5,"food,noodle,taiwanese cuisine",台北善導寺｜基隆麵食館青島東路 必吃懷舊炒咖哩麵,,2026-04-24 03:34:48
+646,ifoodie,三味香麵店,100臺北市中正區桃源街19號,ChIJb057TQqpQjQRL7LbiwZMiy0,0.8,0.5,"food,traditional,family",三味香麵店，巨大包子與菜肉餛飩，三代傳承桃源街美食老店(姊姊食記),,2026-04-24 03:34:51
+647,ifoodie,Dream Plaza,110臺北市信義區松高路11號,ChIJJVngMACrQjQRwo409l3ttvw,0.8,0.5,"food,recommended,Taiwanese",日本三重縣的人氣炸豬排丼｜產地直送食材 × 低溫熟成究好豬 × 極厚棒腰內肉鬆軟又香脆｜台北Dream Plaza夢廣場美食推薦,,2026-04-24 03:34:55
+650,ifoodie,徐羅伐韓國料理,106臺北市大安區永康街14巷5號1樓,ChIJNWsYsIOpQjQRoUUPLON1ugE,0.8,0.7,"foodie,korean_cuisine,trendy",徐羅伐韓國料理．台北大安區美食｜韓國老闆鎮店！永康街超人氣韓國料理！韓式小菜吃到飽！神級韓式烤鰻魚必點！烤五花肉爆香下飯！馬鈴薯排骨湯口味超正宗！捷運東門站～中肯‧食記！,,2026-04-24 03:35:06
+652,ifoodie,老鄧担担麵 Lao Deng 1949,106臺北市大安區信義路二段198巷4號,ChIJxe3EC4KpQjQR5L43YFNVwM4,0.8,0.5,"food,noodle,traditional",老鄧担担麵 Lao Deng 1949｜開業超過70年川味擔擔麵吃起來花生味真的很濃郁,,2026-04-24 03:35:12
+654,ifoodie,台北五星酒店晶泉丰旅『泉源閣』,112臺北市北投區泉源路19號,ChIJa736FpKvQjQRYARAFL19C5U,0.8,0.5,"food,promotion,hotel",台北五星酒店晶泉丰旅『泉源閣』 推出超值『總鋪師烤鴨六吃辦桌宴』、外帶烤鴨優惠,,2026-04-24 03:35:19
+655,ifoodie,晉江茶堂,100臺北市中正區晉江街1號,ChIJcTzuDJqpQjQRNXZGU1vYgnA,0.8,0.5,"food,restaurant,Hakka cuisine",晉江茶堂｜老宅改建客家料理餐廳，近捷運古亭站的平價好選擇,,2026-04-24 03:35:23
+656,ifoodie,尚癮正宗成都串串香,106臺北市大安區忠孝東路四段276號1樓,ChIJyR1obwCrQjQR2mwjm6lKXjs,1.0,0.5,"hot pot,Taipei,Chinese food,recommended",尚癮正宗成都串串香｜藝人也愛的台北串串火鍋推薦,,2026-04-24 03:35:26
+658,ifoodie,鴻廷肥龍重慶老火鍋,10491臺北市中山區中山北路一段135巷38號2樓,ChIJ3zbK6LypQjQRMfu5XkR5kPU,0.8,0.5,"food,restaurant,hot_pot",【台北美食】鴻廷肥龍重慶老火鍋～重慶30年老字號麻辣鍋專賣店海外首間分店，隱身在民宅的老火鍋你吃過嗎？,,2026-04-24 03:35:34
+664,ifoodie,抄手麵食館,106臺北市大安區安東街45-6號,ChIJt0gEjdmrQjQRSKCmNJqUkYs,0.8,0.5,"food,restaurant,recommended",燒喔！抄手麵食館 網友推薦平價版鼎泰豐！菜單必點排骨蛋炒飯紅油抄手,,2026-04-24 03:35:51
+665,ifoodie,小巷子清燉牛肉麵四平店,104472臺北市中山區四平街40號,ChIJt_-mmfOpQjQRxCF22lb5vsU,1.0,0.5,"food,noodle,beef",小巷子清燉牛肉麵四平店，台北人氣牛肉麵必吃名店,,2026-04-24 03:35:54
+666,ifoodie,椒朋友辛潮麻辣鍋,110臺北市信義區松高路11號4 樓,ChIJe1bzLwCrQjQRhdP7Iph-X08,0.8,0.8,"party,dinner,DJ",椒朋友辛潮麻辣鍋｜信義區聚餐新選擇，電話交友+DJ之夜+不限時火鍋派對!,,2026-04-24 03:35:58
+669,ifoodie,蘭花亭涼麵(創始店),100臺北市中正區廈門街77-3號,ChIJr_eNppepQjQRA91EuCn1KJE,0.5,0.5,"food,innovation,traditional",蘭花亭涼麵(創始店)，50年老店加入創新元素,,2026-04-24 03:36:08
+670,ifoodie,粗堡漢堡排,105臺北市松山區敦化北路244巷37號,ChIJHaeCJACrQjQR5WdUtnTFu4k,1.0,0.5,"food,restaurant,popular,Japanese",粗堡漢堡排｜台北超人氣日式漢堡排專賣，肉汁爆滿必吃,,2026-04-24 03:36:12
+671,ifoodie,羅家擔仔麵,108臺北市萬華區環河南路二段125巷9號,ChIJGd7DCK2pQjQRuJb_zTeXx_8,0.2,0.8,"food,limited_time,hidden_gem",羅家擔仔麵｜太晚來吃不到‼️無招牌隱藏版萬華早午餐一天只開5小時,,2026-04-24 03:36:15
+673,ifoodie,九月茶餐廳,103臺北市大同區承德路二段213號,ChIJE63C8fypQjQRocBKJlXHlC8,0.5,0.5,"Hong Kong style,restaurant,tea house",九月茶餐廳 — 香港老闆開的道地港式料理茶餐廳,,2026-04-24 03:36:21
+674,ifoodie,忠孝新生站｜BéVive,100臺北市中正區臨沂街13巷5號1樓,ChIJWRcbFlupQjQRRIlBSchRZdM,0.8,0.5,"vintage,photogenic,coffee,Vietnamese food",忠孝新生站｜BéVive，新開幕越式咖啡廳，越式河粉加咖啡，優雅復古好拍照,,2026-04-24 03:36:25
+678,ifoodie,金豬食堂 Gold Pig Taiwan,104臺北市中山區南京東路一段29號,ChIJaW2yNB6pQjQRQdXv1cjMlqE,0.8,0.5,"food,Korean barbecue,trendy",金豬食堂 Gold Pig Taiwan 韓國首爾人氣燒肉來台北啦～,,2026-04-24 03:36:36
+679,ifoodie,正太酸菜魚,106臺北市大安區忠孝東路四段181巷7弄15號,ChIJbbYpiDerQjQRdTXBi6-0LJg,0.8,0.5,"food,restaurant,recommendation",酸菜魚竟然可以吃到飽？還有2X道川菜也隨意吃，高CP值好吃推薦｜正太酸菜魚,,2026-04-24 03:36:39
+680,ifoodie,UCHI 吾居炭火餐酒,106臺北市大安區忠孝東路四段223巷59號1樓,ChIJb_LIlqKrQjQR9qokRqO9G5s,0.8,0.5,"relaxing,dining",將炙熱留在盤中，把心安放在此【UCHI 吾居炭火餐酒】台北東區餐酒館,,2026-04-24 03:36:43
+684,ifoodie,上海小籠包,105臺北市松山區光復北路190巷39號1楼,ChIJC5UuW-mrQjQRkPqTiC1hySc,1.0,0.5,"food,recommendation",上海小籠包｜在地人激推的手工現蒸好味道!!!,,2026-04-24 03:36:56
+691,ifoodie,台北老宅,103臺北市大同區民樂街66號,ChIJyTJiPtipQjQRPaqqrwNtrd4,0.5,0.5,"早餐,日式餐包,台北早餐店,懷舊",桑斗早餐，捷運中山站早午餐，台北老宅日式蛋沙拉堡，懷舊日式餐包台北早餐店,,2026-04-24 03:37:18
+692,ifoodie,松満樓,106臺北市大安區濟南路三段26號,ChIJT91JuH2pQjQReBnuL1zoca0,0.8,0.5,"food,restaurant,chinese cuisine",松滿樓｜20年人氣平價中式合菜，必吃蝦仁絲瓜湯包、椒香牛柳（附菜單）,,2026-04-24 03:37:21
+693,ifoodie,南機場夜市,100臺北市中正區中華路二段307巷,ChIJv92qsLGpQjQRPYW4ymlvqS0,0.8,0.5,"food,night market,popular",饗咬好佳蚵嗲｜南機場夜市人氣炸物小吃，蚵嗲蝦仁嗲必吃，酥脆飽滿超涮嘴,,2026-04-24 03:37:25
+699,ifoodie,關渡,112臺北市北投區關渡,ChIJn_1wXXKvQjQRYzwAVlzxW-s,0.8,0.7,"delicious,affordable,popular",關渡從早就開始賣到下午的排隊油飯，油飯配碗什錦湯，便宜又好吃，吃完不忘再外帶,,2026-04-24 03:37:42
+700,ifoodie,MOO 101,110臺北市信義區市府路45號B1,ChIJI5JMrbmrQjQR2W6r6bkdHDM,0.8,0.5,"foodie,trendy,new_opening",台北101新開幕麵包店「MOO 101」人氣Miopane麵包打造的全新品牌，鹹奶油紅豆可頌好邪惡！,,2026-04-24 03:37:46
+701,ifoodie,MOO,110臺北市信義區松壽路11號B2,ChIJ5RZzQwCrQjQR9itO7SEfD1g,1.0,0.5,"food,bread",台北信義A11麵包「MOO」人氣Miopane麵包打造的全新麵包品牌，楓糖香蔥可頌超強！,,2026-04-24 03:37:50
+705,ifoodie,釜山順豆腐,108臺北市萬華區武昌街二段25之1號,ChIJw3NvUQmpQjQRHzzQDT-xLKc,0.8,0.5,"food,Korean cuisine,traditional",釜山順豆腐。230元起爽吃韓式30年老店！免費飲料喝到飽！,,2026-04-24 03:38:02
+709,ifoodie,北門蝦仁飯·煲湯,103臺北市大同區天水路2-4號,ChIJZ8M90UqpQjQRF4SLCZnGD8Q,1.0,0.5,"delicious,foodie,recommended",北門蝦仁飯·煲湯｜半熟蛋蝦仁飯邪惡爆汁，一口吃下超銷魂,,2026-04-24 03:38:16
+715,ifoodie,洪記煎餅果子台北旗艦店,104臺北市中山區龍江路21巷20號,ChIJl0LviM6rQjQRTSS23hO8ILY,0.7,0.5,"food,afternoon tea,authentic,specialty store",【台北美食】洪記煎餅果子台北旗艦店～遼寧夜市正宗天津煎餅果子專賣店，中山區辦公室下午茶推薦、捷運南京復興站美食,,2026-04-24 03:38:34
+716,ifoodie,五月雪客家私房珍釀,106臺北市大安區敦化南路一段329巷16號,ChIJh8uQwc2rQjQRyNrw3VrG2y0,1.0,0.5,"delicious,high CP value,recommended",帶香港朋友來吃連續多年米其林推薦創新客家菜餐廳，高CP值又美味｜五月雪客家私房珍釀,,2026-04-24 03:38:38
+723,ifoodie,蝦味鮮,105臺北市松山區八德路四段667號,ChIJR-asWZmrQjQRmXGv2D7OEeM,0.8,0.5,"food,affordable,delicious",老字號小吃店開吃～蒜蝦滷肉飯太狂、排骨兩大片只要銅板價！⎜新北市新店區 蝦味鮮蝦仁排骨飯,,2026-04-24 03:39:01
+725,ifoodie,韮仰韭菜盒專賣店,105臺北市松山區民生東路五段69巷31號,ChIJE2uPEACrQjQR7PcQVNlACFU,0.8,0.5,"food,trendy,Taiwanese cuisine",韮仰韭菜盒專賣店｜台北文青風小吃，乾烙韭菜盒鮮甜清爽,,2026-04-24 03:39:07
+726,ifoodie,屾淼苑,100臺北市中正區北平東路36號1、2樓,ChIJ93FPkLSpQjQRo_y1dAQY3S4,0.8,0.5,"food,restaurant,Chinese cuisine",【華山美食推薦】屾淼苑：藏在善導寺站的超美中式餐酒館(附菜單),,2026-04-24 03:39:10
+733,ifoodie,碧海廚房,106臺北市大安區瑞安街200號,ChIJA9YcMoGrQjQRo1PBSep22_8,0.5,0.5,"food,restaurant,traditional",碧海廚房｜必點老皮嫩肉與老譚菜鮮魚鍋的傳承蔣經國招待所碧海山莊外省家常菜餐廳,,2026-04-24 03:39:32
+734,ifoodie,小文刈菜雞,10491臺北市中山區民生東路一段86號,ChIJ5b7VP12pQjQRV68WFtOD_go,0.8,0.5,"food,hidden gem,recommended",｜中山美食｜小文刈菜雞．在地人激推的隱藏版炸雞．每日限量15隻,,2026-04-24 03:39:36
+736,ifoodie,順園小館,100臺北市中正區汀州路三段281號,ChIJoRPjyYqpQjQRLileViO9FZw,0.5,0.5,"food,restaurant,northern cuisine",順園小館，來自北方麵食老字號家常菜館！,,2026-04-24 03:39:42
+738,ifoodie,Churchill’s Sausages,111臺北市士林區中山北路七段57號2樓,ChIJd7UZid2vQjQRhMpMz3QRxoM,0.8,0.5,"food,breakfast,brunch,British_cuisine",【邱吉爾優質香腸 Churchill’s Sausages】英國主廚坐鎮的正統英式早午餐，餐點美味份量超澎湃｜台北天母美食推薦｜士林區(菜單),,2026-04-24 03:39:49
+739,ifoodie,頁小館,10463臺北市中山區北安路595巷20弄4號1樓,ChIJyQU1ZgWsQjQR5kN2WtEzKtU,1.0,0.5,"fine_dining,french_cuisine,michelin_guided",Restaurant Page 頁小館｜米其林指南推薦法式餐廳，隱藏版高質感料理（附菜單）,,2026-04-24 03:39:52
+740,ifoodie,曹氏家司機食堂,100臺北市中正區羅斯福路四段52巷16弄11號,ChIJJTKyidOpQjQRyyd0Tv8NdFo,0.8,0.5,"Korean food,street food,restaurant",曹氏家司機食堂｜韓國主廚現煮豬肉湯飯，一秒飛到釜山街頭,,2026-04-24 03:39:56
+741,ifoodie,青嬌膠原麵館,100臺北市中正區濟南路二段9號1樓,ChIJ41PutE-pQjQRHVgiNEdORIs,0.8,0.5,"food,new_opening,delicious",單人也適合的美味黃金雞湯料理，店面文青新開幕推薦，近捷運善導寺站、北商、立法院｜青嬌膠原麵館,,2026-04-24 03:39:59
+742,ifoodie,Rebirth Cafe & Restaurant,106臺北市大安區溫州街48巷2號,ChIJffQZ6YipQjQRAdV3sCg2bcM,0.8,0.5,"hidden gem,late night food,recommended",【Rebirth Cafe & Restaurant】溫州街解憂深夜食堂！隱身台大公館巷內萬事屋咖啡廳推薦,,2026-04-24 03:40:03
+745,ifoodie,陸光小館,105臺北市松山區敦化北路165巷4號,ChIJ9TjtLgCrQjQRpyCHskGb5BQ,0.8,0.5,"nostalgic,delicious,tasty",陸光小館｜小巨蛋巷弄裡的懷舊眷村餐廳，除了外省菜這滷味刀工也太強了吧！,,2026-04-24 03:40:11
+746,ifoodie,Dream Plaza,110臺北市信義區松高路11號,ChIJJVngMACrQjQRwo409l3ttvw,0.8,0.5,"buffet,restaurant,foodie",URBAN PARADISE饗賓集團最新精品餐酒Buffet，Dream Plaza吃到飽餐廳，菜色價位大公開！,,2026-04-24 03:40:15
+749,ifoodie,老鄧Lao Deng1949,106臺北市大安區信義路二段198巷4號,ChIJxe3EC4KpQjQR5L43YFNVwM4,1.0,0.5,"food,traditional",老鄧Lao Deng1949｜傳承七十年老字號，人氣麵食小吃必吃！,,2026-04-24 03:40:23
+750,ifoodie,好饗吃茶餐廳,100臺北市中正區臨沂街75巷2-3號,ChIJbekWkUWpQjQRik1n4SXvNL8,0.5,0.5,"food,restaurant,Hong Kong style tea house",好饗吃茶餐廳 中正區港式茶餐廳推薦、捷運東門美食推薦、東門市場美食推薦、中正區港式飲茶推薦、中正區港式點心推薦、中正區早餐推薦 (附菜單),,2026-04-24 03:40:27
+751,ifoodie,Pastaio Noodle cafe,105臺北市松山區敦化北路199巷2弄19號,ChIJgRcaTPerQjQRsBHoPDTQXbI,0.8,0.5,"foodie,creative,popular",IG人氣難訂位名店，創意口味義大利麵，極厚布蕾法式土司也蠻有特色｜Pastaio Noodle cafe,,2026-04-24 03:40:31
+752,ifoodie,爸爸Kevin美式BBQ,105臺北市松山區南京東路三段303巷8弄5號,ChIJoRl0J1ypQjQRjWwMJNxhnDo,1.0,0.5,"food,BBQ,restaurant",爸爸Kevin美式BBQ｜老美主廚煙燻牛胸肉超嫩必吃,,2026-04-24 03:40:34
+754,ifoodie,小公園牛肉麵,106臺北市大安區泰順街35號,ChIJ2T7KxyuqQjQRLytZgS9RYeU,1.0,0.5,"food,noodle,beef",小公園牛肉麵｜台北在地人激推老字號牛肉麵，湯濃肉嫩必吃,,2026-04-24 03:40:40
+757,ifoodie,民生社區,105臺北市松山區民生東路五段163-1號,ChIJVY4jnY2rQjQRrOwPvzbyGTw,0.8,0.5,"newly opened,Italian food,handmade pasta,duck breast,tiramisu",民生社區新開幕質感義式餐酒館 手工義大利麵 鴨胸 提拉米蘇,,2026-04-24 03:40:50
+758,ifoodie,My灶,10491臺北市中山區松江路100巷9-1號,ChIJGdWkSWGpQjQRrEfM4OiT1-U,1.0,0.5,"delicious,recommended",My灶｜連五年米其林推薦的台菜餐廳，麻油雞飯與燒焦皮蛋吃了真的不要走！,,2026-04-24 03:40:54
+760,ifoodie,台北錦州街羊肉爐,10491臺北市中山區錦州街323號,ChIJTZuJC0KrQjQRaojqMqECsUg,0.8,0.5,"food,restaurant,recommendation",招財溫體羊，台北錦州街羊肉爐推薦,,2026-04-24 03:41:00
+763,ifoodie,水源市場,100臺北市中正區羅斯福路四段92號,ChIJ_fgu74qpQjQRDbsRG5E7Fgs,0.8,0.5,"food,market,recommendation",公館站｜11間水源市場美食推薦，酥脆越式法國麵包、炒飯、必吃芋頭紫米糕推薦,,2026-04-24 03:41:08
+764,ifoodie,麵老大．平價飯麵小館,100臺北市中正區寧波西街85-1號,ChIJEb5DR8CpQjQRJsei_5v0P-A,0.8,0.5,"food,restaurant,noodles",｜中正紀念堂美食｜麵老大．平價飯麵小館．烏醋麵與紅燒肉必點,,2026-04-24 03:41:12
+767,ifoodie,好吃好吃2號店,100臺北市中正區羅斯福路三段316巷16號2樓,ChIJrfUpGjOpQjQRDnFOEvCTOlI,0.8,0.5,"food,restaurant,student-friendly",CP值超狂學生最愛！190元起真材實料原肉牛排、自助吧吃到飽 威靈頓牛排也只要400元｜好吃好吃2號店 (捷運公館美食),,2026-04-24 03:41:22
+768,ifoodie,蘇記餃子館,100臺北市中正區延平南路101巷5號,ChIJSa8UoQupQjQRo7Be_TyJhyw,0.8,0.5,"food,noodles,dumplings",蘇記餃子館｜藏在西門町黑漆漆巷子裡的烏漆抹黑炸醬麵與好吃的韭菜水餃,,2026-04-24 03:41:25
+769,ifoodie,新山韓國烤肉,111臺北市士林區大北路7號,ChIJc2NCK9evQjQRsh1BQVPCnXE,1.0,0.5,"food,korean bbq,affordable",新山韓國烤肉 ~ 士林超人氣韓式烤肉餐廳，肉質佳，平價好吃，生菜、韓式小菜免費無限自取,,2026-04-24 03:41:29
+770,ifoodie,文記花枝羹,103臺北市大同區民生西路59之2號,ChIJX9Ch_mmpQjQRcivCIkKlR2A,1.0,0.5,"food,traditional,popular",文記花枝羹｜40年老店必吃海味羹湯，在地人激推排隊小吃,,2026-04-24 03:41:33
+772,ifoodie,士林承德店,111臺北市士林區承德路四段56號,ChIJeyzj6havQjQREX5sIpNMUYM,0.8,0.5,"newly_opened,buffet,affordable",士林新開幕貴族世家mini 士林承德店、299元吃到飽,,2026-04-24 03:41:39
+773,ifoodie,小陳牛肉麵,110臺北市信義區虎林街135號,ChIJzyqO_qOrQjQR2lwRY8GcyUc,1.0,0.5,"food,noodle,beef",台北東半部必吃人氣紅燒牛肉麵，湯好肉大塊滷味也好吃｜小陳牛肉麵,,2026-04-24 03:41:42
+775,ifoodie,皇家帝國麻辣火鍋,108臺北市萬華區中華路一段192號1樓,ChIJGdBRaqepQjQR7NMzZvTESXA,1.0,0.5,"food,hot_pot,popular",皇家帝國麻辣火鍋｜台北超人氣麻辣鴛鴦火鍋吃到飽老字號近十萬則評論好評破表！,,2026-04-24 03:41:49
+777,ifoodie,老睦家台菜,10491臺北市中山區遼寧街16號,ChIJ_eNmrd6rQjQRQA5T6LgopQ0,0.5,0.5,"food,taiwanese cuisine",遼寧街美食『老睦家台菜』台北超手藝無菜單臺菜每人880元,,2026-04-24 03:41:56
+778,ifoodie,程味珍,108臺北市萬華區西寧南路65號,ChIJF47Bvw6pQjQRP3Ni4MBKGN8,0.5,0.5,"food,popular",程味珍｜人氣意麵、滷肉飯、滷味老店（附菜單）,,2026-04-24 03:41:59
+780,ifoodie,曾德自助火鍋城,108臺北市萬華區成都路153號,ChIJf5v6gAipQjQR1q9WrdpdVjA,0.8,0.5,"food,local,nostalgic",曾德自助火鍋城｜60年老字號石頭火鍋專賣店，在地人回憶必吃！,,2026-04-24 03:42:06
+782,ifoodie,龍記炒燴,100臺北市中正區羅斯福路四段92號,ChIJ_fgu74qpQjQRSOvT-G7mkdI,1.0,0.5,"food,recommended",龍記炒燴。小吃界的巨無霸，每一口都開掛、吳念貞也推薦！,,2026-04-24 03:42:12
+783,ifoodie,龍山寺,10853臺北市萬華區廣州街211號,ChIJCd7n16ipQjQRihzEWF4z6Pg,0.8,0.5,"food,traditional,temple",龍山寺美食必吃忠義號便當傳承四代的百年老店 – 呂萱萱愛分享,,2026-04-24 03:42:16
+784,ifoodie,捷運北門站,103臺北市大同區塔城街10號B1,ChIJ2xqYjg2pQjQRpckPYAHmptU,0.8,0.5,"food,noodle,satisfying",美濃現做刀切牛肉麵，價格實在大碗滿意，捷運北門站美食(姊姊食記),,2026-04-24 03:42:19
+785,ifoodie,福鼎湯包店,116臺北市文山區興隆路三段112巷2弄13號,ChIJcaceqxOqQjQRjSTp2mVr7A0,0.8,0.5,"affordable,popular,foodie",福鼎湯包店｜號稱平民版鼎泰豐！人氣湯包、蛋餅、大骨湯麵全都只要銅板價！,,2026-04-24 03:42:23
+786,ifoodie,周家豆腐捲,110臺北市信義區光復南路419巷106號,ChIJdz212LerQjQR-kZIwwVRdds,0.8,0.8,"foodie,trendy,popular",周家豆腐捲。排隊2小時也甘願！這家早餐店到底憑什麼？,,2026-04-24 03:42:26
+787,ifoodie,ROMARO 羅馬脆皮豬腩卷,106臺北市大安區安和路二段173號,ChIJw3SGT1qrQjQRt3rX2WcuYZQ,0.8,0.5,"Food,Restaurant,Pork",ROMARO 羅馬脆皮豬腩卷 — 台北第一家羅馬豬肉卷專賣店，皮脆肉嫩帶有濃郁迷迭香香氣的羅馬豬肉卷。,,2026-04-24 03:42:30
+788,ifoodie,藍阿姨眷村涼麵,106臺北市大安區通安街27巷5號,ChIJ0y8MEC-rQjQRwo-gosDnU78,0.8,0.5,"food,traditional,local",藍阿姨眷村涼麵｜巷弄傳承二代眷村涼麵！涼麵必加半熟蛋＋手工辣椒醬,,2026-04-24 03:42:33
+790,ifoodie,秘魯烤雞Polleria,100臺北市中正區牯嶺街61-5號,ChIJj0kKq5mpQjQRVbzY6qx67Yw,0.8,0.5,"food,latin american,peruvian",秘魯烤雞Polleria，道地拉丁美洲秘魯烤雞在台北！,,2026-04-24 03:42:40
+791,ifoodie,種福園,104臺北市中山區松江路123巷12之1號,ChIJLReaWWCpQjQRVcQhBlfTOZs,1.0,0.5,"food,restaurant,traditional",種福園四平街老字號｜40年北方麵點名店，必吃斤餅配京醬肉絲！,,2026-04-24 03:42:44
+795,ifoodie,曾家豆漿,104臺北市中山區錦州街123號,ChIJ-YfzZFypQjQRAFxGl4nV8S0,1.0,0.5,"food,night_market,taiwanese_cuisine",台北中山宵夜推薦｜曾家豆漿現烤蛋塔、爆汁煎包必吃評價整理,,2026-04-24 03:46:29
+796,ifoodie,便當界勞斯萊斯,105臺北市松山區八德路三段2號,ChIJHbQHreirQjQRBu4dNJC39MY,0.8,0.5,"food,convenient,affordable",有便當界勞斯萊斯美譽，內用加10元就有飲料可以喝,,2026-04-24 03:46:31
+797,ifoodie,大膽牛腩麵,10478臺北市中山區遼寧街222號,ChIJo--aBuurQjQRyN89ig3p_vM,0.5,0.5,"food,restaurant,noodles",大膽牛腩麵｜香港人開的道地港式牛腩麵店（附菜單）,,2026-04-24 03:46:32
+798,ifoodie,楊國福麻辣燙市府巨蛋店,11072臺北市信義區忠孝東路四段553巷6弄11號1樓,ChIJX4ABKgKrQjQRxjGqZKDoSbE,0.8,0.8,"food,queue,popular",楊國福麻辣燙｜市府巨蛋店｜超狂排隊人潮！經典的番茄湯頭必須來上一碗！ - Happiness,,2026-04-24 03:46:34
+800,ifoodie,黑記懷舊排骨飯,114臺北市內湖區內湖路一段203巷5號,ChIJL0jPbmysQjQR_71ph99Cv4g,0.8,0.8,"food,trendy,popular",黑記懷舊排骨飯｜超人氣古早味便當，內行人激推平價排隊名店（附菜單）,,2026-04-24 03:46:35
+803,ifoodie,發哥筍湯包,105臺北市松山區民權東路三段104號2 樓,ChIJxZ6ufparQjQRH6R-THjnJNk,0.5,0.5,"food,new location",中山國中站美食『發哥筍湯包』卡車筍湯包搬家了！爆漿湯包一顆11元,,2026-04-24 03:46:40
+808,ifoodie,蘭姥姥小吃,10491臺北市中山區伊通街66巷3號,ChIJVy_hWWCpQjQRvUGMui6xuWU,1.0,1.0,"popular,local favorite,delicious",蘭姥姥小吃｜人氣爆棚江浙菜老店，在地人激推必吃名單,,2026-04-24 03:46:45
+810,ifoodie,丸滿,10491臺北市中山區林森北路353巷21號,ChIJy2cTgv2pQjQR1Fhco2EWmvg,1.0,0.5,"Taiwanese cuisine,Michelin recommended",丸滿台灣味手路菜｜曾獲得米其林推薦台北台菜餐廳道道都是正港台式手路菜,,2026-04-24 03:46:47
+812,ifoodie,蘇家肉圓油粿,108臺北市萬華區和平西路三段176巷4號,ChIJAfyChVypQjQRByrS2ASVSts,0.8,0.6,"traditional,local,breakfast",蘇家肉圓油粿｜只賣早上的70年老店，在地人從小吃到大！,,2026-04-24 03:46:49
+815,ifoodie,有有1969,104臺北市中山區遼寧街48號,ChIJUVfSk46rQjQRjSYEdTmKW8Q,0.8,0.5,"food,taiwanese cuisine,night market",【有有1969】飄香50年的老字號平價熱炒店，冠軍滷肉飯更是人氣招牌｜台北中山區美食推薦｜遼寧街夜市/捷運南京復興站合菜(菜單),,2026-04-24 03:46:51
+818,ifoodie,松山市場,105臺北市松山區八德路四段679號,ChIJF3TM45urQjQRzo3IjfSZBAI,0.8,0.7,"delicious,popular,traditional",松山市場水餃｜只賣三樣東西就賣到嚇嚇叫每天只營業3個小時的水餃老字號,,2026-04-24 03:46:54
+820,ifoodie,捷運大橋頭延三夜市,103臺北市大同區延平北路三段,ChIJC1Rh4j6pQjQRDJAu726hNOo,0.8,0.5,"food,night market",郁香花蓮扁食，其實是飽滿的大餛飩，捷運大橋頭延三夜市美食(姊姊食記),,2026-04-24 03:46:57
+822,ifoodie,300巷Liao MaMa,106臺北市大安區仁愛路四段300巷35弄6號,ChIJqUN7ScmrQjQR9_YRPwMO9-8,0.8,0.5,"food,celebrity_recommendation,affordable",300巷Liao MaMa魷魚焿 周湯豪封為全台最好吃乾麵！明星推薦平價小吃,,2026-04-24 03:47:02
+823,ifoodie,新富町文化市場,108臺北市萬華區三水街70號,ChIJAUI-sqipQjQRIHVEEGmaZRw,0.8,0.5,"relaxed,foodie,nightlife",揪起來啦！萬華世界下午酒場，新富町文化市場裡的神祕店，菜市場美食自己帶進來，早上10點就能開喝！,,2026-04-24 03:47:06
+824,ifoodie,Ken香.時髦中菜,115臺北市南港區忠孝東路七段369號C棟7樓,ChIJsYD3o0urQjQR09vsANtZks0,1.0,0.5,"romantic,theatrical,delicious",Ken香.時髦中菜 兩個人就能吃！全台首創中菜情境劇場概念餐廳好看又好吃,,2026-04-24 03:47:09
+827,ifoodie,蜀叔,106臺北市大安區敦化南路一段236巷38號,ChIJWwZJZwCrQjQREBBFYZ4w4sI,0.9,0.5,"delicious,addictive,quality,social",台北麻辣鍋黑馬登場！大叔富弟餐飲集團旗下品牌就是品質保證！湯底有水準、食材又講究，真的是吃一次就上癮！聚餐、約會來找蜀叔準沒錯！,,2026-04-24 03:47:18
+830,ifoodie,宋上好脆皮臭豆腐,103臺北市大同區錦西街86號,ChIJA51ZkEGpQjQR9RC6G5sCZ_g,1.0,0.5,"food,delicious,variety",宋上好脆皮臭豆腐，居然還有四種脆度可以選！,,2026-04-24 03:47:28
+831,ifoodie,九記何燒臘,10491臺北市中山區吉林路124號,ChIJRVU8XWepQjQRQ1hab_XX9VQ,0.8,0.5,"Delicious,Traditional,HongKongStyle",九記何燒臘｜六十年港式燒臘老店，燒肉皮脆爆香、鴨腿油嫩多汁，動漫風便當盒也超吸睛！,,2026-04-24 03:47:31
+835,ifoodie,真川味川菜館,108臺北市萬華區康定路25巷42之一號1樓,ChIJ__m7jQipQjQR0l1oiGhOohk,0.8,0.7,"restaurant,taiwanese cuisine,recommendation",台北「真川味川菜館」50年老字號西門町平價川菜推薦，人氣餐廳菜單一次看,,2026-04-24 03:47:43
+836,ifoodie,小南門站,10066臺北市中正區愛國西路22號,ChIJn74-D6GpQjQRYJ0BSWj_hi4,0.8,0.5,"Thai food,affordable,recommended",25元就能吃到道地泰國船麵！小南門站泰國小吃推薦,,2026-04-24 03:47:47
+837,ifoodie,蔣記家薌麵,106臺北市大安區四維路208巷18之1號1樓,ChIJAWZ_6i2qQjQRqsm-OfE9RcI,1.0,0.5,"delicious,recommended",蔣記家薌麵｜搶鍋麵牛肉麵都好吃，口水雞必點，小菜樣樣精彩！,,2026-04-24 03:47:51
+839,ifoodie,當紅炸子雞,111臺北市士林區承德路四段40巷5號（非一樓,ChIJg3aXBbOuQjQRspkTfUoXU5c,1.0,1.0,"delicious,popular,affordable",當紅炸子雞｜平價桶裝炸雞人氣爆棚！超酥超多汁，CP值高到炸！,,2026-04-24 03:47:57
+840,ifoodie,麗馥小吃,106臺北市大安區安居街34巷8號,ChIJySVU1TaqQjQR6LQChR1deSc,0.8,1.0,"popular,traditional,Busy",麗馥小吃｜眷村滷味太猛！近60年老麵店人氣高到下午一點半還客滿！,,2026-04-24 03:48:00
+842,ifoodie,麗馥小吃,106臺北市大安區安居街34巷8號,ChIJySVU1TaqQjQR6LQChR1deSc,1.0,0.5,"delicious,recommended",麗馥小吃｜牛肉麵湯頭濃郁好吃，滷味小菜必點超下飯！,,2026-04-24 03:48:06
+844,ifoodie,麵老大,100臺北市中正區寧波西街85-1號,ChIJEb5DR8CpQjQRJsei_5v0P-A,0.8,0.5,"delicious,recommended,local",【麵老大】澎湃系紅燒肉蓋飯，烏醋麵酸香椒麻辣超對味，在地人推薦的口袋名單｜台北中正區美食推薦｜捷運中正紀念堂站小吃(菜單),,2026-04-24 03:48:12
+847,ifoodie,恰恰韓式豬腳,104臺北市中山區民權東路三段60巷13弄42號,ChIJzyUwZqirQjQRfJBK_4G5aG4,1.0,0.5,"food,korean,pork",中山國中站的韓式豬腳，這是我目前吃過最接近韓國豬腳小姐的店了｜恰恰韓式豬腳,,2026-04-24 03:48:22
+848,ifoodie,LaLaport,115臺北市南港區經貿二路131號,ChIJSwPgOACtQjQREeWs_povoDw,0.5,0.8,"food,queue,japanese",蘋果樹蛋包飯，來自日本連鎖第一品牌，南港LaLaport店排隊店(姊姊食記),,2026-04-24 03:48:26
+849,ifoodie,曾家豆漿,104臺北市中山區錦州街123號,ChIJ-YfzZFypQjQRAFxGl4nV8S0,0.8,0.5,"night market,traditional,local favorite",曾家豆漿｜網友戲稱被豆漿耽誤的蛋塔店竟然是在地20年宵夜豆漿點心老字號,,2026-04-24 03:48:29
+850,ifoodie,冠軍菜肉餛飩,108臺北市萬華區萬大路174號,ChIJg5EnDRGpQjQRWbzSCzUBGLU,0.8,0.5,"food,restaurant,traditional",冠軍菜肉餛飩│老店休店後搬家新開，仍是當年桃源街風味,,2026-04-24 03:48:33
+851,ifoodie,麗園壽司,100臺北市中正區連雲街74之3號,ChIJGf55xX6pQjQRpqF-qvJKaWI,1.0,0.5,"food,sushi,delicious",麗園壽司，芋頭排骨酥脆腸湯很讚，捷運東門站美食(姊姊食記),,2026-04-24 03:48:36
+852,ifoodie,茂園餐廳,104臺北市中山區長安東路二段185號,ChIJcQiIHdyrQjQR-LHoSixrQR8,1.0,0.5,"food,restaurant,taiwanese cuisine",茂園餐廳｜米其林必比登台菜老店，必點白斬雞、花枝丸、鹹冬瓜蒸午仔魚！,,2026-04-24 03:48:40
+858,ifoodie,Pizza Americano,106臺北市大安區安和路二段141號,ChIJoZ-WobOrQjQRu8zLDDfHQys,0.8,0.5,"food,pizza,trendy",Pizza Americano 全球傳奇披薩達人坐鎮指導！道地美式pizza台北吃得到,,2026-04-24 03:48:58
+859,ifoodie,西門町50年老店,108臺北市萬華區漢中街32巷1號,ChIJsTvfsg6pQjQRCk_3ZI36rk0,0.8,0.5,"comfortable,delicious,traditional",西門町50年老店，整修後的店面舒適有冷氣，滷味櫃一字排開任君挑選，樣樣都很入味,,2026-04-24 03:49:01
+860,ifoodie,輝煌川菜小館,100臺北市中正區延平南路166號,ChIJ378eLKepQjQRkJfC7QYTX38,1.0,0.5,"food,restaurant,traditional,spicy",輝煌川菜小館｜台北50年川菜老店，麻辣過癮必吃經典！,,2026-04-24 03:49:05
+861,ifoodie,NAGOMI新光A8店,110臺北市信義區松高路12號台北信義新天地A8館七樓,ChIJlwQIHxWrQjQRqHmvCy8mBxo,0.5,0.5,"buffet,restaurant,Japanese cuisine",NAGOMI新光A8店》NAGOMI雅吃到飽和食料理懷石Buffet自助餐無限供應(價格訂位方式),,2026-04-24 03:49:08
+862,ifoodie,享點港式飲茶,10491臺北市中山區長安東路一段8-2號,ChIJ7awmDQCpQjQR8Uvi8szGMT0,0.8,0.5,"food,tea,HK_style",享點港式飲茶｜粉嫩外觀像甜點店，結果端出30年師傅現做港點！這間中山美食CP值也太高,,2026-04-24 03:49:12
+863,ifoodie,亨利客原味炭烤牛排,11056臺北市信義區和平東路三段215號,ChIJ6U6HVjGqQjQR7_kX3YwXTzA,0.8,0.5,"food,restaurant,steak",台北牛排控衝！老饕激推 平價吃到Prime級炭烤原塊牛排 免服務費＋氣泡飲喝到飽｜亨利客原味炭烤牛排(捷運六張犁站美食),,2026-04-24 03:49:16
+864,ifoodie,萬華阿昌意麵,108臺北市萬華區民和街4號,ChIJQZLWNLGpQjQRBycZaucDziY,0.8,0.5,"food,satisfying",萬華阿昌意麵，海陸雙拼紅糟燒肉蓋飯大滿足(姊姊食記),,2026-04-24 03:49:19
+865,ifoodie,王家麵食館,105臺北市松山區八德路四段253號,ChIJ26V63JWrQjQR0EJZDmEeJkI,1.0,0.5,"food,celebrity",王家麵食館 @ 南京三民美食，杜德偉、影帝吳慷仁都愛,,2026-04-24 03:49:23
+867,ifoodie,燦津呷滷肉飯米粉湯,103臺北市大同區酒泉街139號,ChIJRwm7R2ypQjQRUYgi2T8JmkY,0.8,0.5,"food,traditional,taiwanese",燦津呷滷肉飯米粉湯｜台北大龍峒酒泉街古早味小吃 紅燒肉讓我暈了,,2026-04-24 03:49:29
+868,ifoodie,好饗吃茶餐廳,100臺北市中正區臨沂街75巷2-3號,ChIJbekWkUWpQjQRik1n4SXvNL8,0.8,0.5,"foodie,dimsum,restaurant",好饗吃茶餐廳，只營業白天的熱炒港式點心推薦,,2026-04-24 03:49:32
+869,ifoodie,La Locanda 蘿莎娜小館,105台北市松山區八德路三段12巷52弄18號1樓,ChIJmfF8XcOrQjQRA9x4huvWxRw,0.8,0.5,"Italian food,gourmet,handmade pasta",La Locanda 蘿莎娜小館｜曾連四年米其林推薦的義式家鄉味！正統義大利主廚手工麵太猛啦！,,2026-04-24 03:49:36
+871,ifoodie,小山之丘,100008臺北市中正區許昌街8號,ChIJtdyfGvGpQjQRlqW7nA6sss4,0.8,0.5,"food,mango,sweet",小山之丘 | 台北車站麵包店推薦、芒果控必吃：芒果牛奶棒、芒果珍珠糖日式菠蘿,,2026-04-24 03:49:43
+872,ifoodie,好米亞GOODIES CUSINE,106臺北市大安區敦化南路一段270巷6號,ChIJly19jbyrQjQRBN17akR0XKo,1.0,0.5,"food,restaurant,taiwanese cuisine",【台北美食】好米亞GOODIES CUSINE華麗轉型中菜餐廳！2025大安區必吃砂鍋濃白雞湯霸氣登場，新菜色表現驚艷必點酥皮香酥鴨跟冰釀紅燒肉！,,2026-04-24 03:49:47
+873,ifoodie,呷二嘴,103臺北市大同區甘州街34號,ChIJe7JZZxWpQjQRDr7ZxWTbsvc,0.8,0.7,"traditional,popular,taiwanese cuisine",呷二嘴｜開業超過70年台北老字號排隊米苔目冰主打料多實在的大碗公,,2026-04-24 03:49:50
+875,ifoodie,財哥福州麵,100臺北市中正區西藏路10號,ChIJ1SNPl6SpQjQRNdDWbiygDdc,1.0,0.5,"recommended,traditional,popular",財哥福州麵｜運將大哥跟在地人都超推薦的超過30年小南門麵店老字號,,2026-04-24 03:49:56
+876,ifoodie,中山站新開幕質感火鍋,"201號, 南京西路大同區臺北市103",ChIJKaUVV66pQjQRz73hlHQ_ko4,0.5,0.5,"food,new opening,Taiwanese cuisine,hot pot",中山站新開幕質感火鍋 剝皮辣椒 雞白湯 台式石頭火鍋,,2026-04-24 03:50:00
+878,ifoodie,饗麻饗辣PLUS LALAPORT南港店,115臺北市南港區經貿二路131號6樓,ChIJGR0KDtutQjQRUMdeNJ737Iw,0.8,0.5,"food,hot pot,seafood, buffet",饗麻饗辣PLUS LALAPORT南港店》台北火鍋吃到飽餐廳麻辣鍋吃到飽南霸天現撈活跳蝦吃到飽,,2026-04-24 03:50:06
+880,ifoodie,味擂家日式料理,111臺北市士林區福壽街1號1樓,ChIJWW34AmGvQjQRPpdckEU-j7Q,1.0,0.5,"delicious,Japanese food,recommended",味擂家日式料理 好吃有溫度台北日式定食推薦！白飯鰹魚海帶味噌湯免費續加,,2026-04-24 03:50:12
+881,ifoodie,麵老大,100臺北市中正區寧波西街85-1號,ChIJEb5DR8CpQjQRJsei_5v0P-A,0.8,0.5,"delicious,recommended",麵老大｜紅燒肉蓋飯太強大！烏醋麵加半熟蛋更涮嘴，在地人用餐口袋名單,,2026-04-24 03:50:15
+883,ifoodie,保安宮,103臺北市大同區哈密街61號,ChIJoWFCL2qpQjQRPOoT7nFV3YU,0.8,0.5,"food,delicious,traditional",保安宮旁普通平凡的小吃店，餐點選擇性多，蝦仁炒透抽、蚵仔酥、雞捲都好吃,,2026-04-24 03:50:22
+886,ifoodie,瀨品軒,103025臺北市大同區蘭州街92號,ChIJuaA7Y2qpQjQRr6y36KOk_xE,1.0,0.5,"coffee,bread,hidden_gems,affordable",瀨品軒-製パン&珈琲 隱身蘭州街民宅老屋咖啡店！手作麵包便宜好吃推薦,,2026-04-24 03:50:31
+889,ifoodie,北門蝦仁飯·煲湯,103臺北市大同區天水路2-4號,ChIJZ8M90UqpQjQRF4SLCZnGD8Q,1.0,0.5,"delicious,foodie",北門蝦仁飯·煲湯｜半熟蛋蝦仁飯邪惡爆汁，一口吃下超銷魂！,,2026-04-24 03:50:42
+891,ifoodie,南山炸豬排,103臺北市大同區南京西路18巷6弄8-2號2樓,ChIJu93FIyapQjQRLto-gJ-WMus,0.8,0.5,"food,korean,delicious",南山炸豬排남산돈까스 超巨大韓式炸豬排 外皮酥脆肉香四溢！#士林美食,,2026-04-24 03:50:49
+892,ifoodie,巷子龍家常菜,106臺北市大安區四維路25號,ChIJW3STls2rQjQRlinh2eNHEzY,0.8,0.5,"food,restaurant,michelin",巷子龍家常菜｜連續多年榮獲米其林必比登推薦台北湘菜餐廳必點湖南金錢蛋,,2026-04-24 03:50:53
+893,ifoodie,韓丰117,104臺北市中山區四平街117號1樓,ChIJ885iHg-pQjQRoC8v-_rEl7g,0.8,0.5,"Celebration,Food,Social",韓味熱辣台味暖心，這晚讓人上癮的不只是酒《韓丰117》松江南京聚餐慶生首選,,2026-04-24 03:50:55
+895,ifoodie,搬湯弄煮（湯煮專賣）台北八德店,105臺北市松山區八德路二段378號,ChIJ0zqqSQCrQjQRjBB-JyU_km0,0.8,0.5,"food,trendy,customizable",搬湯弄煮（湯煮專賣）台北八德店｜一喝上癮的文青系湯煮 自助點餐＋客製化湯頭搭配 直接讓人回不去。菜單價位(台北松山平價湯煮料理推薦),,2026-04-24 03:51:01
+896,ifoodie,茹絲葵美式牛排,105臺北市松山區民生東路三段135號,ChIJC3A0YO-rQjQR14SXdF53Q6s,0.8,0.5," anniversary,birthday,fine dining,celebration",茹絲葵美式牛排｜30年台北頂級牛排館老字號是許多人生日週年慶祝訂位首選,,2026-04-24 03:51:04
+897,ifoodie,秦家餅店,106臺北市大安區四維路6巷12號,ChIJnwbG3NGrQjQRgGijR1CGMRk,0.8,0.5,"food,restaurant,traditional",【台北仁愛圓環美食】秦家餅店 舒國治胡天蘭推薦韭菜盒蔥油餅！傳承三代北方乾烙專賣店,,2026-04-24 03:51:08
+900,ifoodie,墨西哥女婿燒餅,105臺北市松山區新東街6巷2號,ChIJbVgbSzqrQjQRs_jpxCNFKjM,0.8,0.5,"food,mexican,taiwanese",墨西哥女婿燒餅｜台墨手作餅包餡專賣，鹹豆漿/TACO蛋餅燒餅/Quesadilla黑豬肉黃金餡餅開吃！民生社區美食,,2026-04-24 03:51:17
+901,ifoodie,麵霸王,104臺北市中山區雙城街10巷10號,ChIJBcoyQNQBaDQRU2jb9Nvhnjs,0.8,0.5,"food,night market,taiwanese cuisine",【麵霸王】李易讚爆的絕世大排麵，一斤多大排上桌就霸氣外漏｜台北中山區美食推薦｜雙城街夜市/晴光市場/捷運中山國小站(菜單),,2026-04-24 03:51:20
+903,ifoodie,第二好吃私房菜,111臺北市中山區吉林路229號,ChIJq6qqqrOuQjQRGGwRH9rZtlU,1.0,0.5,"food,restaurant,tasty",第二好吃私房菜｜行天宮熱炒一條街排隊餐廳必點玉米雞跟豬肝吃過之後會讚不絕口,,2026-04-24 03:51:26
+908,ifoodie,廖家,106臺北市大安區金華街98號,ChIJgbwEgJypQjQR6zkPQ6rpaNI,1.0,0.5,"food,local",來來廖家四十年老味道｜從路邊攤開到店面的隱藏版永和巷弄美食必點超讚的黑白切跟滷味,,2026-04-24 03:51:40
+915,ifoodie,松滿樓,106臺北市大安區濟南路三段26號,ChIJT91JuH2pQjQReBnuL1zoca0,0.8,0.5,"food,restaurant,chinese cuisine",松滿樓｜超過20年平價中式合菜！必吃蝦仁絲瓜湯包＆椒香牛柳（附菜單）,,2026-04-24 03:52:01
+918,ifoodie,港墘站,114臺北市內湖區,ChIJ48QKW2SsQjQRkJKSrz02ZC8,0.8,0.5,"food,hidden gem",港墘站｜五燈獎豬腳飯，超隱密沒招牌，三重豬腳飯滷肉飯名店內湖也吃得到！,,2026-04-24 03:52:10
+919,ifoodie,金豬食堂,104臺北市中山區南京東路一段29號,ChIJaW2yNB6pQjQRQdXv1cjMlqE,0.5,0.5,"food,Taiwanese,Korean",金豬食堂（금돼지식당）Gold Pig Taiwan︱韓國米其林推薦︱台北店菜單,,2026-04-24 03:52:14
+922,ifoodie,天鷄麵屋坊,103臺北市大同區南京西路18巷4弄8之1號1樓,ChIJS5z4JgCpQjQR3i_DVdx9rI8,1.0,0.5,"food,restaurant,noodle,recommendation",【台北中山站美食】天鷄麵屋坊 隱家拉麵新品牌！菜單主打特色柚香雞白湯濃郁好喝推薦,,2026-04-24 03:52:23
+925,ifoodie,小林英夫,108臺北市萬華區康定路120號,ChIJX4JLHaipQjQRfvkdSezeSEs,0.8,0.5,"food,japanese cuisine,affordable",台北食記｜小林英夫｜西門町隱藏版的平價日式料理老店 × 每道菜色平均$200超划算,,2026-04-24 03:52:33
+927,ifoodie,順園小館,100臺北市中正區汀州路三段281號,ChIJoRPjyYqpQjQRLileViO9FZw,0.8,0.7,"delicious,popular,local favorite",順園小館｜在地人激推北方家常菜，公館生意超好小吃餐廳,,2026-04-24 03:52:39
+928,ifoodie,樂天羊肉,100029臺北市中正區羅斯福路一段25號,ChIJBfLFBaCpQjQRyVCgnDSsUGg,0.8,0.5,"food,restaurant,Taiwanese cuisine",中正紀念堂美食｜台北好吃羊肉湯『樂天羊肉』+10元就有一碗噴香滷肉飯,,2026-04-24 03:52:43
+929,ifoodie,聚園餐廳,105臺北市松山區民生東路三段113巷25弄39號,ChIJ6wjmm-WrQjQR_CwNHLQawFg,0.8,0.5,"food,affordable,traditional",聚園餐廳｜一鴨三吃竟然才1588元！開業超過40年的台北平價北平餐館太誇張了,,2026-04-24 03:52:46
+931,ifoodie,盛味豐炭烤燒餅,106臺北市大安區和平東路二段321號,ChIJeUcnhi6qQjQRZPc14do3CLA,1.0,0.5,"food,recommendation,delicious",【大安區科技大樓站美食小吃】盛味豐炭烤燒餅 台北貼爐燒餅推薦！甜鹹酥餅好吃又平價,,2026-04-24 03:52:53
+934,ifoodie,小宅門渡,111臺北市士林區通河街104號,ChIJg1itbtOvQjQRZ0nMpX5YAxQ,1.0,0.5,"relaxing,beautiful,afternoon tea",手作甜點下午茶 絕美日式庭園超享受 小宅門渡｜士林劍潭站咖啡廳,,2026-04-24 03:53:04
+935,ifoodie,福華飯店珍珠坊,106臺北市大安區仁愛路三段160號2樓,ChIJRW2USNGrQjQRCr_458UOPX0,0.5,0.5,"food,buffet",福華飯店珍珠坊吃到飽,,2026-04-24 03:53:07
+938,ifoodie,搬湯弄煮-台北八德店,103臺北市大同區民生西路87號1樓,ChIJi_3TeF6pQjQRlVkM3YFG2vY,0.8,0.5,"delicious,affordable,popular",搬湯弄煮-台北八德店｜靠一碗湯征服上班族！配料澎湃、湯頭厲害爆紅湯煮料理，價位還很親民,,2026-04-24 03:53:17
+939,ifoodie,顏家蚵仔麵線,103臺北市大同區延平北路四段253之1號,ChIJtZ4ZxzWpQjQRjoOspjlLOzk,0.8,0.5,"traditional,breakfast,street_food",顏家蚵仔麵線，早餐就吃麵線配臭豆腐，台北五十年老店(姊姊食記),,2026-04-24 03:53:21
+940,ifoodie,KA SKY COFFEE,110臺北市信義區松高路77號33樓,ChIJfZJaTwCrQjQRrSgCZr0uiiU,0.5,0.5,"cafe,scenic view",【台北咖啡】KA SKY COFFEE 陶朱隱園101第一排高空景觀咖啡廳，台北信義區網美咖啡廳,,2026-04-24 03:53:24
+941,ifoodie,KANG Artisan Bakery,105臺北市松山區敦化北路120巷19號,ChIJO6ixbT2rQjQR1B8rWnKtEVs,0.8,0.5,"delicious,popular",KANG Artisan Bakery｜前文華東方烘焙主廚開的麵包店，連黃仁勳都愛的杏仁可頌有夠猛！,,2026-04-24 03:53:28
+942,ifoodie,上引水產,10491臺北市中山區民族東路410巷2弄18號,ChIJ_3AKcP2rQjQRG-FBsLE_NWY,0.8,0.5,"food,value_for_money",上引水產健康便當｜只要150元就能配五菜超大盒！還能一次吃到雞腿＋糖醋排骨,,2026-04-24 03:53:31
+943,ifoodie,磚窯黃仁勳愛店,105臺北市松山區敦化南路1段7-1號,ChIJJYOmOMOrQjQRKdqazCuONy0,1.0,0.5,"food,restaurant,taiwanese cuisine",【小巨蛋美食】磚窯黃仁勳愛店 古早味懷舊餐廳 台菜必吃菜單,,2026-04-24 03:53:35
+944,ifoodie,神農太太底家,10491臺北市中山區南京西路14號4樓,ChIJdd8sZYipQjQRGAdnbdCEAY4,0.8,0.5,"food,buffet,Japanese cuisine",博多天麩羅山海明太子吃到飽，限量20份商業午餐好豐盛 @神農太太底家,,2026-04-24 03:53:38
+946,ifoodie,好記擔仔麵,10491臺北市中山區吉林路79號,ChIJDV9uW2epQjQR43zG4K2WfJ4,0.8,0.7,"food,taiwanese cuisine,popular","【好記擔仔麵X阿美飯店】日銷2,000碗超強擔仔麵！台菜酒家菜代表老店可訂位有停車場",,2026-04-24 03:53:45
+951,ifoodie,彈芽麵,112臺北市北投區裕民一路40巷15號,ChIJe3dUdJCuQjQRQHEUM5kDAWk,1.0,0.5,"food,recommendation",【彈芽麵】手工麵條極Q彈，份量大到一人份兩人飽｜台北北投美食推薦｜捷運石牌站小吃(菜單),,2026-04-24 03:54:01
+953,ifoodie,丸林滷肉飯,104臺北市中山區民族東路32號,ChIJYfIZQ1qpQjQRlYV-mAl4PQI,0.8,0.5,"luxurious,traditional,foodie",丸林滷肉飯｜台北古早味自助餐 裝潢超奢華還有現打果汁吧,,2026-04-24 03:54:08
+954,ifoodie,查記麵館,110臺北市信義區吳興街37號,ChIJf8ogi7WrQjQRnKwuPbJ3uDM,0.5,1.0,"crowded,popular,foodie",查記麵館｜不用等到用餐時間？下午4點半竟然客滿的台北吳興街皮蛋抄手麵,,2026-04-24 03:54:11
+957,ifoodie,新采粵式小館,106臺北市大安區市民大道四段60-1號,ChIJ2ZW5X56rQjQRKVWVagAdSiQ,0.8,0.5,"food,restaurant,nightlife,Chinese cuisine",【新采粵式小館】深夜也吃得到誘人粵菜，腊味煲仔飯必吃推薦｜台北大安美食｜市民大道/忠孝敦化/忠孝復興港式合菜(菜單),,2026-04-24 03:54:22
+958,ifoodie,KA SKY COFFEE,110臺北市信義區松高路77號33樓,ChIJfZJaTwCrQjQRrSgCZr0uiiU,0.8,0.5,"romantic,scenic,coffee",【KA SKY COFFEE】陶朱隱園第一排高空景觀咖啡廳，感受101與台北城市的浪漫美景｜台北信義區咖啡廳推薦｜捷運市政府站(菜單),,2026-04-24 03:54:25
+959,ifoodie,我家川菜,108臺北市萬華區成都路105巷7號,ChIJqXe38wipQjQRimcHAyFPjwU,0.8,0.5,"delicious,high_value,Sichuan_cuisine",川菜一條街中平價高CP值熱炒中式料理，推薦糖醋里肌與蚵仔酥｜我家川菜,,2026-04-24 03:54:29
+961,ifoodie,微風南京店,105臺北市松山區南京東路三段337號,ChIJq3Y47HwEbjQRiJOugEYDoTo,0.8,0.5,"food,restaurant,buffet",橫濱牛排微風南京店，自助沙拉吧咖哩飯吃到飽 @神農太太底家,,2026-04-24 03:54:35
+962,ifoodie,道食樂韓式小吃,110臺北市信義區虎林街137號,ChIJfTsB_KOrQjQRfDShmhGM7eU,0.8,0.5,"Korean food,Happy,Delicious",道食樂韓式小吃｜感受道地韓食的樂趣！小菜爽吃CP值頂天！ - Happiness,,2026-04-24 03:54:39
+967,ifoodie,忠青商行,100臺北市中正區青島東路6-1號,ChIJLZxabbKpQjQR6cN-5ukbq78,0.8,0.5,"food,restaurant,new brand",忠青商行新品牌 青嬌膠原麵館 6小時燉煮雞湯 黃金燉雞湯、芋頭排骨湯 還有超水準的小菜 - ifunny 艾方妮的遊樂場,,2026-04-24 03:54:55
+968,ifoodie,楊家手工水餃,116臺北市文山區景後街176號,ChIJFYrvtwCqQjQRWKN3x__DfPA,1.0,0.5,"delicious,recommended",楊家手工水餃｜飽滿多汁韭菜水餃，被譽為台北最好吃,,2026-04-24 03:54:59
+970,ifoodie,野人花園,111臺北市士林區菁山路131巷13-1號,ChIJz8md_HKtQjQROvZB1Vt1R24,0.8,0.5,"relaxing,scenic,cafe",野人花園｜只要250元就能坐一整天！陽明山這間景觀咖啡廳太佛了,,2026-04-24 03:55:05
+971,ifoodie,基隆麵食館,100臺北市中正區青島東路7-3號,ChIJJVbgA3GpQjQR6VhEPnLA69w,0.8,0.5,"food,noodle,curry,retro",基隆麵食館 - 台北也吃得到基隆版的咖哩炒麵，外加懷舊番茄蛋包飯助攻,,2026-04-24 03:55:09
+972,ifoodie,湘八老,106臺北市大安區安和路二段74巷8號,ChIJ87I138yrQjQR-lABGmCr6jc,0.8,0.5,"food,restaurant,chinese cuisine",湘八老｜要猛的啦‼️台北老字號彭園旗下湘菜子品牌每一道料理幾乎都無雷,,2026-04-24 03:55:12
+975,ifoodie,士東市場,111臺北市士林區士東路100號,ChIJx0l0WoSuQjQRJIqnZLjDego,0.8,0.5,"delicious,night market,street food",八卿潮滷潮汕滷鵝專賣｜士東市場必吃滷味小吃,,2026-04-24 03:55:22
+977,ifoodie,金豬食堂 Gold Pig Taiwan,104臺北市中山區南京東路一段29號,ChIJaW2yNB6pQjQRQdXv1cjMlqE,0.8,0.5,"food,KoreanBBQ,Michelin",『金豬食堂 Gold Pig Taiwan』 韓式燒肉界唯一連續七年獲《米其林指南》必比登推薦,,2026-04-24 03:55:28
+978,ifoodie,士林夜市,111臺北市士林區基河路101號,ChIJBa_9xLGuQjQRKfnnhr5twuc,0.8,0.8,"night market,foodie,trendy",無店名魷魚羹｜李易推薦隱藏版小吃，士林夜市巷弄人氣羹湯爆紅中！,,2026-04-24 03:55:31
+979,ifoodie,予菓銅鑼燒&手作烘焙工坊,111臺北市士林區士東路66號1樓,ChIJHY00_4SuQjQR9Lcuwdwgnvw,1.0,0.5,"sweet,afternoon_tea",予菓銅鑼燒&手作烘焙工坊 士東市場旁甜點下午茶推薦！銅鑼燒好吃便宜,,2026-04-24 03:55:35
+980,ifoodie,新采粵式小館,106臺北市大安區市民大道四段60-1號,ChIJ2ZW5X56rQjQRKVWVagAdSiQ,1.0,0.5,"food,recommendation,nightlife",台北深夜港式合菜推薦｜新采粵式小館，必吃臘味煲仔飯,,2026-04-24 03:55:38
+988,ifoodie,和園川味小吃,100臺北市中正區紹興南街5之2號,ChIJnXmLh3CpQjQR9QwzobICtsw,0.8,0.5,"food,restaurant,affordable",善導寺美食｜和園川味小吃 平價熱炒大份量，上班族激推超高CP值餐廳,,2026-04-24 03:56:04
+989,ifoodie,青島豆漿店,100台北市中正区杭州南路一段139-3號,ChIJbVYP5XepQjQRQ4vA309-_UE,0.8,0.5,"traditional,breakfast,nostalgic",青島豆漿店｜都2025年了‼️沒想到台北還能吃到傳統烤爐去烤的燒餅肉餅早餐,,2026-04-24 03:56:07
+992,ifoodie,延三夜市,103臺北市大同區延平北路三段,ChIJC1Rh4j6pQjQRDJAu726hNOo,0.8,0.5,"food,night_market,popular",延三夜市必吃人氣小吃，人手一碗魯肉飯，豬腳皮Q肉香，藥燉排骨清甜肉大塊,,2026-04-24 03:56:18
+994,ifoodie,Lin's Bakery,104臺北市中山區建國北路三段113巷31弄23號,ChIJwZnJvJOpQjQRlfokwG8VaKc,0.0,0.5,,林氏貝果 Lin’s. Bakery,,2026-04-24 03:56:24
+996,ifoodie,小公園牛肉麵,106臺北市大安區泰順街35號,ChIJ2T7KxyuqQjQRLytZgS9RYeU,1.0,0.5,"beef noodle,taipei,local favorite",小公園牛肉麵｜台北在地人激推老字號牛肉麵，湯濃肉嫩必吃！,,2026-04-24 03:56:30
+997,ifoodie,捷運劍潭站,111臺北市士林區中山北路五段65號,ChIJa3NR3LGuQjQRD9luxlkVfro,0.8,0.5,"food,recommendation,affordable",【正宗嘉義火雞肉飯】蔡阿嘎大力推薦的銅板美食，實惠又對味的台北火雞肉飯｜台北士林美食推薦｜捷運劍潭站小吃(菜單),,2026-04-24 03:56:34
+998,ifoodie,巧房餡餅,106臺北市大安區和平東路二段313號,ChIJQXI8hi6qQjQRgZW2hjSusQg,0.8,0.8,"food,popular,delicious",【科技大樓站美食】巧房餡餅 北教大超人氣排隊小吃推薦！牛肉豬肉餡餅香甜多汁會爆漿,,2026-04-24 03:56:37
+999,ifoodie,羊成小館,100臺北市中正區忠孝東路二段80號,ChIJUUgeDnupQjQRgq7eGrd-818,1.0,0.5,"hidden gem,cantonese cuisine",羊成小館｜低調卻超實力！台北隱藏版粵菜推薦,,2026-04-24 03:56:41
+1002,ifoodie,小巷子清燉牛肉麵四平店,104472臺北市中山區四平街40號,ChIJt_-mmfOpQjQRxCF22lb5vsU,1.0,0.5,"food,noodle,beef",小巷子清燉牛肉麵四平店，台北人氣牛肉麵必吃名店,,2026-04-24 03:56:49
+1004,ifoodie,阿娥水餃,10491臺北市中山區南京東路二段21巷9號,ChIJ_f6k8GapQjQRUOsMbB2Ev3Q,0.8,0.5,"food,affordable",阿娥水餃，一顆7元的韭黃蝦仁鮮肉水餃超划算,,2026-04-24 03:56:55
+1005,ifoodie,查記麵館,110臺北市信義區吳興街37號,ChIJf8ogi7WrQjQRnKwuPbJ3uDM,0.8,1.0,"popular,delicious,crowded",查記麵館，台北必吃皮蛋抄手麵，下午4點半也爆滿的人氣小吃,,2026-04-24 03:56:59
+1006,ifoodie,品味鮮小館老彭,106臺北市大安區信義路四段150號1樓,ChIJz8XqxTCrQjQRLIigHBR753E,0.8,0.5,"traditional,chinese cuisine,experienced chef",品味鮮小館老彭的菜，50年經驗的經典粵菜館,,2026-04-24 03:57:02
+1008,ifoodie,你好原汁牛肉麵,106臺北市大安區四維路170巷43號,ChIJUf5iYQCrQjQRElPg3APC1Mk,0.8,0.5,"food,beef noodle,restaurant",你好原汁牛肉麵，140元就可以吃半筋半肉牛肉麵，內用豆漿紅茶喝到飽，近成功國宅(菜單) – MayaWang 麻亞愛吃喝玩樂,,2026-04-24 03:57:09
+1010,ifoodie,三味香麵店,100臺北市中正區桃源街19號,ChIJb057TQqpQjQRL7LbiwZMiy0,1.0,0.5,"food,recommended,traditional",【桃源街美食推薦】三味香麵店 總統御用包子傳承三代70年老店！肉包豆沙包餛鈍都好吃,,2026-04-24 03:57:15
+1013,ifoodie,龍山寺站,108台灣臺北市萬華區,ChIJUYHP2K6pQjQRjYUQWX4zGWQ,0.5,0.5,"food,restaurant",布袋鮮之蚵，不一樣的蚵仔麵線，捷運龍山寺站美食(姊姊食記),,2026-04-24 03:57:24
+1015,ifoodie,八時神仙草中山店,104202臺北市中山區中山北路一段135巷5號,ChIJBW4IcNOpQjQRxvXxpkdCMoc,1.0,0.5,"summer,dessert,trendy",中山站｜八時神仙草中山店，嫩仙草雪花冰，清新仙草茶，夏日必吃台北甜品店推薦！,,2026-04-24 03:57:31
+1018,ifoodie,Oregano奧瑞岡義式餐廳,106臺北市大安區四維路96號,ChIJYbRuh9KrQjQR97QVMLEicQs,0.8,0.5,"food,Italian,familiar",被喚醒的熟悉味道｜Oregano奧瑞岡義式餐廳 吃了好多年味道一樣有水準,,2026-04-24 03:57:41
+1023,ifoodie,丸隆生魚行,103台北市大同区迪化街一段21號永樂市場1楼內 攤位1418號,ChIJtVMNiBOpQjQRxcr2v9-QVu0,1.0,0.5,"food,sushi,Japanese cuisine,affordable,high-quality",丸隆生魚行｜隱身市場的人氣日料攤！平價卻像高級日料般職人級生魚片，滿滿配料魚肉味增湯免費喝到飽,,2026-04-24 03:57:56
+1024,ifoodie,小龍飲食,105050臺北市松山區光復南路13巷31號一樓,ChIJw8JbDsCrQjQRzRofIDKpgpE,-1.0,0.5,"overpriced,bad_taste",小龍飲食真心不推！價格誇張口味雷 (菜單),,2026-04-24 03:58:00
+1027,ifoodie,Gras French,10491臺北市中山區民權西路56巷2號,ChIJ_SJpCa-pQjQRNAt8o_e3wNk,0.8,0.5,"french cuisine,fine dining,trendy",將慾望慢火燉煮，法式靈魂的濃縮與綻放【Gras French】台北法國傳統料理推薦,,2026-04-24 03:58:08
+1028,ifoodie,老翁家,105臺北市松山區新東街19號,ChIJVz4IDo6rQjQRAg7_mlxU4S0,0.8,0.5,"food,Taiwanese cuisine",老翁家四神湯｜好喝到不給免費加湯就給負評的民生社區原汁豬腳湯與四神湯,,2026-04-24 03:58:12
+1030,ifoodie,許仔豬腳麵線,103臺北市大同區保安街49巷17號,ChIJjcZR1z-pQjQR1827D4G7NDo,0.8,0.8,"food,popular,traditional",許仔豬腳麵線｜白湯豬腳只賣一味賣到爆！老饕狂推乾濕分離吃法，廟前50年豬腳麵線老店,,2026-04-24 03:58:19
+1031,ifoodie,金泰刀削小廚,100臺北市中正區南昌路一段51巷5號,ChIJwYbiNZmpQjQRzqE-KhpQpyc,1.0,0.5,"food,restaurant,recommended",【台北中正區美食】金泰刀削小廚，必點木須炒麵、排骨炒飯，廣東爆炒刀削麵食尚玩家推薦,,2026-04-24 03:58:22
+1035,ifoodie,爸爸Kevin美式BBQ,105臺北市松山區南京東路三段303巷8弄5號,ChIJoRl0J1ypQjQRjWwMJNxhnDo,0.0,0.5,"BBQ,American cuisine,Restaurant",爸爸Kevin美式BBQ — 正統道地美式烤肉專賣餐廳,,2026-04-24 03:58:37
+1036,ifoodie,德立莊酒店,100臺北市中正區秀山街4號,ChIJGQEDxQupQjQRoPYLg8zGh64,0.8,0.5,"food,buffet,restaurant",魅麗海中庭餐廳.德立莊酒店台北最強吃到飽.最低只要398元起自助吧吃到飽.加18元就有主餐.台北吃到飽餐廳,,2026-04-24 03:58:41
+1038,ifoodie,泰和樓,106臺北市大安區杭州南路二段61-20號,ChIJbyUU8imqQjQRUvC4IivLW4A,1.0,0.5,"food,recommended,restaurant",台北羊肉湯推薦-騷煲 新台潮羊肉湯｜泰和樓新品牌！紅燒清燉小排湯＋松露滷肉飯 中山區美食必吃,,2026-04-24 03:58:47
+1040,ifoodie,Fourninetine Bakery南京三民店,105臺北市松山區八德路四段245巷32弄22號ㄧ樓,ChIJK_opspWrQjQR-_5aYDxDXBw,0.8,0.5,"trendy,foodie,breakfast",【台北美食】Fourninetine Bakery南京三民店，大安區人氣韓系可頌麵包專賣店開二店，台北韓系咖啡廳，捷運南京三民站早午餐,,2026-04-24 03:58:53
+1042,ifoodie,張記鍋貼牛肉麵,100臺北市中正區衡陽路79-1號,ChIJWfxypgupQjQRAQtE_GjLejI,0.8,0.6,"food,popular,hidden gem",【台北西門町美食】張記鍋貼牛肉麵 生意好到日本都有分店！隱身巷內的中山堂附近美食,,2026-04-24 03:58:59
+1045,ifoodie,利長春小吃店,106臺北市大安區安和路一段112巷8號,ChIJi_3kvturQjQRBZSwRM4GKD0,1.0,0.5,"food,recommendation",利長春小吃店｜好吃經濟又實惠，推薦牛肉蒸餃、菜肉餛飩,,2026-04-24 03:59:07
+1046,ifoodie,大杵臼,100臺北市中正區思源街1號『公館水岸廣場』,ChIJD2HpwyGpQjQR9l9qll3g_E0,0.8,0.5,"Thai food,northeastern Thailand cuisine,authentic,delicious",大杵臼 ส้มตําครกยักษ์｜真的不是在泰國！台北公館道地泰國東北伊善料理,,2026-04-24 03:59:11
+1047,ifoodie,1976道地香港美食,106臺北市大安區敦化南路一段233巷11號,ChIJqYBZYMWrQjQRBzCZlczR8C4,1.0,0.5,"Hong Kong cuisine,traditional,Chinese food",1976道地香港美食，台北最資深的廣東粥,,2026-04-24 03:59:15
+1050,ifoodie,無名牛排,115臺北市南港區南港路一段57號,ChIJcxnHBm2rQjQRQMK_ivsAi5Y,0.8,0.5,"food,restaurant,beef,steak",既有名又無名，在地高CP值大口吃肉牛排館推薦｜無名牛排,,2026-04-24 03:59:24
+1051,ifoodie,鷹流臺灣總店,110臺北市信義區忠孝東路五段183號,ChIJPYrRLgCrQjQRCKuUsynPC30,1.0,0.5,"food,ramen,beef,tasty",鷹流臺灣總店．台北信義區美食｜史上最濃郁！日本A5黑毛和牛拉麵！「鷹老」親煮極濃牛肉麵！食肉控必訪！滿滿和牛太過癮！拉麵控必朝聖！捷運市政府站～中肯‧食記！,,2026-04-24 03:59:28
+1052,ifoodie,大麗士可麗餅,105臺北市松山區民權東路三段103巷35號,ChIJd8dPRpWrQjQR6hTjDDktomE,1.0,0.5,"food,restaurant,recommendation",台北最好吃的可麗餅『大麗士可麗餅』菜單、外送、昆陽站美食推薦,,2026-04-24 03:59:31
+1053,ifoodie,川畝園麵食館,103臺北市大同區承德路二段120號1樓,ChIJU21B8GupQjQRRRTsNGB9Qrg,1.0,0.5,"food,restaurant,Chinese cuisine",川畝園麵食館必吃蔥油餅、牛肉捲餅超驚艷（附菜單）,,2026-04-24 03:59:35
+1054,ifoodie,希臘左巴 台大店,106臺北市大安區羅斯福路三段283巷7弄16號,ChIJk9O6fY-pQjQRou8MUthzcgU,0.8,0.5,"food,restaurant,breakfast,lunch",台大公館美食『希臘左巴 台大店』菜單、cp值超高歐陸排餐，大份量早午餐,,2026-04-24 04:00:55
+1058,ifoodie,便當界勞斯萊斯,105臺北市松山區八德路三段2號,ChIJHbQHreirQjQRBu4dNJC39MY,0.8,0.5,"food,restaurant,affordable",有便當界勞斯萊斯美譽，內用加10元就有飲料可以喝,,2026-04-24 04:00:58
+1059,ifoodie,大膽牛腩麵,10478臺北市中山區遼寧街222號,ChIJo--aBuurQjQRyN89ig3p_vM,0.5,0.5,"food,restaurant,noodle",大膽牛腩麵｜香港人開的道地港式牛腩麵店（附菜單）,,2026-04-24 04:00:59
+1060,ifoodie,楊國福麻辣燙 市府巨蛋店,11072臺北市信義區忠孝東路四段553巷6弄11號1樓,ChIJX4ABKgKrQjQRxjGqZKDoSbE,0.8,0.8,"food,popular,long_queue",楊國福麻辣燙｜市府巨蛋店｜超狂排隊人潮！經典的番茄湯頭必須來上一碗！ - Happiness,,2026-04-24 04:01:00
+1062,ifoodie,黑記懷舊排骨飯,114臺北市內湖區內湖路一段203巷5號,ChIJL0jPbmysQjQR_71ph99Cv4g,1.0,0.8,"food,popular,traditional",黑記懷舊排骨飯｜超人氣古早味便當，內行人激推平價排隊名店（附菜單）,,2026-04-24 04:01:02
+1065,ifoodie,發哥筍湯包,105臺北市松山區民權東路三段104號2 樓,ChIJxZ6ufparQjQRH6R-THjnJNk,0.5,0.5,"food,restaurant",中山國中站美食『發哥筍湯包』卡車筍湯包搬家了！爆漿湯包一顆11元,,2026-04-24 04:01:09
+1070,ifoodie,蘭姥姥小吃,10491臺北市中山區伊通街66巷3號,ChIJVy_hWWCpQjQRvUGMui6xuWU,1.0,1.0,"popular,local favorite,traditional",蘭姥姥小吃｜人氣爆棚江浙菜老店，在地人激推必吃名單,,2026-04-24 04:01:14
+1072,ifoodie,丸滿台灣味,10491臺北市中山區林森北路353巷21號,ChIJy2cTgv2pQjQR1Fhco2EWmvg,0.8,0.5,"taiwanese cuisine,michelin recommended",丸滿台灣味手路菜｜曾獲得米其林推薦台北台菜餐廳道道都是正港台式手路菜,,2026-04-24 04:01:17
+1074,ifoodie,蘇家肉圓油粿,108臺北市萬華區和平西路三段176巷4號,ChIJAfyChVypQjQRByrS2ASVSts,0.8,0.5,"traditional,local favorite,breakfast",蘇家肉圓油粿｜只賣早上的70年老店，在地人從小吃到大！,,2026-04-24 04:01:19
+1077,ifoodie,有有1969,104臺北市中山區遼寧街48號,ChIJUVfSk46rQjQRjSYEdTmKW8Q,0.8,0.5,"food,restaurant,night market",【有有1969】飄香50年的老字號平價熱炒店，冠軍滷肉飯更是人氣招牌｜台北中山區美食推薦｜遼寧街夜市/捷運南京復興站合菜(菜單),,2026-04-24 04:01:21
+1080,ifoodie,松山市場,105臺北市松山區八德路四段679號,ChIJF3TM45urQjQRzo3IjfSZBAI,0.8,0.8,"popular,traditional,delicious",松山市場水餃｜只賣三樣東西就賣到嚇嚇叫每天只營業3個小時的水餃老字號,,2026-04-24 04:01:24
+1082,ifoodie,捷運大橋頭延三夜市,103臺北市大同區延平北路三段,ChIJC1Rh4j6pQjQRDJAu726hNOo,0.8,0.5,"food,night_market",郁香花蓮扁食，其實是飽滿的大餛飩，捷運大橋頭延三夜市美食(姊姊食記),,2026-04-24 04:01:27
+1084,ifoodie,300巷Liao MaMa,106臺北市大安區仁愛路四段300巷35弄6號,ChIJqUN7ScmrQjQR9_YRPwMO9-8,1.0,0.5,"food,celebrity_recommended,affordable",300巷Liao MaMa魷魚焿 周湯豪封為全台最好吃乾麵！明星推薦平價小吃,,2026-04-24 04:01:30
+1085,ifoodie,新富町文化市場,108臺北市萬華區三水街70號,ChIJAUI-sqipQjQRIHVEEGmaZRw,0.8,0.6,"lively,foodie,nightlife",揪起來啦！萬華世界下午酒場，新富町文化市場裡的神祕店，菜市場美食自己帶進來，早上10點就能開喝！,,2026-04-24 04:01:31
+1086,ifoodie,Ken香.時髦中菜,115臺北市南港區忠孝東路七段369號C棟7樓,ChIJsYD3o0urQjQR09vsANtZks0,1.0,0.5,"trendy,theatrical,Chinese cuisine",Ken香.時髦中菜 兩個人就能吃！全台首創中菜情境劇場概念餐廳好看又好吃,,2026-04-24 04:01:35
+1089,ifoodie,蜀叔,106臺北市大安區敦化南路一段236巷38號,ChIJWwZJZwCrQjQREBBFYZ4w4sI,1.0,0.5,"delicious,addictive,quality",台北麻辣鍋黑馬登場！大叔富弟餐飲集團旗下品牌就是品質保證！湯底有水準、食材又講究，真的是吃一次就上癮！聚餐、約會來找蜀叔準沒錯！,,2026-04-24 04:01:44
+1092,ifoodie,宋上好脆皮臭豆腐,103臺北市大同區錦西街86號,ChIJA51ZkEGpQjQR9RC6G5sCZ_g,1.0,0.5,"food,street_food,night_market",宋上好脆皮臭豆腐，居然還有四種脆度可以選！,,2026-04-24 04:01:53
+1093,ifoodie,九記何燒臘,10491臺北市中山區吉林路124號,ChIJRVU8XWepQjQRQ1hab_XX9VQ,1.0,0.5,"food,restaurant,delicious",九記何燒臘｜六十年港式燒臘老店，燒肉皮脆爆香、鴨腿油嫩多汁，動漫風便當盒也超吸睛！,,2026-04-24 04:01:57
+1097,ifoodie,真川味川菜館,108臺北市萬華區康定路25巷42之一號1樓,ChIJ__m7jQipQjQR0l1oiGhOohk,0.8,0.7,"food,recommended,popular",台北「真川味川菜館」50年老字號西門町平價川菜推薦，人氣餐廳菜單一次看,,2026-04-24 04:02:09
+1098,ifoodie,小南門站,10066臺北市中正區愛國西路22號,ChIJn74-D6GpQjQRYJ0BSWj_hi4,0.8,0.5,"food,Thai cuisine,affordable",25元就能吃到道地泰國船麵！小南門站泰國小吃推薦,,2026-04-24 04:02:12
+1099,ifoodie,蔣記家薌麵,106臺北市大安區四維路208巷18之1號1樓,ChIJAWZ_6i2qQjQRqsm-OfE9RcI,1.0,0.5,"delicious,recommended",蔣記家薌麵｜搶鍋麵牛肉麵都好吃，口水雞必點，小菜樣樣精彩！,,2026-04-24 04:02:16
+1101,ifoodie,當紅炸子雞,111臺北市士林區承德路四段40巷5號（非一樓,ChIJg3aXBbOuQjQRspkTfUoXU5c,1.0,1.0,"delicious,popular,busy",當紅炸子雞｜平價桶裝炸雞人氣爆棚！超酥超多汁，CP值高到炸！,,2026-04-24 04:02:22
+1102,ifoodie,麗馥小吃,106臺北市大安區安居街34巷8號,ChIJySVU1TaqQjQR6LQChR1deSc,0.8,1.0,"popular,traditional,crowded",麗馥小吃｜眷村滷味太猛！近60年老麵店人氣高到下午一點半還客滿！,,2026-04-24 04:02:26
+1104,ifoodie,麗馥小吃,106臺北市大安區安居街34巷8號,ChIJySVU1TaqQjQR6LQChR1deSc,1.0,0.5,"delicious,recommended",麗馥小吃｜牛肉麵湯頭濃郁好吃，滷味小菜必點超下飯！,,2026-04-24 04:02:32
+1106,ifoodie,麵老大,100臺北市中正區寧波西街85-1號,ChIJEb5DR8CpQjQRJsei_5v0P-A,1.0,0.5,"delicious,recommended,local",【麵老大】澎湃系紅燒肉蓋飯，烏醋麵酸香椒麻辣超對味，在地人推薦的口袋名單｜台北中正區美食推薦｜捷運中正紀念堂站小吃(菜單),,2026-04-24 04:02:38
+1109,ifoodie,恰恰韓式豬腳,104臺北市中山區民權東路三段60巷13弄42號,ChIJzyUwZqirQjQRfJBK_4G5aG4,1.0,0.5,"food,korean,recommended",中山國中站的韓式豬腳，這是我目前吃過最接近韓國豬腳小姐的店了｜恰恰韓式豬腳,,2026-04-24 04:02:47
+1110,ifoodie,LaLaport,115臺北市南港區經貿二路131號,ChIJSwPgOACtQjQREeWs_povoDw,0.5,0.8,"food,queue,Japanese",蘋果樹蛋包飯，來自日本連鎖第一品牌，南港LaLaport店排隊店(姊姊食記),,2026-04-24 04:02:51
+1111,ifoodie,曾家豆漿,104臺北市中山區錦州街123號,ChIJ-YfzZFypQjQRAFxGl4nV8S0,0.8,0.5,"food,night_market,taiwanese_culture",曾家豆漿｜網友戲稱被豆漿耽誤的蛋塔店竟然是在地20年宵夜豆漿點心老字號,,2026-04-24 04:02:54
+1112,ifoodie,冠軍菜肉餛飩,108臺北市萬華區萬大路174號,ChIJg5EnDRGpQjQRWbzSCzUBGLU,0.8,0.5,"food,noodles,restaurant",冠軍菜肉餛飩│老店休店後搬家新開，仍是當年桃源街風味,,2026-04-24 04:02:58
+1113,ifoodie,麗園壽司,100臺北市中正區連雲街74之3號,ChIJGf55xX6pQjQRpqF-qvJKaWI,1.0,0.5,"food,sushi,delicious",麗園壽司，芋頭排骨酥脆腸湯很讚，捷運東門站美食(姊姊食記),,2026-04-24 04:03:01
+1114,ifoodie,茂園餐廳,104臺北市中山區長安東路二段185號,ChIJcQiIHdyrQjQR-LHoSixrQR8,1.0,0.5,"food,restaurant,taiwanese cuisine",茂園餐廳｜米其林必比登台菜老店，必點白斬雞、花枝丸、鹹冬瓜蒸午仔魚！,,2026-04-24 04:03:05
+1120,ifoodie,Pizza Americano,106臺北市大安區安和路二段141號,ChIJoZ-WobOrQjQRu8zLDDfHQys,0.8,0.5,"food,pizza,American",Pizza Americano 全球傳奇披薩達人坐鎮指導！道地美式pizza台北吃得到,,2026-04-24 04:03:23
+1121,ifoodie,西門町,108臺北市萬華區西門町,ChIJKyaoGAmpQjQR99RS3zrx9Ms,0.8,0.5,"comfortable,variety,delicious",西門町50年老店，整修後的店面舒適有冷氣，滷味櫃一字排開任君挑選，樣樣都很入味,,2026-04-24 04:03:27
+1122,ifoodie,輝煌川菜小館,100臺北市中正區延平南路166號,ChIJ378eLKepQjQRkJfC7QYTX38,1.0,0.5,"food,Chinese cuisine,restaurant",輝煌川菜小館｜台北50年川菜老店，麻辣過癮必吃經典！,,2026-04-24 04:03:30
+1123,ifoodie,NAGOMI新光A8店,110臺北市信義區松高路12號台北信義新天地A8館七樓,ChIJlwQIHxWrQjQRqHmvCy8mBxo,0.5,0.5,"buffet,restaurant",NAGOMI新光A8店》NAGOMI雅吃到飽和食料理懷石Buffet自助餐無限供應(價格訂位方式),,2026-04-24 04:03:34
+1124,ifoodie,享點港式飲茶,10491臺北市中山區長安東路一段8-2號,ChIJ7awmDQCpQjQR8Uvi8szGMT0,0.8,0.5,"food,drink,high_value",享點港式飲茶｜粉嫩外觀像甜點店，結果端出30年師傅現做港點！這間中山美食CP值也太高,,2026-04-24 04:03:37
+1125,ifoodie,亨利客原味炭烤牛排,11056臺北市信義區和平東路三段215號,ChIJ6U6HVjGqQjQR7_kX3YwXTzA,1.0,0.5,"food,restaurant,trendy",台北牛排控衝！老饕激推 平價吃到Prime級炭烤原塊牛排 免服務費＋氣泡飲喝到飽｜亨利客原味炭烤牛排(捷運六張犁站美食),,2026-04-24 04:03:41
+1126,ifoodie,萬華阿昌意麵,108臺北市萬華區民和街4號,ChIJQZLWNLGpQjQRBycZaucDziY,1.0,0.5,"food,satisfying",萬華阿昌意麵，海陸雙拼紅糟燒肉蓋飯大滿足(姊姊食記),,2026-04-24 04:03:45
+1127,ifoodie,王家麵食館,105臺北市松山區八德路四段253號,ChIJ26V63JWrQjQR0EJZDmEeJkI,1.0,0.5,"food,celebrity",王家麵食館 @ 南京三民美食，杜德偉、影帝吳慷仁都愛,,2026-04-24 04:03:48
+1129,ifoodie,台北大龍峒酒泉街,103臺北市大同區酒泉街,ChIJUX_XREipQjQRKXvwLbm7KVQ,0.8,0.5,"food,traditional",燦津呷滷肉飯米粉湯｜台北大龍峒酒泉街古早味小吃 紅燒肉讓我暈了,,2026-04-24 04:03:54
+1130,ifoodie,好饗吃茶餐廳,100臺北市中正區臨沂街75巷2-3號,ChIJbekWkUWpQjQRik1n4SXvNL8,0.8,0.5,"food,Hong Kong style,dim sum",好饗吃茶餐廳，只營業白天的熱炒港式點心推薦,,2026-04-24 04:03:58
+1131,ifoodie,La Locanda 蘿莎娜小館,105台北市松山區八德路三段12巷52弄18號1樓,ChIJmfF8XcOrQjQRA9x4huvWxRw,1.0,0.5,"Italian food,delicious,recommended",La Locanda 蘿莎娜小館｜曾連四年米其林推薦的義式家鄉味！正統義大利主廚手工麵太猛啦！,,2026-04-24 04:04:01
+1133,ifoodie,小山之丘,100008臺北市中正區許昌街8號,ChIJtdyfGvGpQjQRlqW7nA6sss4,0.8,0.5,"food,mango,sweet",小山之丘 | 台北車站麵包店推薦、芒果控必吃：芒果牛奶棒、芒果珍珠糖日式菠蘿,,2026-04-24 04:04:08
+1134,ifoodie,好米亞GOODIES CUSINE,106臺北市大安區敦化南路一段270巷6號,ChIJly19jbyrQjQRBN17akR0XKo,1.0,0.5,"delicious,new menu,recommended",【台北美食】好米亞GOODIES CUSINE華麗轉型中菜餐廳！2025大安區必吃砂鍋濃白雞湯霸氣登場，新菜色表現驚艷必點酥皮香酥鴨跟冰釀紅燒肉！,,2026-04-24 04:04:12
+1135,ifoodie,呷二嘴,103臺北市大同區甘州街34號,ChIJe7JZZxWpQjQRDr7ZxWTbsvc,0.8,0.7,"traditional,popular,dessert",呷二嘴｜開業超過70年台北老字號排隊米苔目冰主打料多實在的大碗公,,2026-04-24 04:04:16
+1137,ifoodie,財哥福州麵,100臺北市中正區西藏路10號,ChIJ1SNPl6SpQjQRNdDWbiygDdc,1.0,0.5,"recommended,traditional,popular",財哥福州麵｜運將大哥跟在地人都超推薦的超過30年小南門麵店老字號,,2026-04-24 04:04:22
+1138,ifoodie,中山站新開幕質感火鍋,"201號, 南京西路大同區臺北市103",ChIJKaUVV66pQjQRz73hlHQ_ko4,0.5,0.5,"food,new opening,Taiwanese cuisine,hot pot",中山站新開幕質感火鍋 剝皮辣椒 雞白湯 台式石頭火鍋,,2026-04-24 04:04:26
+1140,ifoodie,饗麻饗辣PLUS LALAPORT南港店,115臺北市南港區經貿二路131號6樓,ChIJGR0KDtutQjQRUMdeNJ737Iw,0.8,0.5,"food,hot pot,buffet",饗麻饗辣PLUS LALAPORT南港店》台北火鍋吃到飽餐廳麻辣鍋吃到飽南霸天現撈活跳蝦吃到飽,,2026-04-24 04:04:32
+1142,ifoodie,味擂家日式料理,111臺北市士林區福壽街1號1樓,ChIJWW34AmGvQjQRPpdckEU-j7Q,1.0,0.5,"Delicious,Japanese Food,Recommended",味擂家日式料理 好吃有溫度台北日式定食推薦！白飯鰹魚海帶味噌湯免費續加,,2026-04-24 04:04:38
+1143,ifoodie,麵老大,100臺北市中正區寧波西街85-1號,ChIJEb5DR8CpQjQRJsei_5v0P-A,1.0,0.5,"delicious,recommended",麵老大｜紅燒肉蓋飯太強大！烏醋麵加半熟蛋更涮嘴，在地人用餐口袋名單,,2026-04-24 04:04:41
+1145,ifoodie,保安宮,103臺北市大同區哈密街61號,ChIJoWFCL2qpQjQRPOoT7nFV3YU,0.8,0.5,"food,delicious,traditional",保安宮旁普通平凡的小吃店，餐點選擇性多，蝦仁炒透抽、蚵仔酥、雞捲都好吃,,2026-04-24 04:04:48
+1148,ifoodie,瀨品軒,103025臺北市大同區蘭州街92號,ChIJuaA7Y2qpQjQRr6y36KOk_xE,0.8,0.5,"coffee,bakery,hidden gem",瀨品軒-製パン&珈琲 隱身蘭州街民宅老屋咖啡店！手作麵包便宜好吃推薦,,2026-04-24 04:04:57
+1151,ifoodie,北門蝦仁飯·煲湯,103臺北市大同區天水路2-4號,ChIJZ8M90UqpQjQRF4SLCZnGD8Q,1.0,0.5,"food,delicious",北門蝦仁飯·煲湯｜半熟蛋蝦仁飯邪惡爆汁，一口吃下超銷魂！,,2026-04-24 04:05:07
+1153,ifoodie,南山炸豬排남산돈까스,103臺北市大同區南京西路18巷6弄8-2號2樓,ChIJu93FIyapQjQRLto-gJ-WMus,0.8,0.5,"delicious,korean food,fried pork cutlet",南山炸豬排남산돈까스 超巨大韓式炸豬排 外皮酥脆肉香四溢！#士林美食,,2026-04-24 04:05:14
+1154,ifoodie,巷子龍家常菜,106臺北市大安區四維路25號,ChIJW3STls2rQjQRlinh2eNHEzY,0.8,0.5,"Michelin,Taiwanese cuisine,Hunan food",巷子龍家常菜｜連續多年榮獲米其林必比登推薦台北湘菜餐廳必點湖南金錢蛋,,2026-04-24 04:05:18
+1155,ifoodie,韓丰117,104臺北市中山區四平街117號1樓,ChIJ885iHg-pQjQRoC8v-_rEl7g,0.8,0.5,"celebration,dinner,Korean food",韓味熱辣台味暖心，這晚讓人上癮的不只是酒《韓丰117》松江南京聚餐慶生首選,,2026-04-24 04:05:21
+1157,ifoodie,搬湯弄煮（湯煮專賣）台北八德店,105臺北市松山區八德路二段378號,ChIJ0zqqSQCrQjQRjBB-JyU_km0,0.8,0.5,"tasty,customizable,addictive",搬湯弄煮（湯煮專賣）台北八德店｜一喝上癮的文青系湯煮 自助點餐＋客製化湯頭搭配 直接讓人回不去。菜單價位(台北松山平價湯煮料理推薦),,2026-04-24 04:05:27
+1158,ifoodie,茹絲葵美式牛排,105臺北市松山區民生東路三段135號,ChIJC3A0YO-rQjQR14SXdF53Q6s,1.0,0.5,"celebration,fine_dining,special_occasion",茹絲葵美式牛排｜30年台北頂級牛排館老字號是許多人生日週年慶祝訂位首選,,2026-04-24 04:05:32
+1159,ifoodie,秦家餅店,106臺北市大安區四維路6巷12號,ChIJnwbG3NGrQjQRgGijR1CGMRk,0.8,0.5,"food,recommendation",【台北仁愛圓環美食】秦家餅店 舒國治胡天蘭推薦韭菜盒蔥油餅！傳承三代北方乾烙專賣店,,2026-04-24 04:05:35
+1162,ifoodie,墨西哥女婿燒餅,105臺北市松山區新東街6巷2號,ChIJbVgbSzqrQjQRs_jpxCNFKjM,0.8,0.5,"foodie,Mexican,Taiwanese",墨西哥女婿燒餅｜台墨手作餅包餡專賣，鹹豆漿/TACO蛋餅燒餅/Quesadilla黑豬肉黃金餡餅開吃！民生社區美食,,2026-04-24 04:05:42
+1163,ifoodie,麵霸王,104臺北市中山區雙城街10巷10號,ChIJBcoyQNQBaDQRU2jb9Nvhnjs,0.8,0.5,"food,noodle,night market",【麵霸王】李易讚爆的絕世大排麵，一斤多大排上桌就霸氣外漏｜台北中山區美食推薦｜雙城街夜市/晴光市場/捷運中山國小站(菜單),,2026-04-24 04:05:45
+1165,ifoodie,第二好吃私房菜,111臺北市中山區吉林路229號,ChIJq6qqqrOuQjQRGGwRH9rZtlU,1.0,0.5,"delicious,popular,wait_in_line",第二好吃私房菜｜行天宮熱炒一條街排隊餐廳必點玉米雞跟豬肝吃過之後會讚不絕口,,2026-04-24 04:05:51
+1169,ifoodie,老北京炸醬麵,105臺北市松山區敦化北路120巷7弄5號,ChIJNfZo1OerQjQRqG7_MJ_64Xo,0.8,0.5,"food,night market,trendy",捷運小巨蛋站美食 老北京炸醬麵，老饕才知道的巷子內必吃眷村菜！肉塊超多，黃瓜絲好像不用錢爽爽吃,,2026-04-24 04:06:03
+1170,ifoodie,廖家,106臺北市大安區金華街98號,ChIJgbwEgJypQjQR6zkPQ6rpaNI,1.0,0.5,"food,restaurant,hidden gem",來來廖家四十年老味道｜從路邊攤開到店面的隱藏版永和巷弄美食必點超讚的黑白切跟滷味,,2026-04-24 04:06:06
+1177,ifoodie,松滿樓,106臺北市大安區濟南路三段26號,ChIJT91JuH2pQjQReBnuL1zoca0,0.8,0.5,"food,Chinese Cuisine,restaurant",松滿樓｜超過20年平價中式合菜！必吃蝦仁絲瓜湯包＆椒香牛柳（附菜單）,,2026-04-24 04:06:27
+1180,ifoodie,港墘站,114臺北市內湖區,ChIJ48QKW2SsQjQRkJKSrz02ZC8,0.8,0.5,"food,hidden gem",港墘站｜五燈獎豬腳飯，超隱密沒招牌，三重豬腳飯滷肉飯名店內湖也吃得到！,,2026-04-24 04:06:37
+1181,ifoodie,金豬食堂（금돼지식당）Gold Pig Taiwan,104臺北市中山區南京東路一段29號,ChIJaW2yNB6pQjQRQdXv1cjMlqE,0.0,0.5,,金豬食堂（금돼지식당）Gold Pig Taiwan︱韓國米其林推薦︱台北店菜單,,2026-04-24 04:06:40
+1184,ifoodie,天鷄麵屋坊,103臺北市大同區南京西路18巷4弄8之1號1樓,ChIJS5z4JgCpQjQR3i_DVdx9rI8,1.0,0.5,"food,recommendation",【台北中山站美食】天鷄麵屋坊 隱家拉麵新品牌！菜單主打特色柚香雞白湯濃郁好喝推薦,,2026-04-24 04:06:49
+1187,ifoodie,小林英夫,108臺北市萬華區康定路120號,ChIJX4JLHaipQjQRfvkdSezeSEs,1.0,0.5,"food,Japanese cuisine,affordable",台北食記｜小林英夫｜西門町隱藏版的平價日式料理老店 × 每道菜色平均$200超划算,,2026-04-24 04:06:59
+1189,ifoodie,順園小館,100臺北市中正區汀州路三段281號,ChIJoRPjyYqpQjQRLileViO9FZw,1.0,0.8,"delicious,popular,local",順園小館｜在地人激推北方家常菜，公館生意超好小吃餐廳,,2026-04-24 04:07:05
+1190,ifoodie,樂天羊肉,100029臺北市中正區羅斯福路一段25號,ChIJBfLFBaCpQjQRyVCgnDSsUGg,0.8,0.5,"food,restaurant,Taiwanese cuisine",中正紀念堂美食｜台北好吃羊肉湯『樂天羊肉』+10元就有一碗噴香滷肉飯,,2026-04-24 04:07:09
+1191,ifoodie,聚園餐廳,105臺北市松山區民生東路三段113巷25弄39號,ChIJ6wjmm-WrQjQR_CwNHLQawFg,0.8,0.5,"food,restaurant,affordable",聚園餐廳｜一鴨三吃竟然才1588元！開業超過40年的台北平價北平餐館太誇張了,,2026-04-24 04:07:12
+1193,ifoodie,盛味豐炭烤燒餅,106臺北市大安區和平東路二段321號,ChIJeUcnhi6qQjQRZPc14do3CLA,1.0,0.5,"food,restaurant,taiwanese cuisine",【大安區科技大樓站美食小吃】盛味豐炭烤燒餅 台北貼爐燒餅推薦！甜鹹酥餅好吃又平價,,2026-04-24 04:07:20
+1196,ifoodie,小宅門渡,111臺北市士林區通河街104號,ChIJg1itbtOvQjQRZ0nMpX5YAxQ,0.8,0.5,"relaxing,coffee,garden",手作甜點下午茶 絕美日式庭園超享受 小宅門渡｜士林劍潭站咖啡廳,,2026-04-24 04:07:30
+1197,ifoodie,福華飯店珍珠坊,106臺北市大安區仁愛路三段160號2樓,ChIJRW2USNGrQjQRCr_458UOPX0,0.8,0.5,"food, buffet",福華飯店珍珠坊吃到飽,,2026-04-24 04:07:33
+1200,ifoodie,搬湯弄煮-台北八德店,103臺北市大同區民生西路87號1樓,ChIJi_3TeF6pQjQRlVkM3YFG2vY,1.0,0.5,"food,popular,affordable",搬湯弄煮-台北八德店｜靠一碗湯征服上班族！配料澎湃、湯頭厲害爆紅湯煮料理，價位還很親民,,2026-04-24 04:07:44
+1201,ifoodie,顏家蚵仔麵線,103臺北市大同區延平北路四段253之1號,ChIJtZ4ZxzWpQjQRjoOspjlLOzk,0.8,0.5,"traditional,local,breakfast",顏家蚵仔麵線，早餐就吃麵線配臭豆腐，台北五十年老店(姊姊食記),,2026-04-24 04:07:48
+1202,ifoodie,KA SKY COFFEE,110臺北市信義區松高路77號33樓,ChIJfZJaTwCrQjQRrSgCZr0uiiU,0.5,0.5,"coffee,scenic,trendy",【台北咖啡】KA SKY COFFEE 陶朱隱園101第一排高空景觀咖啡廳，台北信義區網美咖啡廳,,2026-04-24 04:07:51
+1203,ifoodie,KANG Artisan Bakery,105臺北市松山區敦化北路120巷19號,ChIJO6ixbT2rQjQR1B8rWnKtEVs,0.8,0.5,"food,bakery,almond croissant",KANG Artisan Bakery｜前文華東方烘焙主廚開的麵包店，連黃仁勳都愛的杏仁可頌有夠猛！,,2026-04-24 04:07:55
+1204,ifoodie,上引水產,10491臺北市中山區民族東路410巷2弄18號,ChIJ_3AKcP2rQjQRG-FBsLE_NWY,0.8,0.5,"food,value_for_money",上引水產健康便當｜只要150元就能配五菜超大盒！還能一次吃到雞腿＋糖醋排骨,,2026-04-24 04:07:58
+1205,ifoodie,磚窯黃仁勳愛店,105臺北市松山區敦化南路1段7-1號,ChIJJYOmOMOrQjQRKdqazCuONy0,0.8,0.5,"food,nostalgia,Taiwanese cuisine",【小巨蛋美食】磚窯黃仁勳愛店 古早味懷舊餐廳 台菜必吃菜單,,2026-04-24 04:08:02
+1206,ifoodie,神農太太底家,10491臺北市中山區南京西路14號4樓,ChIJdd8sZYipQjQRGAdnbdCEAY4,0.8,0.5,"food,lunch,buffet",博多天麩羅山海明太子吃到飽，限量20份商業午餐好豐盛 @神農太太底家,,2026-04-24 04:08:05
+1208,ifoodie,好記擔仔麵,10491臺北市中山區吉林路79號,ChIJDV9uW2epQjQR43zG4K2WfJ4,0.8,0.8,"food,Taiwanese cuisine,popular","【好記擔仔麵X阿美飯店】日銷2,000碗超強擔仔麵！台菜酒家菜代表老店可訂位有停車場",,2026-04-24 04:08:11
+1213,ifoodie,彈芽麵,112臺北市北投區裕民一路40巷15號,ChIJe3dUdJCuQjQRQHEUM5kDAWk,0.8,0.5,"food,restaurant,taiwanese cuisine",【彈芽麵】手工麵條極Q彈，份量大到一人份兩人飽｜台北北投美食推薦｜捷運石牌站小吃(菜單),,2026-04-24 04:08:28
+1215,ifoodie,丸林滷肉飯,104臺北市中山區民族東路32號,ChIJYfIZQ1qpQjQRlYV-mAl4PQI,0.8,0.5,"奢華,自助餐,果汁吧",丸林滷肉飯｜台北古早味自助餐 裝潢超奢華還有現打果汁吧,,2026-04-24 04:08:34
+1216,ifoodie,查記麵館,110臺北市信義區吳興街37號,ChIJf8ogi7WrQjQRnKwuPbJ3uDM,0.5,1.0,"popular,busy",查記麵館｜不用等到用餐時間？下午4點半竟然客滿的台北吳興街皮蛋抄手麵,,2026-04-24 04:08:38
+1219,ifoodie,新采粵式小館,106臺北市大安區市民大道四段60-1號,ChIJ2ZW5X56rQjQRKVWVagAdSiQ,0.8,0.5,"food,nightlife,restaurant,recommended",【新采粵式小館】深夜也吃得到誘人粵菜，腊味煲仔飯必吃推薦｜台北大安美食｜市民大道/忠孝敦化/忠孝復興港式合菜(菜單),,2026-04-24 04:08:48
+1220,ifoodie,KA SKY COFFEE,110臺北市信義區松高路77號33樓,ChIJfZJaTwCrQjQRrSgCZr0uiiU,0.8,0.5,"romantic,scenic",【KA SKY COFFEE】陶朱隱園第一排高空景觀咖啡廳，感受101與台北城市的浪漫美景｜台北信義區咖啡廳推薦｜捷運市政府站(菜單),,2026-04-24 04:08:52
+1221,ifoodie,我家川菜,108臺北市萬華區成都路105巷7號,ChIJqXe38wipQjQRimcHAyFPjwU,1.0,0.5,"food,Chinese cuisine,Sichuan cuisine",川菜一條街中平價高CP值熱炒中式料理，推薦糖醋里肌與蚵仔酥｜我家川菜,,2026-04-24 04:08:55
+1223,ifoodie,橫濱牛排微風南京店,105臺北市松山區南京東路三段337號3 樓,ChIJq-0x_eerQjQRJKlzjBdQXAU,0.8,0.5,"food,buffet,restaurant",橫濱牛排微風南京店，自助沙拉吧咖哩飯吃到飽 @神農太太底家,,2026-04-24 04:09:01
+1224,ifoodie,道食樂韓式小吃,110臺北市信義區虎林街137號,ChIJfTsB_KOrQjQRfDShmhGM7eU,1.0,0.5,"Korean food,delicious,happy",道食樂韓式小吃｜感受道地韓食的樂趣！小菜爽吃CP值頂天！ - Happiness,,2026-04-24 04:09:05
+1229,ifoodie,忠青商行,100臺北市中正區青島東路6-1號,ChIJLZxabbKpQjQR6cN-5ukbq78,0.8,0.5,"foodie,new_brand,restaurant",忠青商行新品牌 青嬌膠原麵館 6小時燉煮雞湯 黃金燉雞湯、芋頭排骨湯 還有超水準的小菜 - ifunny 艾方妮的遊樂場,,2026-04-24 04:09:22
+1230,ifoodie,楊家手工水餃,116臺北市文山區景後街176號,ChIJFYrvtwCqQjQRWKN3x__DfPA,1.0,0.5,"delicious,popular",楊家手工水餃｜飽滿多汁韭菜水餃，被譽為台北最好吃,,2026-04-24 04:09:25
+1232,ifoodie,野人花園,111臺北市士林區菁山路131巷13-1號,ChIJz8md_HKtQjQROvZB1Vt1R24,0.8,0.5,"relaxing,scenic",野人花園｜只要250元就能坐一整天！陽明山這間景觀咖啡廳太佛了,,2026-04-24 04:09:31
+1233,ifoodie,基隆麵食館,100臺北市中正區青島東路7-3號,ChIJJVbgA3GpQjQR6VhEPnLA69w,0.8,0.5,"food,noodle,restaurant,taiwanese cuisine",基隆麵食館 - 台北也吃得到基隆版的咖哩炒麵，外加懷舊番茄蛋包飯助攻,,2026-04-24 04:09:35
+1237,ifoodie,士東市場,111臺北市士林區士東路100號,ChIJx0l0WoSuQjQRJIqnZLjDego,0.8,0.5,"food,night_market,popular",八卿潮滷潮汕滷鵝專賣｜士東市場必吃滷味小吃,,2026-04-24 04:09:48
+1239,ifoodie,金豬食堂 Gold Pig Taiwan,104臺北市中山區南京東路一段29號,ChIJaW2yNB6pQjQRQdXv1cjMlqE,0.8,0.5,"food,michelin",『金豬食堂 Gold Pig Taiwan』 韓式燒肉界唯一連續七年獲《米其林指南》必比登推薦,,2026-04-24 04:09:54
+1240,ifoodie,士林夜市,111臺北市士林區基河路101號,ChIJBa_9xLGuQjQRKfnnhr5twuc,0.8,0.7,"food,nightmarket,trendy",無店名魷魚羹｜李易推薦隱藏版小吃，士林夜市巷弄人氣羹湯爆紅中！,,2026-04-24 04:09:58
+1241,ifoodie,予菓銅鑼燒&手作烘焙工坊,111臺北市士林區士東路66號1樓,ChIJHY00_4SuQjQR9Lcuwdwgnvw,0.8,0.5,"sweet,affordable,afternoon_tea",予菓銅鑼燒&手作烘焙工坊 士東市場旁甜點下午茶推薦！銅鑼燒好吃便宜,,2026-04-24 04:10:01
+1242,ifoodie,新采粵式小館,106臺北市大安區市民大道四段60-1號,ChIJ2ZW5X56rQjQRKVWVagAdSiQ,1.0,0.5,"food,restaurant,recommendation",台北深夜港式合菜推薦｜新采粵式小館，必吃臘味煲仔飯,,2026-04-24 04:10:05
+1250,ifoodie,和園川味小吃,100臺北市中正區紹興南街5之2號,ChIJnXmLh3CpQjQR9QwzobICtsw,0.8,0.5,"food,recommended,affordable",善導寺美食｜和園川味小吃 平價熱炒大份量，上班族激推超高CP值餐廳,,2026-04-24 04:10:31
+1251,ifoodie,青島豆漿店,100台北市中正区杭州南路一段139-3號,ChIJbVYP5XepQjQRQ4vA309-_UE,0.8,0.5,"traditional food,breakfast,nostalgic",青島豆漿店｜都2025年了‼️沒想到台北還能吃到傳統烤爐去烤的燒餅肉餅早餐,,2026-04-24 04:10:34
+1254,ifoodie,延三夜市,103臺北市大同區延平北路三段,ChIJC1Rh4j6pQjQRDJAu726hNOo,0.8,0.5,"food,night market",延三夜市必吃人氣小吃，人手一碗魯肉飯，豬腳皮Q肉香，藥燉排骨清甜肉大塊,,2026-04-24 04:10:45
+1256,ifoodie,Lin's Bakery,104臺北市中山區建國北路三段113巷31弄23號,ChIJwZnJvJOpQjQRlfokwG8VaKc,0.0,0.5,,林氏貝果 Lin’s. Bakery,,2026-04-24 04:10:51
+1258,ifoodie,小公園牛肉麵,106臺北市大安區泰順街35號,ChIJ2T7KxyuqQjQRLytZgS9RYeU,1.0,0.5,"delicious,recommended,local favorite",小公園牛肉麵｜台北在地人激推老字號牛肉麵，湯濃肉嫩必吃！,,2026-04-24 04:10:57
+1260,ifoodie,巧房餡餅,106臺北市大安區和平東路二段313號,ChIJQXI8hi6qQjQRgZW2hjSusQg,1.0,0.5,"food,popular,delicious",【科技大樓站美食】巧房餡餅 北教大超人氣排隊小吃推薦！牛肉豬肉餡餅香甜多汁會爆漿,,2026-04-24 04:11:03
+1261,ifoodie,羊成小館,100臺北市中正區忠孝東路二段80號,ChIJUUgeDnupQjQRgq7eGrd-818,1.0,0.5,"food,hidden gem,cantonese cuisine",羊成小館｜低調卻超實力！台北隱藏版粵菜推薦,,2026-04-24 04:11:07
+1264,ifoodie,小巷子清燉牛肉麵四平店,104472臺北市中山區四平街40號,ChIJt_-mmfOpQjQRxCF22lb5vsU,1.0,0.5,"food,popular,noodle",小巷子清燉牛肉麵四平店，台北人氣牛肉麵必吃名店,,2026-04-24 04:11:16
+1266,ifoodie,阿娥水餃,10491臺北市中山區南京東路二段21巷9號,ChIJ_f6k8GapQjQRUOsMbB2Ev3Q,1.0,0.5,"food,value_for_money",阿娥水餃，一顆7元的韭黃蝦仁鮮肉水餃超划算,,2026-04-24 04:11:22
+1267,ifoodie,查記麵館,110臺北市信義區吳興街37號,ChIJf8ogi7WrQjQRnKwuPbJ3uDM,1.0,1.0,"delicious,popular,traditional",查記麵館，台北必吃皮蛋抄手麵，下午4點半也爆滿的人氣小吃,,2026-04-24 04:11:25
+1268,ifoodie,品味鮮小館老彭,106臺北市大安區信義路四段150號1樓,ChIJz8XqxTCrQjQRLIigHBR753E,0.8,0.5,"food,traditional,cantonese",品味鮮小館老彭的菜，50年經驗的經典粵菜館,,2026-04-24 04:11:29
+1270,ifoodie,你好原汁牛肉麵,106臺北市大安區四維路170巷43號,ChIJUf5iYQCrQjQRElPg3APC1Mk,0.8,0.5,"food,restaurant,deal",你好原汁牛肉麵，140元就可以吃半筋半肉牛肉麵，內用豆漿紅茶喝到飽，近成功國宅(菜單) – MayaWang 麻亞愛吃喝玩樂,,2026-04-24 04:11:35
+1272,ifoodie,三味香麵店,100臺北市中正區桃源街19號,ChIJb057TQqpQjQRL7LbiwZMiy0,1.0,0.5,"food,delicious,traditional",【桃源街美食推薦】三味香麵店 總統御用包子傳承三代70年老店！肉包豆沙包餛鈍都好吃,,2026-04-24 04:11:41
+1275,ifoodie,龍山寺站,108台灣臺北市萬華區,ChIJUYHP2K6pQjQRjYUQWX4zGWQ,0.5,0.5,"food,travel",布袋鮮之蚵，不一樣的蚵仔麵線，捷運龍山寺站美食(姊姊食記),,2026-04-24 04:11:51
+1277,ifoodie,八時神仙草中山店,104202臺北市中山區中山北路一段135巷5號,ChIJBW4IcNOpQjQRxvXxpkdCMoc,1.0,0.5,"summer,dessert,Taipei",中山站｜八時神仙草中山店，嫩仙草雪花冰，清新仙草茶，夏日必吃台北甜品店推薦！,,2026-04-24 04:11:58
+1280,ifoodie,Oregano奧瑞岡義式餐廳,106臺北市大安區四維路96號,ChIJYbRuh9KrQjQR97QVMLEicQs,0.8,0.5,"familiar,high_quality,tasty",被喚醒的熟悉味道｜Oregano奧瑞岡義式餐廳 吃了好多年味道一樣有水準,,2026-04-24 04:12:08
+1285,ifoodie,丸隆生魚行,103台北市大同区迪化街一段21號永樂市場1楼內 攤位1418號,ChIJtVMNiBOpQjQRxcr2v9-QVu0,1.0,0.5,"Japanese cuisine,affordable,high-quality,sushi",丸隆生魚行｜隱身市場的人氣日料攤！平價卻像高級日料般職人級生魚片，滿滿配料魚肉味增湯免費喝到飽,,2026-04-24 04:12:23
+1286,ifoodie,小龍飲食,105050臺北市松山區光復南路13巷31號一樓,ChIJw8JbDsCrQjQRzRofIDKpgpE,-1.0,0.5,"overpriced,bad_taste",小龍飲食真心不推！價格誇張口味雷 (菜單),,2026-04-24 04:12:27
+1289,ifoodie,Gras French,10491臺北市中山區民權西路56巷2號,ChIJ_SJpCa-pQjQRNAt8o_e3wNk,0.8,0.5,"french cuisine,fine dining,taiwan eats",將慾望慢火燉煮，法式靈魂的濃縮與綻放【Gras French】台北法國傳統料理推薦,,2026-04-24 04:12:36
+1290,ifoodie,老翁家,105臺北市松山區新東街19號,ChIJVz4IDo6rQjQRAg7_mlxU4S0,0.8,0.5,"food,delicious,Taiwanese cuisine",老翁家四神湯｜好喝到不給免費加湯就給負評的民生社區原汁豬腳湯與四神湯,,2026-04-24 04:12:38
+1292,ifoodie,許仔豬腳麵線,103臺北市大同區保安街49巷17號,ChIJjcZR1z-pQjQR1827D4G7NDo,0.8,0.8,"food,traditional,popular",許仔豬腳麵線｜白湯豬腳只賣一味賣到爆！老饕狂推乾濕分離吃法，廟前50年豬腳麵線老店,,2026-04-24 04:12:45
+1293,ifoodie,金泰刀削小廚,100臺北市中正區南昌路一段51巷5號,ChIJwYbiNZmpQjQRzqE-KhpQpyc,1.0,0.5,"food,restaurant,recommendation",【台北中正區美食】金泰刀削小廚，必點木須炒麵、排骨炒飯，廣東爆炒刀削麵食尚玩家推薦,,2026-04-24 04:12:48
+1297,ifoodie,爸爸Kevin美式BBQ,105臺北市松山區南京東路三段303巷8弄5號,ChIJoRl0J1ypQjQRjWwMJNxhnDo,0.5,0.5,"BBQ,American cuisine,restaurant",爸爸Kevin美式BBQ — 正統道地美式烤肉專賣餐廳,,2026-04-24 04:13:02
+1298,ifoodie,德立莊酒店,100臺北市中正區秀山街4號,ChIJGQEDxQupQjQRoPYLg8zGh64,0.8,0.5,"buffet,affordable,hotel restaurant",魅麗海中庭餐廳.德立莊酒店台北最強吃到飽.最低只要398元起自助吧吃到飽.加18元就有主餐.台北吃到飽餐廳,,2026-04-24 04:13:06
+1300,ifoodie,泰和樓,106臺北市大安區杭州南路二段61-20號,ChIJbyUU8imqQjQRUvC4IivLW4A,0.8,0.5,"food,trendy,restaurant",台北羊肉湯推薦-騷煲 新台潮羊肉湯｜泰和樓新品牌！紅燒清燉小排湯＋松露滷肉飯 中山區美食必吃,,2026-04-24 04:13:12
+1302,ifoodie,Fourninetine Bakery,106臺北市大安區仁愛路四段48巷23號,ChIJWTabvmerQjQRLterF_tsyoQ,0.8,0.6,"trendy,cafe,Korean-style,breakfast,lunch",【台北美食】Fourninetine Bakery南京三民店，大安區人氣韓系可頌麵包專賣店開二店，台北韓系咖啡廳，捷運南京三民站早午餐,,2026-04-24 04:13:18
+1304,ifoodie,張記鍋貼牛肉麵,100臺北市中正區衡陽路79-1號,ChIJWfxypgupQjQRAQtE_GjLejI,0.8,0.7,"food,trendy,popular",【台北西門町美食】張記鍋貼牛肉麵 生意好到日本都有分店！隱身巷內的中山堂附近美食,,2026-04-24 04:13:24
+1307,ifoodie,利長春小吃店,106臺北市大安區安和路一段112巷8號,ChIJi_3kvturQjQRBZSwRM4GKD0,1.0,0.5,"delicious,affordable",利長春小吃店｜好吃經濟又實惠，推薦牛肉蒸餃、菜肉餛飩,,2026-04-24 04:13:33
+1308,ifoodie,大杵臼,100臺北市中正區思源街1號『公館水岸廣場』,ChIJD2HpwyGpQjQR9l9qll3g_E0,0.8,0.5,"Thai food,Northeastern cuisine,restaurant",大杵臼 ส้มตําครกยักษ์｜真的不是在泰國！台北公館道地泰國東北伊善料理,,2026-04-24 04:13:36
+1309,ifoodie,1976道地香港美食,106臺北市大安區敦化南路一段233巷11號,ChIJqYBZYMWrQjQRBzCZlczR8C4,0.5,0.5,,1976道地香港美食，台北最資深的廣東粥,,2026-04-24 04:13:40
+1312,ifoodie,無名牛排,115臺北市南港區南港路一段57號,ChIJcxnHBm2rQjQRQMK_ivsAi5Y,0.8,0.5,"food,restaurant,beef",既有名又無名，在地高CP值大口吃肉牛排館推薦｜無名牛排,,2026-04-24 04:13:49
+1313,ifoodie,鷹流臺灣總店,110臺北市信義區忠孝東路五段183號,ChIJPYrRLgCrQjQRCKuUsynPC30,1.0,0.5,"food,ramen,beef,tasty",鷹流臺灣總店．台北信義區美食｜史上最濃郁！日本A5黑毛和牛拉麵！「鷹老」親煮極濃牛肉麵！食肉控必訪！滿滿和牛太過癮！拉麵控必朝聖！捷運市政府站～中肯‧食記！,,2026-04-24 04:13:53
+1314,ifoodie,大麗士可麗餅,105臺北市松山區民權東路三段103巷35號,ChIJd8dPRpWrQjQR6hTjDDktomE,0.8,0.5,"food,taiwan,recommended",台北最好吃的可麗餅『大麗士可麗餅』菜單、外送、昆陽站美食推薦,,2026-04-24 04:13:57
+1315,ifoodie,川畝園麵食館,103臺北市大同區承德路二段120號1樓,ChIJU21B8GupQjQRRRTsNGB9Qrg,1.0,0.5,"food,recommended",川畝園麵食館必吃蔥油餅、牛肉捲餅超驚艷（附菜單）,,2026-04-24 04:14:01
+1316,ifoodie,希臘左巴 台大店,106臺北市大安區羅斯福路三段283巷7弄16號,ChIJk9O6fY-pQjQRou8MUthzcgU,0.8,0.5,"food,restaurant,breakfast",台大公館美食『希臘左巴 台大店』菜單、cp值超高歐陸排餐，大份量早午餐,,2026-04-24 04:16:28
+1319,ifoodie,荷麵亭,111臺北市士林區中山北路五段505巷42弄2號,ChIJhSV_pKSuQjQRtJ-1sSeP4R8,0.8,0.5,"Japanese food,noodle,free refills",昭和風日式拉麵 免費加湯加麵 一秒到日本 荷麵亭｜士林站美食,,2026-04-24 04:18:31
+1325,ifoodie,阿仁炒飯,103臺北市大同區哈密街45巷2之4號,ChIJ8cqWc0mpQjQRZm3RZqjV0pM,1.0,0.5,"food,restaurant,taiwanese cuisine",阿仁炒飯｜網友公認的台北最好吃炒飯竟然藏在大龍峒保安宮巷弄,,2026-04-24 04:18:36
+1329,ifoodie,大熊涼麵,108臺北市萬華區漢中街24號,ChIJdWoK97qpQjQRTSLLQDRHov0,1.0,0.5,"food,recommended,tasty",大熊涼麵，西門町爆幹好吃涼麵推薦,,2026-04-24 04:18:39
+1331,ifoodie,羅家擔仔麵,108臺北市萬華區環河南路二段125巷9號,ChIJGd7DCK2pQjQRuJb_zTeXx_8,0.2,0.8,"food,hidden gem,busy",羅家擔仔麵｜太晚來吃不到‼️一天只開5小時無招牌隱藏版萬華早午餐,,2026-04-24 04:18:41
+1332,ifoodie,行天宮,10491臺北市中山區民權東路二段109號,ChIJG3jOqVmpQjQRlMAW5wvvwrA,0.5,0.5,"food,traditional,breakfast,lunch",中原街腰子冬粉｜行天宮老字號傳統早午餐專賣腰子、豬腸與豬肝冬粉,,2026-04-24 04:18:42
+1337,ifoodie,有有1969,104臺北市中山區遼寧街48號,ChIJUVfSk46rQjQRjSYEdTmKW8Q,1.0,0.5,"food,restaurant,taiwanese cuisine",有有1969｜不像熱炒店的遼寧街50年精緻熱炒店必點惹娘燒蛋與百花油條,,2026-04-24 04:18:48
+1338,ifoodie,蜀道叁麻辣燙,116臺北市文山區景美街141號,ChIJbRIao8irQjQRlDjCJh8vOW8,0.8,0.5,"delicious,spicy,popular",蜀道叁麻辣燙｜正宗四川風味平價麻辣燙！干鍋爆炒麻鮮香超過癮，藏身巷弄內人氣麻辣燙,,2026-04-24 04:18:50
+1339,ifoodie,川味麵典,106臺北市大安區四維路176巷17號,ChIJmUDadC2qQjQRmwx0x69Yq7I,0.8,0.8,"food,queue,recommended",川味麵典，科技大樓排隊外省麵推薦,,2026-04-24 04:18:51
+1340,ifoodie,小陳牛肉麵,110臺北市信義區虎林街135號,ChIJzyqO_qOrQjQR2lwRY8GcyUc,0.8,0.8,"food,queue,popular",小陳牛肉麵，每天生意都排隊的信義區牛肉麵,,2026-04-24 04:18:52
+1341,ifoodie,神農太太底家,10491臺北市中山區南京西路14號4樓,ChIJdd8sZYipQjQRGAdnbdCEAY4,0.8,0.5,"food,hot pot,recommended",金麥子酸菜白肉鍋，溫潤酸爽湯頭，必點拔絲地瓜 @神農太太底家,,2026-04-24 04:18:54
+1342,ifoodie,林合發油飯店,103臺北市大同區迪化街一段21號,ChIJeXELiROpQjQRLfS3rOlt4j0,1.0,0.5,"food,recommended,historic",林合發油飯店｜台北最好吃的油飯？老饕激推這一家百年歷史油飯，連郭台銘彌月油飯都用它！,,2026-04-24 04:18:55
+1343,ifoodie,洪樓,111臺北市士林區德行西路25號,ChIJ_____5auQjQRFoM9xHbmMI4,0.8,0.5,"taiwanese cuisine,local favorite,affordable",洪樓，在地人激推的平價台菜（附菜單）,,2026-04-24 04:18:57
+1344,ifoodie,金河洞,108臺北市萬華區成都路100之1號 1 樓,ChIJ7RR0LACpQjQRnCzQMYb_R20,1.0,0.5,"韩式烤肉,火焰秀,正宗道地",金河洞｜韓國老婆認證在台灣吃到最正宗道地的韓式烤肉，火焰秀煞氣登場！ - Happiness,,2026-04-24 04:18:58
+1345,ifoodie,楊家手工水餃,116臺北市文山區景後街176號,ChIJFYrvtwCqQjQRWKN3x__DfPA,1.0,0.5,"delicious,traditional,recommended",楊家手工水餃，台北最好吃的韭菜水餃,,2026-04-24 04:18:59
+1349,ifoodie,宏品炒飯麵食專賣,110臺北市信義區永吉路30巷7號,ChIJlb8mfACrQjQRlGVY5tgF9eM,1.0,0.5,"delicious,recommended",宏品炒飯麵食專賣｜油亮動人的排骨就已經足夠誘人，信義區又一間極品炒飯！ - Happiness,,2026-04-24 04:19:10
+1351,ifoodie,行天宮涼麵店,104臺北市中山區錦州街253-1號,ChIJAbLg1lipQjQRKf4cBXpzJz4,0.8,0.5,"food,restaurant,Taiwanese cuisine",金香豬腳涼麵｜真的很有趣‼️行天宮涼麵店竟然最強的是不輸給其他台北名店的滷豬腳,,2026-04-24 04:19:16
+1352,ifoodie,蘇記餃子館,100臺北市中正區延平南路101巷5號,ChIJSa8UoQupQjQRo7Be_TyJhyw,0.8,0.5,"food,restaurant,taiwanese cuisine",【台北中正區美食】蘇記餃子館 隱身延平南路巷內小吃！菜單推薦必點山東燒雞韭菜水餃,,2026-04-24 04:19:20
+1353,ifoodie,方家雞肉飯,103臺北市大同區寧夏路060攤位號,ChIJA03WIGupQjQROrxprZe_sXU,0.8,0.8,"delicious,popular,night market",方家雞肉飯｜大排長龍就是等開攤！夜市內米其林推薦雞肉飯滷肉飯，像蒸蛋一樣嫩的滷豆腐,,2026-04-24 04:19:23
+1354,ifoodie,金山客家小館創始店,105臺北市松山區南京東路五段250巷2弄5號1樓,ChIJW-0Vl5arQjQRnd0jVlLsV1k,1.0,0.5,"food,recommended,hakka cuisine",金山客家小館創始店，台北好吃客家菜推薦 (菜單),,2026-04-24 04:19:27
+1355,ifoodie,雙胞胎手工蛋餅捲,111臺北市士林區中山北路五段505巷27號 No,ChIJmwqOmKSuQjQRWlu_u6CJh80,0.8,0.5,"food,breakfast,taiwanese_cuisine,recommendation",双胞胎手工蛋餅捲ㄦ，台北蛋餅早餐推薦 (菜單),,2026-04-24 04:19:30
+1357,ifoodie,劍潭蔥油餅,111臺北市士林區劍潭路98號,ChIJSaSftCmvQjQRpxSWus7ree4,1.0,0.5,"food,delicious,taiwanese cuisine",劍潭蔥油餅，超讚的高麗菜水煎包以及無敵的蘿蔔絲餅,,2026-04-24 04:19:38
+1359,ifoodie,Ctrl+F Brunch & Cafe,10461臺北市中山區雙城街54號,ChIJCdDo9E-pQjQRQWxIl-3KYDM,0.5,0.5,"brunch,cafe,relaxing",Ctrl+F Brunch & Cafe｜伴著悠閒早午餐與咖啡的城市探索｜雙城街、花博公園、民權西路站、中山國小,,2026-04-24 04:19:44
+1362,ifoodie,肥豚屋豬排食堂,105臺北市松山區敦化北路244巷37-2號,ChIJ-Qza7Z6rQjQRtAyekY3dpHA,1.0,0.5,"food,restaurant,recommended",肥豚屋豬排食堂，超好吃炸豬排丼飯推薦,,2026-04-24 04:19:54
+1363,ifoodie,順園小館,100臺北市中正區汀州路三段281號,ChIJoRPjyYqpQjQRLileViO9FZw,0.8,0.7,"delicious,northern cuisine,popular",順園小館，公館生意無敵好的北方家常菜,,2026-04-24 04:19:57
+1365,ifoodie,濟南鮮湯包,106臺北市大安區濟南路三段20號,ChIJFXOByn2pQjQRchJYlGYxFeU,1.0,0.5,"delicious,popular,touristy",濟南鮮湯包，日本人超多的超好吃小籠包,,2026-04-24 04:20:03
+1367,ifoodie,豪香劇場炸雞 SO PUNG,108台北市万华区汉口街二段75號1 樓,ChIJs1G6X_2pQjQRWXtLEhwd1XA,0.8,0.5,"food,night market,recommended",台北雙連美食「豪香劇場炸雞 SO PUNG」超狂「炸雞蛋糕盒」林森北路宵夜推薦！(菜單價位),,2026-04-24 04:20:11
+1368,ifoodie,海羊 HAI YANG,111臺北市士林區後港街152-2號,ChIJTeLBx7CuQjQR3lZV15PbnIo,1.0,0.5,"food,recommended",海羊 HAI YANG，蔡阿嘎超推! 煎餃羊肉都很好吃,,2026-04-24 04:20:14
+1370,ifoodie,老麵攤 KANOKWAN,104臺北市中山區四平街21號1樓,ChIJXWY6-WapQjQR7OxlqACxbw8,0.5,0.5,"Thai food,popular",老麵攤 KANOKWAN，巷弄內人氣泰國料理,,2026-04-24 04:20:20
+1372,ifoodie,OKAY 韓國烤肉,10491臺北市中山區南京東路一段34號2樓,ChIJjTx_y2ipQjQRsbBeE7AaDsc,0.8,0.5,"food,korean BBQ,affordable",OKAY 韓國烤肉｜什麼⁉️中山韓式烤肉吃到飽只要499元就有韓式烤豬五花、銅盤烤肉與春川辣雞隨便你點,,2026-04-24 04:20:26
+1373,ifoodie,合成燒餅舖,105臺北市松山區新中街2-4號,ChIJ3Y6ux5KrQjQRKN3zRI4O-2U,0.5,0.7,"popular,delicious",合成燒餅舖，早上要先預訂要不然買不到的炭烤燒餅,,2026-04-24 04:20:30
+1374,ifoodie,鴨箱,106臺北市大安區通安街79號1樓,ChIJv0I5M5OrQjQR6iPfe4rMvC8,0.8,0.5,"new_opening,night_market,food,luxury",新開幕！通化夜市旁的高級鴨箱飯，特盛肉量超級多｜鴨箱,,2026-04-24 04:20:33
+1375,ifoodie,紐約黑幫俱樂部,105臺北市松山區南京東路五段15號,ChIJt7JDM4KrQjQRjbeuPqbQQ8A,1.0,0.5,"food,restaurant,recommended",【松山區美食推薦】紐約黑幫俱樂部 台北龍蝦牛排餐廳第一品牌！個人套餐雙主餐好吃過癮,,2026-04-24 04:20:37
+1377,ifoodie,老鄧Lao Deng1949,106臺北市大安區信義路二段198巷4號,ChIJxe3EC4KpQjQR5L43YFNVwM4,1.0,0.5,"recommended,timeless",老鄧Lao Deng1949，七十年的東門老店就是棒,,2026-04-24 04:20:44
+1378,ifoodie,首爾商行,106臺北市大安區忠孝東路四段101巷31號,ChIJCWui09qrQjQRGkC4A9t_Br0,0.5,0.5,"korean food,private kitchen",首爾商行：在雜貨店內，品嚐正韓式私廚料理。,,2026-04-24 04:20:47
+1381,ifoodie,金華麵店,106臺北市大安區潮州街56號,ChIJKbtRppypQjQRFgdt0J0Razk,0.8,0.5,"noodles,traditional,local favorite",金華麵店，巷弄內的40年麵店必點炸醬麵與豆皮豆腐,,2026-04-24 04:20:57
+1383,ifoodie,輝煌川菜小館,100臺北市中正區延平南路166號,ChIJ378eLKepQjQRkJfC7QYTX38,1.0,0.5,"Chinese food,recommended,established",輝煌川菜小館，台北超強50年老字號川菜推薦,,2026-04-24 04:21:03
+1384,ifoodie,天徠小吃店,111臺北市士林區天母東路8巷27號之3,ChIJv_INxYCuQjQROEGW4fvuFsE,0.8,0.5,"food,restaurant,taiwanese cuisine,recommended",【天徠小吃店】40年神低調無菜單猛店，現炒海鮮與熱炒極度推薦｜台北天母美食推薦｜士林區台菜/合菜(菜單),,2026-04-24 04:21:07
+1385,ifoodie,廣香日式涮涮鍋,10491臺北市中山區中原街132號,ChIJn4yopVupQjQRmf-5bF46Ya4,0.8,0.5,"food,hot pot,affordable",廣香日式涮涮鍋，火鍋吃到飽才$499也太爽,,2026-04-24 04:21:10
+1386,ifoodie,誠序臺菜料理,105臺北市松山區南京東路五段250巷18弄6號,ChIJb1kO44urQjQRzV4MAunKAII,1.0,0.5,"delicious,recommended,taiwanese cuisine",誠序臺菜料理 我吃過最好吃的台菜料理 精緻好味道 黑金紅燒肉一定要點,,2026-04-24 04:21:14
+1389,ifoodie,台北橋孔魯肉飯,103臺北市大同區昌吉街156號,ChIJYzYVGTmpQjQRzhTusdKPXGM,0.8,0.5,"food,restaurant,Taiwanese cuisine",台北橋孔魯肉飯，捷運大橋頭站平價便當美食(姊姊食記),,2026-04-24 04:21:23
+1391,ifoodie,大巨蛋,110臺北市信義區忠孝東路四段515號,ChIJm6BTWcerQjQR-JQqd521Sv8,0.2,0.5,"new store,exclusive flavor",從網路跨足實體店，台北首店落腳大巨蛋！還有大巨蛋獨賣的口味，晚來只能望空櫃興嘆,,2026-04-24 04:21:30
+1394,ifoodie,花娘小館南京店,105臺北市松山區南京東路五段6號2樓,ChIJJdgKCLSrQjQR2ddPPbU77P8,0.5,0.8,"trendy,foodie,busy",花娘小館南京店，訂位很滿的台北川菜餐廳,,2026-04-24 04:21:38
+1396,ifoodie,龜尾家韓式家庭料理,105臺北市松山區八德路三段199巷1弄20號,ChIJFdveDtGrQjQRNC6bYch-_2w,0.5,0.5,"Korean Food,Family Restaurant,Taiwanese-Husband Korean-Wife",龜尾家韓式家庭料理｜台韓夫妻的慶尚北道私房菜 復古老宅隱藏道地韓味,,2026-04-24 04:21:44
+1398,ifoodie,蘭姥姥小吃,10491臺北市中山區伊通街66巷3號,ChIJVy_hWWCpQjQRvUGMui6xuWU,1.0,0.5,"foodie,trendy",【蘭姥姥小吃】隱身巷弄人氣江浙菜館，紅蔥烤排與蘿蔔牛肉醇郁又對味｜台北中山區美食推薦｜捷運松江南京站合菜(菜單),,2026-04-24 04:21:51
+1399,ifoodie,程味珍,108臺北市萬華區西寧南路65號,ChIJF47Bvw6pQjQRP3Ni4MBKGN8,1.0,0.5,"delicious,foodie,taiwanese cuisine",程味珍，意麵跟魯肉飯、滷味都超棒 (菜單),,2026-04-24 04:21:55
+1400,ifoodie,老木小店,105臺北市松山區新中街2巷23-3號,ChIJz7j_h-6rQjQRALb9wp2ktSg,0.5,0.5,"hidden gem,seafood,fresh",老木小店｜主打每日新鮮直送鮮魚料理的民生社區隱藏版澎湖海鮮餐館,,2026-04-24 04:21:58
+1401,ifoodie,時飴 Approprie仁愛圓環店,"7號, No. 7號仁愛路四段105巷大安區臺北市106",ChIJH4bXslerQjQRpfQaOku_irw,0.8,0.5,"food,cake,gift",台北好吃千層蛋糕「時飴 Approprie仁愛圓環店」生日蛋糕、餅乾三明治、年節禮盒推薦(菜單價位),,2026-04-24 04:22:02
+1403,ifoodie,永樂蔥油餅,103臺北市大同區民樂街4號,ChIJ6XoDaAapQjQR1kphycp-J_8,0.8,0.5,"food,restaurant",迪化街美食｜永樂蔥油餅搬家至民樂街4號，菜單必點蔥油餅、芋頭餅、甜甜圈,,2026-04-24 04:22:09
+1404,ifoodie,台北車站,100臺北市中正區黎明里,ChIJcYy0Y3KpQjQRXiW_s2lGln8,0.8,0.7,"food,new_opening,sweet_treats",台北車站商圈新開幕秒殺滿餡甜甜圈 巧克力 卡士達 開心果,,2026-04-24 04:22:13
+1406,ifoodie,老虎炸豬排,110061臺北市信義區忠孝東路五段372巷27弄77-2號,ChIJ4yG9psirQjQRPYwPCVHTZDY,1.0,0.5,"delicious,affordable,foodie",極度軟嫩的平價炸豬排飯，炸雞也相當美味，白飯醬沙拉都可以免費續｜老虎炸豬排,,2026-04-24 04:22:20
+1407,ifoodie,初點良食,10491臺北市中山區龍江路394巷2號1樓,ChIJbxG7RPyrQjQRGObc49jPJv8,1.0,0.5,"food,dim_sum,recommended",初點良食，五星級飯店師傅開的港式點心店,,2026-04-24 04:22:23
+1418,ifoodie,一品山西刀削麵之家,111臺北市士林區天玉街3號,ChIJ2VpInIeuQjQRQfGwrU7Aj7U,1.0,0.5,"food,restaurant,noodles",一品山西刀削麵之家 菜單推薦必點番茄牛肉麵牛肉捲餅！超人氣高評價,,2026-04-24 04:22:57
+1419,ifoodie,功夫肉圓,10491臺北市中山區林森北路263-3號,ChIJNfqndgCpQjQRhe7nzyx4sVM,0.8,0.5,"food,nightlife,hidden_gems",功夫肉圓| 24小時不打烊 ! 藏身台北巷弄中人氣小吃，老饕私藏的神級Q彈肉圓。 - 肉依小姐吃什麼,,2026-04-24 04:23:01
+1420,ifoodie,京簡康(台北延平店),100臺北市中正區延平南路171巷1號1樓,ChIJO07KNKupQjQR88QgcitnLRY,1.0,0.5,"food,innovative,traditional",京簡康(台北延平店)｜鬍鬚張再創美食傳奇！專業蒸烤烹調呈現澎湃餐盒創新風味,,2026-04-24 04:23:04
+1424,ifoodie,順園小館,100臺北市中正區汀州路三段281號,ChIJoRPjyYqpQjQRLileViO9FZw,0.8,0.8,"delicious,northern cuisine,popular",順園小館，生意無敵好的北方家常菜,,2026-04-24 04:23:18
+1430,ifoodie,泰和樓,106臺北市大安區杭州南路二段61-20號,ChIJbyUU8imqQjQRUvC4IivLW4A,1.0,0.5,"food,Chinese cuisine",泰和樓，道地山東菜，酸鮮夠味白肉鍋好吃,,2026-04-24 04:23:36
+1434,ifoodie,王記排骨酥湯,100臺北市中正區汀州路二段81號1F,ChIJE1zFdJepQjQROJbIFGO46eY,1.0,0.5,"food,delicious,taiwanese cuisine",古亭站美食『王記排骨酥湯』好吃筒仔米糕、95元佛跳牆,,2026-04-24 04:23:49
+1438,ifoodie,濟南鮮湯包,106臺北市大安區濟南路三段20號,ChIJFXOByn2pQjQRchJYlGYxFeU,1.0,0.5,"food,restaurant,recommended",濟南鮮湯包｜近三千則評價且許多名人的愛店必點台北最好吃的東坡肉,,2026-04-24 04:24:01
+1439,ifoodie,Sweet & Sour Kitchen重慶,103臺北市大同區重慶北路一段112號,ChIJjWEEZAqpQjQRfnzFuc-7E4A,0.8,0.5,"cafe,restaurant,new_opening",北門站新開幕『Sweet & Sour Kitchen重慶』酸甜二號店摩登復古咖啡廳、插座咖啡早午餐,,2026-04-24 04:24:05
+1442,ifoodie,新東街無名炒飯,105臺北市松山區新東街47號,ChIJbTLAJoyrQjQR6ikInjMGaQk,0.8,0.5,"food,local,classic",新東街無名炒飯｜從路邊攤開到有店面在地超過30年的民生社區熱炒老店,,2026-04-24 04:24:15
+1445,ifoodie,老麵攤 光復店,105臺北市松山區光復北路154號,ChIJxbVVWAGrQjQR1cHeYh0Z5fk,0.8,0.5,"Thai food,clean environment,no service fee",老麵攤 光復店｜台北最強泰式料理分店升級成2.0版用餐環境乾淨又免服務費,,2026-04-24 04:24:24
+1446,ifoodie,饒河街,105臺北市松山區饒河街,ChIJmzdy2JurQjQRuXQfJFmS4AM,0.8,0.5,"food,shopping,relaxation",不用到宜蘭，台北也吃的到正常鮮肉小籠包！吃完順便逛饒河街或是五分埔,,2026-04-24 04:24:27
+1448,ifoodie,麗馥小吃,106臺北市大安區安居街34巷8號,ChIJySVU1TaqQjQR6LQChR1deSc,1.0,0.5,"food,recommended,delicious",麗馥小吃，牛肉麵超好吃推薦必點滷味,,2026-04-24 04:24:34
+1451,ifoodie,銀座仁志川,106臺北市大安區敦化南路1段226號1 樓,ChIJvwIbWACrQjQRYJmnPlAAvH0,0.8,0.5,"food,trendy,limited edition",日本好吃生吐司銀座仁志川來台灣囉！每個月都有限定的創意口味「月初旬吐司」,,2026-04-24 04:24:44
+1455,ifoodie,華西街夜市,108臺北市萬華區華西街,ChIJa_nIQKmpQjQROfvCKC0Y7mo,0.8,0.5,"food,night market",蒸好吃佛跳牆，一個人也可以吃辦桌菜色，華西街夜市美食(姊姊食記),,2026-04-24 04:24:57
+1458,ifoodie,北平萬珍樓,105臺北市松山區敦化北路120巷11號,ChIJZWwjyeerQjQRAjZeXRgvO0c,0.8,0.5,"affordable,delicious",北平萬珍樓美食餐廳，點一大桌居然才四千元超便宜,,2026-04-24 04:25:07
+1459,ifoodie,蘭姥姥小吃,10491臺北市中山區伊通街66巷3號,ChIJVy_hWWCpQjQRvUGMui6xuWU,0.8,0.6,"hidden gem,trendy,local cuisine",蘭姥姥小吃，隱藏巷弄的人氣江浙料理餐廳！,,2026-04-24 04:25:11
+1460,ifoodie,秦味館,106臺北市大安區延吉街138巷2號,ChIJ0_ua_cWrQjQRIbUBC-UUu_E,0.8,0.5,"陜西菜,餐廳,推薦",秦味館｜真的很特別‼️台北少數主打陜西菜餐廳推薦必點手撕泡饃與蒙古炸奶豆腐,,2026-04-24 04:25:14
+1461,ifoodie,婦聯公園麵店,105臺北市松山區延壽街330巷20弄1號,ChIJa3AtTpOrQjQRaD5IJDbQ_dE,0.8,0.5,"hidden gem,local favorite,food",婦聯公園麵店》民生社區美食沒招牌藏在公園麵攤在地人推薦松山麵店,,2026-04-24 04:25:18
+1462,ifoodie,台北市政府,110台北市信义区市府路1號5樓,ChIJXVRz3LmrQjQRRDfk9Cl4yno,0.5,0.5,"food,government",炒飯真是有兩把刷子 一定要加大-台北市政府,,2026-04-24 04:25:21
+1464,ifoodie,中原福州乾麵,100臺北市中正區延平南路164號,ChIJUc7MLaepQjQRCJVLfg8SuPE,0.8,0.5,"food,restaurant,noodles",中原福州乾麵｜位於小南門站的西門町老字號乾麵店推薦福州乾拌麵與餛飩湯,,2026-04-24 04:25:28
+1465,ifoodie,Timchi’s,115014臺北市南港區中南街50號,ChIJk8zWuBOrQjQRDHAyZIdXBDY,0.8,0.5,"food,dessert,seasonal",Timchi’s週末肉桂捲 ，季節限定草莓芙蓮、超濃巧克力蛋糕，台北蛋糕推薦,,2026-04-24 04:25:31
+1467,ifoodie,198日本料理,108臺北市萬華區昆明街198號,ChIJrzVaOQipQjQRIb1WlUTHQsA,0.5,0.5,"restaurant,Japanese cuisine,Taiwanese dining",198日本料理 三角窗無名台式日本料理搬家新地址！菜單必點蛋包飯關東煮,,2026-04-24 04:25:37
+1470,ifoodie,羊成小館,100臺北市中正區忠孝東路二段80號,ChIJUUgeDnupQjQRgq7eGrd-818,1.0,0.5,"food,cantonese cuisine,underrated",羊成小館，台北最被低估的好吃粵菜,,2026-04-24 04:25:47
+1475,ifoodie,新大戈壁蒙古烤肉,108臺北市萬華區成都路81號4 樓,ChIJp6YgWQCpQjQRWLrW-GCMsK4,0.8,0.5,"food,buffet,Mongolian BBQ",新大戈壁蒙古烤肉》西門町吃到飽蒙古烤肉、鴛鴦火鍋、港點自助吧無限吃,,2026-04-24 04:26:04
+1476,ifoodie,毓鮨割烹重慶南店,10046臺北市中正區重慶南路一段141號,ChIJQdyLrC-pQjQRoFoFKoif9Ss,0.8,0.5,"Japanese food,high-end,value for money",台北超值無菜單日料推薦『毓鮨割烹重慶南店』1380元+10%,,2026-04-24 04:26:07
+1477,ifoodie,Solo Pasta,106臺北市大安區安和路一段29-1號,ChIJwQPcmc-rQjQRtXDQA__PPwg,0.8,0.5,"Italian food,restaurant",Solo Pasta，台灣最會做義大利菜的男人開的義大利餐廳,,2026-04-24 04:26:11
+1478,ifoodie,彭家園,106臺北市大安區東豐街60號,ChIJN1pOu82rQjQRa9l4gzGSjEQ,1.0,0.5,"Michelin,Taiwanese cuisine,Cantonese food",彭家園｜連續六年入選米其林必比登台北大安區廣東料理桌菜餐廳,,2026-04-24 04:26:14
+1479,ifoodie,禾盛小料理,104臺北市中山區錦州街396號,ChIJV0Ziu6erQjQRxuv1kPvmd_c,1.0,0.5,"delicious,satisfying,recommended",【禾盛小料理】優秀又用心的定食好滋味，小菜到主餐通通欠吃又讓人滿足｜台北中山區美食推薦｜錦州街/捷運中山國中站(菜單),,2026-04-24 04:26:18
+1482,ifoodie,南京三民武昌市場,105臺北市松山區南京東路五段59巷27弄11號,ChIJAc15ypSrQjQRZEqODSEp5CA,0.8,0.8,"foodie,hidden gem,busy",李家良友牛肉麵｜真的只有內行人才知道藏在南京三民武昌市場的排隊牛肉麵,,2026-04-24 04:26:27
+1483,ifoodie,捷運中山站,10491臺北市中山區南京西路16號,ChIJE-kmU2mpQjQRg3J0ihh6nvI,0.8,0.8,"popular,crowded,japanese",還沒開門先排爆！捷運中山站人氣排隊小吃店，店內超多日本人，幾乎桌桌都有蒸餃,,2026-04-24 04:26:31
+1486,ifoodie,Peppino培皮諾小館,106臺北市大安區濟南路三段42號,ChIJAbTuKwapQjQRFJHX2bqMHqA,0.8,0.5,"food,pizza,restaurant",台北吃得到全球披薩大賽冠軍『Peppino培皮諾小館』菜單、訂位方式、台北好吃羊排推薦,,2026-04-24 04:26:39
+1487,ifoodie,香而廉小館,10491臺北市中山區合江街17巷2號,ChIJXdoi8OCrQjQRv7XFyS-_O0w,0.8,0.8,"popular,hot pot,trendy",香而廉小館，人氣好到直接有兩個店面的南京復興平價熱炒,,2026-04-24 04:26:43
+1489,ifoodie,廚房客家美食,105臺北市松山區敦化北路120巷20號,ChIJw9FlzOerQjQRPGPvmFNDRYU,0.8,0.5,"food,recommendation",廚房客家美食，黃仁勳吃過一次就被貼滿整個牆,,2026-04-24 04:26:49
+1490,ifoodie,四平小館,10491臺北市中山區四平街45號,ChIJPUaCx2CpQjQR1WHoOgjHAJ0,0.8,0.5,"food,delicious,taipei_eats",【四平小館】一輩子做酸菜白肉鍋，酸盡甘來的濃醇鮮美｜台北中山區美食推薦｜四平街商圈/捷運松江南京站(菜單),,2026-04-24 04:26:53
+1491,ifoodie,La Piola Cucina Italiana,106臺北市大安區光復南路308巷45號,ChIJW2hXnsirQjQReAynJ_RDVsY,0.5,0.5,"Italian,Food",La Piola Cucina Italiana義大利餐廳。道地義大利料理,,2026-04-24 04:26:56
+1494,ifoodie,川畝園麵食館,103臺北市大同區承德路二段120號1樓,ChIJU21B8GupQjQRRRTsNGB9Qrg,1.0,0.5,"food,restaurant,Taiwanese cuisine",川畝園麵食館，蔥油餅跟牛肉捲餅真的是一絕 (菜單),,2026-04-24 04:27:06
+1495,ifoodie,沾美西餐廳,106臺北市大安區仁愛路四段77號B1,ChIJKwZSytGrQjQRzl585-Teyig,1.0,0.5,"delicious,western cuisine,buffet",沾美西餐廳 ~ 台北70多年老字號西餐廳，自助午餐吃到飽，現烤牛排、羊排，每道料理精緻好吃，用餐時間3.5小時,,2026-04-24 04:27:09
+1498,ifoodie,雞湯榮麵食館,104臺北市中山區錦州街14號,ChIJzUmjNN-pQjQR0RPvNw8BGs0,0.8,0.5,"food,nightmarket,recommended",雞湯榮麵食館，中山區美食宵夜推薦,,2026-04-24 04:27:19
+1499,ifoodie,阿富海鮮粥,104臺北市中山區農安街14號前雙城美食,ChIJ9QE0evmrQjQRCJKI_LMtzu4,0.8,0.5,"night market,food,satisfying",阿富海鮮粥，宵夜吃炸三鮮好滿足，雙城街夜市美食(姊姊食記),,2026-04-24 04:27:23
+1500,ifoodie,合府小籠湯包｜光復店,106臺北市大安區光復南路180巷13號1樓,ChIJlxKXMACrQjQRTBCtX4KKIkw,1.0,0.5,"delicious,spicy",合府小籠湯包｜光復店｜21摺爆汁小籠湯包，沾點辣椒更帶勁！ - Happiness,,2026-04-24 04:27:27
+1502,ifoodie,HAPI CAFE,106062臺北市大安區光復南路302號,ChIJV2-CyPKrQjQRm-UOCra_X-g,0.8,0.5,"cafe,restaurant,new",HAPI CAFE｜新加坡連鎖咖啡廳台灣首店！台北大巨蛋美食推薦！,,2026-04-24 04:27:33
+1504,ifoodie,大烹小饌,103臺北市大同區民生西路146-1號,ChIJm_pGd5arQjQRsD_vJMWg8Cc,0.8,0.5,"Taiwanese cuisine,traditional,restaurant",【大烹小饌】傳承四代的50年台菜熱炒，一桌合菜人均$300有找｜台北大同區美食推薦｜捷運雙連站(菜單),,2026-04-24 04:27:40
+1506,ifoodie,醉楓園小館,105臺北市松山區八德路三段8巷5號,ChIJJaeSPcOrQjQR73XFXXh_zLs,1.0,0.5,"Michelin recommended,Taiwanese cuisine,affordable",醉楓園小館｜相當低調的連續七年米其林推薦台北平價粵菜館必點芋泥香酥鴨與瓊山豆腐,,2026-04-24 04:27:46
+1510,ifoodie,豬霸王,104臺北市中山區錦州街411號,ChIJlVKcBqGrQjQRozRIkjVy8BE,1.0,0.5,"food,recommendation,traditional",豬霸王：台北豬腳飯推薦 台北最強豬腳飯之一 傳承三十年的滷製工藝，極致台灣古早味,,2026-04-24 04:27:58
+1511,ifoodie,和園川味小吃,100臺北市中正區紹興南街5之2號,ChIJnXmLh3CpQjQR9QwzobICtsw,0.5,0.5,"affordable,office worker,hot pot",和園川味小吃，上班族的超平價熱炒,,2026-04-24 04:28:02
+1512,ifoodie,麵包廚房,108臺北市萬華區峨眉街66號,ChIJHWG97gipQjQRM4_CFNctB20,1.0,0.5,"food,taiwanese cuisine,dessert",麵包廚房｜超過20年的西門町麵包店老字號必點台北最好吃的芋泥蛋糕與可麗露,,2026-04-24 04:28:05
+1513,ifoodie,湘民小館,105臺北市松山區八德路三段155巷24號,ChIJYzKdXeqrQjQRXga3f1NvrHI,1.0,0.5,"food,restaurant,taiwanese_cuisine",湘民小館｜小巨蛋站巷弄好評破千則的台北平價湘菜餐廳必點左宗棠雞,,2026-04-24 04:28:09
+1516,ifoodie,老山東牛肉家常麵店,108臺北市萬華區西寧南路70號B1之15室,ChIJsSC8HAmpQjQR7uCNzzunDRw,0.8,0.5,"noodle shop,michelin recommended,traditional",老山東牛肉家常麵店｜藏身地下室屹立不搖七十年牛肉麵老店，連拿四屆米其林推薦絕品牛肉麵,,2026-04-24 04:28:19
+1517,ifoodie,松滿樓,106臺北市大安區濟南路三段26號,ChIJT91JuH2pQjQReBnuL1zoca0,1.0,0.5,"food,chinese cuisine,restaurant",松滿樓｜超過20年的濟南路平價中式合菜桌菜餐廳必點蝦仁絲瓜湯包與椒香爆牛柳,,2026-04-24 04:28:23
+1520,ifoodie,小公園牛肉麵,106臺北市大安區泰順街35號,ChIJ2T7KxyuqQjQRLytZgS9RYeU,1.0,0.5,"food,noodle,beef,recommendation,taiwanese cuisine",小公園牛肉麵，台北好吃牛肉麵推薦 (菜單),,2026-04-24 04:28:33
+1521,ifoodie,味有招,100臺北市中正區汀州路一段90號,ChIJhcPXvaSpQjQRqaLghEEP8tU,1.0,0.5,"food,delicious",味有招，三大鹹粥之首!紅燒肉與雞卷超棒,,2026-04-24 04:28:37
+1522,ifoodie,六品小館-總店,106臺北市大安區金華街199巷3弄8號,ChIJh8vlnYOpQjQRUR6sHTr34x4,0.8,0.5,"Chinese cuisine,traditional,long-standing",六品小館-總店｜開業超過40年中式桌菜合菜餐館老字號必點黃魚燒豆腐與豆干肉絲,,2026-04-24 04:28:40
+1523,ifoodie,鐘路大多力韓雞湯,103臺北市大同區南京西路81號,ChIJpX8hVgCpQjQROb9RDu6KpNA,0.5,0.5,"newly_opened,food,korean_cuisine",中山站新開幕『鐘路大多力韓雞湯』全台首間元祖辣雞湯專賣店、訂位方式、菜單,,2026-04-24 04:28:44
+1524,ifoodie,村民食堂廚窗港點士林官邸店,111臺北市士林區福林路188號,ChIJ7wNaysSvQjQR_SXHqoILp1k,1.0,0.5,"food,buffet,affordable",村民食堂廚窗港點士林官邸店｜網評破萬則的台北港點吃到飽竟然不到700元也太爽了啊！,,2026-04-24 04:28:48
+1525,ifoodie,美利港式茶檔,106臺北市大安區忠孝東路三段300號B2,ChIJM9-CXACrQjQRFwMyisoqZt0,1.0,1.0,"tasty,popular,worth waiting",美利港式茶檔 這家店好怪，每次經過都在排，吃過一次後，果真是「舌尖上最道地的港味！」 隊伍再長我也排。台北101/世貿,,2026-04-24 04:28:51
+1527,ifoodie,新港茶餐廳,108臺北市萬華區漢中街52號7樓,ChIJ_e4jawmpQjQRsHArNoHZOME,0.8,0.5,"港式飲茶,西門町,美食",【新港茶餐廳】萬華最大間港式飲茶，新穎質感環境｜西門町捷運站美食,,2026-04-24 04:28:58
+1530,ifoodie,磚窯古早味懷舊餐廳,105臺北市松山區敦化南路1段7-1號,ChIJJYOmOMOrQjQRKdqazCuONy0,0.5,0.5,"Taiwanese cuisine,restaurant,recommended",磚窯古早味懷舊餐廳，黃仁勳推薦的台菜餐廳,,2026-04-24 04:29:05
+1531,ifoodie,肥豚屋豬排食堂,105臺北市松山區敦化北路244巷37-2號,ChIJ-Qza7Z6rQjQRtAyekY3dpHA,1.0,0.5,"food,recommendation",肥豚屋豬排食堂，超厚炸豬排丼飯推薦,,2026-04-24 04:29:08
+1534,ifoodie,祝你行運,106臺北市大安區羅斯福路三段283巷21弄2號,ChIJP8lDl92rQjQRzFgaIEFuifw,1.0,0.5,"foodie,Chinese cuisine,restaurant","祝你行運是香港人開設的港式餐廳,推薦必點滑蛋大蝦飯、熔岩奶皇西多士 蜜汁叉燒芝士撈丁麵、烤棉花糖可可...等",,2026-04-24 04:29:17
+1537,ifoodie,台北不限時咖啡廳,105臺北市松山區南京東路四段133巷4弄16號,ChIJ8TuKLOqrQjQRSrGsTe4tu2o,0.8,0.5,"music,foodie,relaxing",台北不限時咖啡廳。濃厚自製青醬燉飯必吃。週末皆有音樂現場表演,,2026-04-24 04:29:27
+1539,ifoodie,佳佳小吃店,104臺北市中山區林森北路67巷121號,ChIJBaGWAWWpQjQRGbQwBJJmz8s,0.8,0.5,"food,restaurant,taiwanese cuisine",佳佳小吃店》台北熱炒推薦中山區餐廳胡瓜愛店林森北路平價美食想吃先訂位,,2026-04-24 04:29:34
+1540,ifoodie,阮Q臭豆腐,112臺北市北投區知行路235巷2號,ChIJ7zUZ52yvQjQRyRwkoF9jBBI,0.8,0.5,"food,afternoon_tea,popular_snack",台北北投美食-阮Q臭豆腐，關渡宮附近的人氣小吃。金黃酥脆臭豆腐以及清爽溫順的越南牛肉湯，享受的下午茶組合。－Nash's Wonderland,,2026-04-24 04:29:37
+1543,ifoodie,劉仲記食品,100臺北市中正區寧波西街28號,ChIJkZH8OJmpQjQRMkcnlZDZrYQ,0.8,0.5,"traditional,foodie,delicious",中正紀念堂美食｜劉仲記食品必買桂花條糕，台北傳統糕點開業超過一甲子,,2026-04-24 04:29:47
+1544,ifoodie,曾家豆漿,104臺北市中山區錦州街123號,ChIJ-YfzZFypQjQRAFxGl4nV8S0,1.0,0.5,"food,recommendation",曾家豆漿。地點曝光！「全台灣最強蛋塔」，比肯德雞還好吃！,,2026-04-24 04:29:51
+1545,ifoodie,磚窯古早味懷舊餐廳,105臺北市松山區敦化南路1段7-1號,ChIJJYOmOMOrQjQRKdqazCuONy0,0.5,0.5," Taiwanese cuisine,nostalgic",磚窯古早味懷舊餐廳｜黃仁勳台北美食地圖中的小巨蛋站台菜古早味餐廳,,2026-04-24 04:29:54
+1546,ifoodie,匯客棧,111臺北市士林區福華路141巷24號,ChIJNYHDc8KvQjQREX-R9akgv2U,0.8,0.5,"affordable,delicious",匯客棧，台北點一桌六菜居然不到$1000真的好爽啊,,2026-04-24 04:29:58
+1554,ifoodie,昶鴻麵點,108臺北市萬華區華西街171號號攤,ChIJ3wSXQKmpQjQR6V89kvuhU5o,0.8,0.5,"food,michelin,recommended",昶鴻麵點，華西街美食，米其林必比登推薦美食(姊姊食記),,2026-04-24 04:30:21
+1555,ifoodie,粗堡漢堡排,105臺北市松山區敦化北路244巷37號,ChIJHaeCJACrQjQR5WdUtnTFu4k,0.8,0.5,"food,burger,Recommendation",粗堡漢堡排，台北好吃漢堡排推薦,,2026-04-24 04:30:24
+1556,ifoodie,吉園葡花園野菜餐廳,112臺北市北投區竹子湖路33號,ChIJ0S6SRvixQjQR9r1ORzkCiJA,0.8,0.5,"food,restaurant,chicken",吉園葡花園野菜餐廳｜低調人氣鄉野土雞城！皮薄超嫩超狂白切雞,,2026-04-24 04:30:28
+1558,ifoodie,廚窗港點士林官邸店,111臺北市士林區福林路188號,ChIJ7wNaysSvQjQR_SXHqoILp1k,1.0,0.5,"food,restaurant,dim_sum",廚窗港點士林官邸店，港式飲茶吃到飽有夠讚,,2026-04-24 04:30:34
+1560,ifoodie,咖芳工作室,103臺北市大同區迪化街二段296巷9號,ChIJ4d6SnDepQjQRKs6M1zpsxBw,0.8,0.5,"food,dessert,gift",大橋頭美食｜咖芳工作室水果及草莓大福和雪球都是熱門必買，台北伴手禮推薦,,2026-04-24 04:30:41
+1561,ifoodie,Greedy Beagle,10491臺北市中山區民生西路66巷15號1樓,ChIJnd54fJSpQjQReRwwD640fwI,0.8,0.7,"dessert,strawberry,trendy",Greedy Beagle 貪吃狗甜點（雙連店）。草莓控開吃，超限量「草莓千層蛋塔」想吃要用搶的。,,2026-04-24 04:30:44
+1564,ifoodie,中正紀念堂,100臺北市中正區,ChIJTamiuZ2pQjQRsmnfkkID6UM,0.8,0.5,"food,Taiwanese cuisine",樂天羊肉》中正紀念堂美食台北羊肉湯專賣店加點魯肉飯只要10元免費續湯,,2026-04-24 04:30:54
+1565,ifoodie,根萊鐵板燒,108臺北市萬華區昆明街92號之1號B1,ChIJx3dG1wipQjQRtgYsfBCJisA,0.8,0.8,"hidden gem,affordable,crowded,long-standing",根萊鐵板燒．萬華區美食｜西門町超級隱藏版平價鐵板燒！沒人帶保證找不到！開業30年老字號！生意夯到天天排隊！白飯飲料免費無限續！西門町美食推薦！捷運西門站～中肯‧食記！,,2026-04-24 04:30:58
+1566,ifoodie,阿旺阿華炒飯炒麵,103臺北市大同區歸綏街190號,ChIJfVozEBWpQjQRDmE1BnTMLrU,1.0,0.5,"delicious,street_food",阿旺阿華炒飯炒麵｜大稻埕炒功非凡街邊小吃 帶鑊氣極致美味,,2026-04-24 04:31:01
+1567,ifoodie,大倉久和大飯店歐風館自助餐廳,10491臺北市中山區南京東路一段9號2F,ChIJwWa00WipQjQRXja3_IayxiA,1.0,0.5," buffet,hotel,fine_dining",台北五星飯店吃到飽『大倉久和大飯店歐風館自助餐廳』價格、現開生蠔吃到飽、爐烤牛排、紅白酒啤酒無限暢飲,,2026-04-24 04:31:05
+1568,ifoodie,得意烤鴨,110臺北市信義區虎林街119之18號,ChIJM4Gox6urQjQRKxqCFqAa-yo,0.8,0.8,"food,affordable,popular",得意烤鴨。爆排！這間烤鴨竟然只要220元！,,2026-04-24 04:31:08
+1569,ifoodie,大湖麵館(喬記麵店),114臺北市內湖區大湖山莊街219巷5號,ChIJC5n0te6sQjQR1DYo0LGK1OA,0.8,0.5,"food,affordable",大湖麵館(喬記麵店)，小菜價格實惠，一條龍也不貴🤣 @內湖美食,,2026-04-24 04:31:12
+1572,ifoodie,沙嗲士多,100臺北市中正區羅斯福路三段316巷9弄4號,ChIJ2y44g4upQjQRZgBkRrSr220,0.0,0.5,"food,restaurant",沙嗲士多。捷運公館站︱台大學子平價港式食堂 (原 香港亨記),,2026-04-24 04:31:22
+1573,ifoodie,品冠客家小館,105臺北市松山區南京東路五段23巷9弄4號,ChIJW795EeurQjQRAhp-PqZhheA,0.8,0.5,"hospitality,recommended",品冠客家小館｜熱情款待的心意 累積出無數好評｜南京三民站、南京東路,,2026-04-24 04:31:25
+1576,ifoodie,同心大腸蚵仔麵線(二店),100臺北市中正區同安街63-3號,ChIJaSeaGgCpQjQRrqU0p48FXtw,0.8,0.5,"food,stinky_tofu,noodle",汀洲路美食│同心大腸蚵仔麵線(二店)│這間臭豆腐真的非常炸，酥脆到炸的那種炸！ 古亭美食、同安街臭豆腐,,2026-04-24 04:31:35
+1577,ifoodie,極鶴和牛鍋物,106臺北市大安區仁愛路四段91巷5號,ChIJbfo2sx2rQjQRSveXoM7cU7c,0.8,0.5,"food,seafood,buffet,A5 wagyu",極鶴和牛鍋物｜台北最狂A5和牛海鮮吃到飽，還有專人桌邊剝蝦給你吃! - 肉依小姐吃什麼,,2026-04-24 04:31:39
+1580,ifoodie,忠孝敦化,106臺北市大安區忠孝東路四段182號,ChIJh5HYCsWrQjQRYVlmxRjtu9E,0.8,0.8,"popular,touristy,crowded",爆棚人氣 日本觀光客也排隊-台北忠孝敦化,,2026-04-24 04:34:27
+1584,ifoodie,東大門韓國特色料理西門店,"4樓, No. 92-1號昆明街萬華區臺北市108",ChIJmTRQwOWpQjQRaLx7eyX1o5k,0.8,0.5,"Korean food,all-you-can-eat,Asian cuisine",韓國人開的正宗韓式料理，$399韓式烤肉吃到飽，小菜無限續！東大門韓國特色料理西門店,,2026-04-24 04:34:31
+1588,ifoodie,Butcher by Lanpengyou 忠孝店,106臺北市大安區忠孝東路三段205-1號,ChIJz-oAxDerQjQRW9GdKmZncBE,0.0,0.5,,Butcher by Lanpengyou 忠孝店,,2026-04-24 04:34:34
+1590,ifoodie,起上小法師,106臺北市大安區敦化南路一段160巷6號,ChIJDzxg2OCrQjQRVu04nIOtwgU,1.0,0.5,"food,Japanese cuisine,tasty",起上小法師｜台北超好吃牛舌定食！日式招牌、厚切一次滿足,,2026-04-24 04:34:35
+1591,ifoodie,茶冉 茶湯火鍋專門店,106臺北市大安區復興南路一段107巷25之3號,ChIJr1veM_KrQjQRj_fJM2kVmSw,0.8,0.5,"relaxing,foodie,low-key",台北東區低調的鍋物店｜茶冉 茶湯火鍋專門店 熱量低不怕胖可以安心吃,,2026-04-24 04:34:37
+1592,ifoodie,西門店,108臺北市萬華區峨眉街52號,ChIJv_XXHQmpQjQRteItj_pOUDA,0.8,0.5,"food,Korean cuisine,buffet",甩鍋雞韓式炒雞吃到飽西門店｜全天候一口價CP值超高韓式炒雞鍋吃到飽！八種炒雞鍋外加韓式料理自助吧通通無限吃到飽,,2026-04-24 04:34:38
+1593,ifoodie,正宗飄香40年烤鴨老店,108臺北市萬華區西寧南路36號10樓,ChIJZdcmMwmpQjQRVhoFltvFacY,0.8,0.5,"delicious,popular",正宗飄香40年烤鴨老店，多家媒體報導火紅店家，一鴨兩吃加辣超對味,,2026-04-24 04:34:40
+1595,ifoodie,四川飯館,116臺北市文山區指南路二段65號,ChIJJTX3yHuqQjQRtjdWiyT9BE4,0.8,0.5,"affordable,large portions,traditional",四川飯館，政大附近大份量平價老店,,2026-04-24 04:34:43
+1596,ifoodie,MERCER BRUNCH,105臺北市松山區民生東路四段121號,ChIJa1pDFwCrQjQRPI1XQ9cUmKo,1.0,0.5,"brunch,foodie,new_opening",東京最強早午餐來台北了『MERCER BRUNCH』人生必吃一次的法式吐司、民生社區新開幕早午餐,,2026-04-24 04:34:44
+1604,ifoodie,家園江浙小館,106臺北市大安區羅斯福路二段15巷2號,ChIJ9---TpqpQjQR7C643oFKTVE,1.0,0.5,"美味,江浙菜",家園江浙小館，在地人才知道的巷弄超美味江浙菜料理！,,2026-04-24 04:34:53
+1606,ifoodie,寶飽煲,111臺北市士林區福壽街3號,ChIJ5XYjM6OuQjQRo-u6wvOrnLI,0.8,1.0,"taiwanese cuisine,popular,busy",寶飽煲，每天都爆滿的台菜推薦 (菜單),,2026-04-24 04:34:54
+1611,ifoodie,萬華蘇家肉圓油粿,108臺北市萬華區和平西路三段176巷4號,ChIJAfyChVypQjQRByrS2ASVSts,0.5,0.5,,萬華蘇家肉圓油粿｜在地超過70年萬華小吃美食專賣肉圓與芋粿的露店蘇來傳,,2026-04-24 04:35:07
+1615,ifoodie,雞湯榮麵食館,104臺北市中山區錦州街14號,ChIJzUmjNN-pQjQR0RPvNw8BGs0,1.0,0.5,"food,recommended,nightmarket",中山美食「雞湯榮麵食館」超強老火雞湯麵、炸雞翅，台北宵夜推薦(菜單價位),,2026-04-24 04:35:19
+1617,ifoodie,雞窩餐廳,110台北市信义区和平東路三段377號1樓,ChIJMwTp18yrQjQR2k_VIsJXNTs,1.0,0.5,"food,popular",雞窩餐廳，驥園子品牌!!砂鍋土雞湯超級受歡迎,,2026-04-24 04:35:25
+1618,ifoodie,尚雯早午餐,103臺北市大同區長安西路231號,ChIJb5CtlsypQjQRStcZ1ACr6O4,1.0,0.5,"delicious,affordable,seafood",尚雯早午餐 | 台北後車站平價早午餐．招牌海鮮炒麵必點．餐點份量大CP值超高！,,2026-04-24 04:35:28
+1620,ifoodie,興安四海豆漿,10491臺北市中山區興安街94號,ChIJu-DwLOGrQjQRCePHZdzonpw,0.8,0.8,"delicious,lively,popular",興安四海豆漿｜台北宵夜早餐都能吃得爆漿酥皮蛋餅不論是早上還是晚上都很熱鬧,,2026-04-24 04:35:36
+1621,ifoodie,KANG Artisan Baker,105臺北市松山區敦化北路120巷19號,ChIJO6ixbT2rQjQR1B8rWnKtEVs,0.8,0.5,"baking,gourmet,high-end",KANG Artisan Baker 前五星酒店烘焙主廚康豐柚所開設的高質感烘焙店 探訪紀錄,,2026-04-24 04:35:39
