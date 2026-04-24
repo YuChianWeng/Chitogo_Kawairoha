@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generated Page</title>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="global.css">
+  <style id="sections-styles">
+/* CSS for section section:App */
+#section-app {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+.app-container {
+  display: flex;
+  width: 1440px;
+  height: 965px;
+  padding-left: 80px;
+  padding-right: 80px;
+}
+.sidebar {
+  width: 193px;
+  background: white;
+  border-radius: 15px;
+  flex-shrink: 0;
+  padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.logo-container {
+  text-align: center;
+  margin-bottom: 60px;
+}
+.logo-icon {
+  width: 40px;
+  height: 40px;
+  margin-bottom: 10px;
+}
+.logo-text {
+  font-size: 16px;
+  font-weight: bold;
+  color: #000;
+  line-height: 1.4;
+}
+.nav-menu {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  text-decoration: none;
+  color: #6c7072;
+  border-radius: 15px;
+  font-size: 16px;
+  gap: 15px;
+}
+.nav-item.active {
+  background-color: #4d68bf;
+  color: #ffffff;
+  box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.1);
+}
+.nav-item img {
+  width: 24px;
+  height: 24px;
+}
+.nav-item.active img {
+  filter: brightness(0) invert(1);
+}
+
+.main-content {
+  display: flex;
+  margin-left: 24px;
+  position: relative;
+  height: 100%;
+  flex: 1;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 0 20px rgba(0,0,0,0.05);
+}
+
+.chat-area {
+  width: 520px;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+.chat-header {
+  text-align: center;
+  padding-top: 20px;
+}
+.chat-header h2 {
+  font-size: 18px;
+  margin-bottom: 15px;
+  color: #000;
+}
+.info-bar {
+  background-color: #4d68bf;
+  color: white;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  height: 33px;
+  font-size: 12px;
+}
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.chat-content {
+  flex: 1;
+  padding: 20px 30px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.message {
+  display: flex;
+  gap: 15px;
+}
+.user-message {
+  justify-content: flex-end;
+}
+.user-bubble {
+  background-color: #4d68bf;
+  color: white;
+  padding: 15px;
+  border-radius: 15px;
+  max-width: 308px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.message-time {
+  text-align: right;
+  font-size: 10px;
+  color: #bebebe;
+  margin-top: 5px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 5px;
+}
+.agent-message {
+  justify-content: flex-start;
+}
+.avatar {
+  width: 31px;
+  height: 31px;
+  border-radius: 50%;
+}
+.agent-bubble {
+  color: #252525;
+  font-size: 14px;
+  line-height: 1.6;
+  max-width: 404px;
+}
+.transport-options {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+.transport-btn {
+  padding: 5px 15px;
+  border: 1px solid #5c76ca;
+  background: transparent;
+  color: #5c76ca;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+}
+.transport-btn.active {
+  background-color: #5c76ca;
+  color: white;
+}
+.bar-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-top: 20px;
+}
+.bar-card {
+  border: 1px solid #b4e1a5;
+  border-radius: 15px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.bar-img {
+  width: 100%;
+  height: 119px;
+  object-fit: cover;
+  border-radius: 13px 13px 0 0;
+}
+.bar-info {
+  padding: 12px;
+}
+.bar-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+}
+.bar-title-row h3 {
+  margin: 0;
+  font-size: 14px;
+  color: #121212;
+}
+.rating {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 12px;
+  color: #6f7789;
+}
+.bar-desc {
+  font-size: 12px;
+  color: #6f7789;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 10px;
+}
+.bar-tags {
+  display: flex;
+  gap: 5px;
+}
+.tag {
+  font-size: 10px;
+  color: #6f7789;
+  border: 0.5px solid #6f7789;
+  border-radius: 15px;
+  padding: 2px 8px;
+}
+.refresh-btn {
+  text-align: center;
+  color: #5c76ca;
+  font-size: 14px;
+  margin-top: 20px;
+  cursor: pointer;
+}
+.chat-footer {
+  background-color: #4d68bf;
+  height: 88px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+}
+.input-container {
+  width: 447px;
+  height: 53px;
+  background: white;
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+}
+.input-container input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  color: #adadad;
+}
+.mic-icon {
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+}
+
+.divider {
+  position: absolute;
+  left: 520px;
+  top: 0;
+  height: 100%;
+  width: 32px;
+  transform: translateX(-50%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+}
+.divider-line {
+  width: 3px;
+  height: 100%;
+  background-color: #4d68bf;
+}
+.divider-handle {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: col-resize;
+}
+
+.map-area {
+  flex: 1;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  overflow: hidden;
+}
+.current-location-top {
+  position: absolute;
+  top: 50px;
+  right: 20px;
+  background-color: rgba(77, 104, 191, 0.8);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 14px;
+  z-index: 5;
+}
+.map-markers {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+.center-pin {
+  position: absolute;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 5;
+}
+.pin-text {
+  color: #5173e0;
+  font-size: 14px;
+  font-weight: bold;
+  margin-bottom: 5px;
+  background: rgba(255,255,255,0.8);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.map-card {
+  position: absolute;
+  background: white;
+  border: 1.5px solid #b4e1a5;
+  border-radius: 15px;
+  display: flex;
+  padding: 10px;
+  gap: 10px;
+  width: 212px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  z-index: 5;
+}
+.map-card img {
+  width: 70px;
+  height: 70px;
+  border-radius: 13px;
+  object-fit: cover;
+}
+.map-card-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.map-card-info h4 {
+  margin: 0 0 5px 0;
+  font-size: 14px;
+  color: #121212;
+}
+.map-card-info p {
+  margin: 0;
+  font-size: 10px;
+  color: #6f7789;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.map-star {
+  position: absolute;
+  font-size: 24px;
+  line-height: 1;
+  text-shadow: 0 0 2px rgba(0,0,0,0.3);
+  z-index: 4;
+}
+  </style>
+  <script src="global.js" defer></script>
+</head>
+<body>
+<section id="section-app">
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="logo-container">
+        <img src="images/111_200.svg" alt="Logo" class="logo-icon">
+        <h1 class="logo-text">𨑨迌迌<br>Chito-Go</h1>
+      </div>
+      <nav class="nav-menu">
+        <a href="#" class="nav-item">
+          <img src="images/I111_161_1_103_47_149.svg" alt="Home">
+          <span>首頁</span>
+        </a>
+        <a href="#" class="nav-item">
+          <img src="images/I111_160_1_103_47_158.svg" alt="Attractions">
+          <span>景點</span>
+        </a>
+        <a href="#" class="nav-item active">
+          <img src="images/I111_160_1_103_47_158.svg" alt="Agent">
+          <span>Agent</span>
+        </a>
+        <a href="#" class="nav-item">
+          <img src="images/I111_163_1_103_47_152.svg" alt="Profile">
+          <span>個人資料</span>
+        </a>
+        <a href="#" class="nav-item">
+          <div style="width: 24px; height: 24px;"></div>
+          <span>設定</span>
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Main Content (Chat + Map) -->
+    <div class="main-content">
+      <!-- Chat Area -->
+      <main class="chat-area">
+        <header class="chat-header">
+          <h2>𨑨迌迌 Chito-Go</h2>
+          <div class="info-bar">
+            <div class="info-item">
+              <img src="images/111_361.svg" alt="Weather">
+              <span>多雲•降雨機率 30%</span>
+            </div>
+            <div class="info-item">
+              <img src="images/111_363.svg" alt="Time">
+              <span>星期五 19:32</span>
+            </div>
+            <div class="info-item">
+              <img src="images/111_362.svg" alt="Location">
+              <span>台北市•信義區</span>
+            </div>
+          </div>
+        </header>
+
+        <div class="chat-content">
+          <!-- User Message -->
+          <div class="message user-message">
+            <div class="bubble user-bubble">
+              我今晚想找個有氣氛、安靜的角落喝杯酒<br>
+              幫我找一間附近有氣氛、可以安靜喝一杯的隱藏版酒吧。我想要那種燈光微暗、音樂不會太吵，適合一個人待著放空的私房名單
+              <div class="message-time">19:30 <img src="images/111_410.svg" alt="Read"></div>
+            </div>
+          </div>
+
+          <!-- Agent Message 1 -->
+          <div class="message agent-message">
+            <img src="images/111_301.svg" alt="Agent Avatar" class="avatar">
+            <div class="bubble agent-bubble">
+              今晚台北天氣多雲、沒下雨，氣溫 22 度非常舒服。<br>
+              請先選擇偏好的交通工具：
+              <div class="transport-options">
+                <button class="transport-btn">機車</button>
+                <button class="transport-btn active">步行</button>
+                <button class="transport-btn">汽車</button>
+                <button class="transport-btn">捷運</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Agent Message 2 -->
+          <div class="message agent-message">
+            <img src="images/115_49.svg" alt="Agent Avatar" class="avatar">
+            <div class="bubble agent-bubble">
+              我幫您掃描了您所在的信義區周邊即時動態，根據最近的社群媒體內容分析與擁擠度數據，我為您篩選出四間目前人少有位且氣氛佳的隱藏版名單：
+              
+              <div class="bar-grid">
+                <!-- Bar Card 1 -->
+                <div class="bar-card">
+                  <img src="images/562f22286b528749d8c9c64b5dccd5fea7d29c59.png" class="bar-img" alt="Ron Xinyi">
+                  <div class="bar-info">
+                    <div class="bar-title-row">
+                      <h3>Ron Xinyi</h3>
+                      <div class="rating"><img src="images/111_254.svg" alt="Star"> 4.6</div>
+                    </div>
+                    <div class="bar-desc">
+                      <img src="images/111_241.svg" alt="Pin"> 步行 10 分鐘 • 基隆路
+                    </div>
+                    <div class="bar-tags">
+                      <span class="tag">安靜</span>
+                      <span class="tag">室內</span>
+                      <span class="tag">放鬆</span>
+                    </div>
+                  </div>
+                </div>
+                <!-- Bar Card 2 -->
+                <div class="bar-card">
+                  <img src="images/0d5013bb290214ebf4e634d47476a96e10284f8e.png" class="bar-img" alt="CÉ LA VI">
+                  <div class="bar-info">
+                    <div class="bar-title-row">
+                      <h3>CÉ LA VI</h3>
+                      <div class="rating"><img src="images/111_254.svg" alt="Star"> 4.3</div>
+                    </div>
+                    <div class="bar-desc">
+                      <img src="images/111_241.svg" alt="Pin"> 步行 15 分鐘 • 松智路
+                    </div>
+                    <div class="bar-tags">
+                      <span class="tag">安靜</span>
+                      <span class="tag">室內</span>
+                    </div>
+                  </div>
+                </div>
+                <!-- Bar Card 3 -->
+                <div class="bar-card">
+                  <img src="images/562f22286b528749d8c9c64b5dccd5fea7d29c59.png" class="bar-img" alt="BAR C">
+                  <div class="bar-info">
+                    <div class="bar-title-row">
+                      <h3>BAR C</h3>
+                      <div class="rating"><img src="images/111_254.svg" alt="Star"> 4.0</div>
+                    </div>
+                    <div class="bar-desc">
+                      <img src="images/111_241.svg" alt="Pin"> 步行 15 分鐘 • 仁愛路四段
+                    </div>
+                    <div class="bar-tags">
+                      <span class="tag">安靜</span>
+                      <span class="tag">室內</span>
+                      <span class="tag">放鬆</span>
+                    </div>
+                  </div>
+                </div>
+                <!-- Bar Card 4 -->
+                <div class="bar-card">
+                  <img src="images/8d38edaeb174e78c2f764c80dee5c9d515f5bc93.png" class="bar-img" alt="BAR D">
+                  <div class="bar-info">
+                    <div class="bar-title-row">
+                      <h3>BAR D</h3>
+                      <div class="rating"><img src="images/111_254.svg" alt="Star"> 4.1</div>
+                    </div>
+                    <div class="bar-desc">
+                      <img src="images/111_241.svg" alt="Pin"> 步行 7 分鐘 • 基隆路
+                    </div>
+                    <div class="bar-tags">
+                      <span class="tag">安靜</span>
+                      <span class="tag">室內</span>
+                      <span class="tag">放鬆</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="refresh-btn">換一批</div>
+            </div>
+          </div>
+        </div>
+
+        <footer class="chat-footer">
+          <div class="input-container">
+            <input type="text" placeholder="想探索台北哪個角落？">
+            <img src="images/111_309.svg" alt="Mic" class="mic-icon">
+          </div>
+        </footer>
+      </main>
+
+      <!-- Divider -->
+      <div class="divider">
+        <div class="divider-line"></div>
+        <div class="divider-handle">
+          <!--merged image-->
+          <div style="position: relative; width: 32px; height: 32px;">
+            <img src="images/116_56.svg" alt="Handle Bg" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
+            <img src="images/116_47.svg" alt="Handle Icon" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 24px; height: 24px;">
+          </div>
+        </div>
+      </div>
+
+      <!-- Map Area -->
+      <aside class="map-area" style="background-image: url('images/64a7f341fa8f61b2e4b1a4fdc763552dd17b6ff4.png');">
+        <!-- Top Right Location -->
+        <div class="current-location-top">
+          目前位置：台北市信義區
+        </div>
+
+        <!-- Map Markers / Cards -->
+        <div class="map-markers">
+          <!-- Center Location Pin -->
+          <div class="center-pin" style="left: 294px; top: 549px;">
+            <span class="pin-text">目前位置</span>
+            <img src="images/116_61.svg" alt="Pin">
+          </div>
+
+          <!-- Stars -->
+          <div class="map-star" style="left: 452px; top: 647px; color: #26c536;">★</div>
+          <div class="map-star" style="left: 212px; top: 701px; color: #0ecc0e;">★</div>
+          <div class="map-star" style="left: 329px; top: 482px; color: #ff9000;">★</div>
+          <div class="map-star" style="left: 157px; top: 500px; color: #0ecc0e;">★</div>
+
+          <!-- Map Card: Bar C -->
+          <div class="map-card" style="top: 404px; left: 31px;">
+            <img src="images/562f22286b528749d8c9c64b5dccd5fea7d29c59.png" alt="Bar C">
+            <div class="map-card-info">
+              <h4>Bar C</h4>
+              <p><img src="images/111_241.svg" alt="Pin"> 步行 15 分鐘 • 仁愛路四段</p>
+            </div>
+          </div>
+
+          <!-- Map Card: Bar D -->
+          <div class="map-card" style="top: 378px; left: 306px;">
+            <img src="images/562f22286b528749d8c9c64b5dccd5fea7d29c59.png" alt="Bar D">
+            <div class="map-card-info">
+              <h4>Bar D</h4>
+              <p><img src="images/111_241.svg" alt="Pin"> 步行 7 分鐘 • 基隆路</p>
+            </div>
+          </div>
+
+          <!-- Map Card: Ron Xinyi -->
+          <div class="map-card" style="top: 608px; left: 45px;">
+            <img src="images/562f22286b528749d8c9c64b5dccd5fea7d29c59.png" alt="Ron Xinyi">
+            <div class="map-card-info">
+              <h4>Ron Xinyi</h4>
+              <p><img src="images/111_241.svg" alt="Pin"> 步行 10 分鐘 • 基隆路</p>
+            </div>
+          </div>
+
+          <!-- Map Card: CÉ LA VI -->
+          <div class="map-card" style="top: 670px; left: 320px;">
+            <img src="images/562f22286b528749d8c9c64b5dccd5fea7d29c59.png" alt="CÉ LA VI">
+            <div class="map-card-info">
+              <h4>CÉ LA VI</h4>
+              <p><img src="images/111_241.svg" alt="Pin"> 步行 15 分鐘 • 松智路</p>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+</body>
+</html>
