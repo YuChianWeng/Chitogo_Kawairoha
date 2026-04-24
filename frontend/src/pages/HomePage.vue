@@ -137,7 +137,15 @@
               autocomplete="off"
             >
             <button type="submit" class="send-btn" :disabled="loading || !input.trim()">送出</button>
+            <button
+              type="button"
+              class="mic-btn"
+              :class="{ recording: isRecording }"
+              @click="toggleRecording"
+              :disabled="loading"
+            >
             <img src="/images/111_309.svg" alt="Mic" class="mic-icon">
+            </button>
           </form>
         </footer>
       </main>
@@ -182,6 +190,7 @@ import { ref, computed, nextTick, onBeforeUnmount } from 'vue'
 import { sendMessage } from '../services/api'
 import type { Itinerary, ChatCandidate } from '../types/itinerary'
 import MapPanel from '../components/MapPanel.vue'
+import RecordRTC from 'recordrtc'
 
 type TabKey = 'home' | 'attractions' | 'agent' | 'profile' | 'settings'
 
@@ -302,6 +311,67 @@ const latestItinerary = computed<Itinerary | null>(() => {
   }
   return null
 })
+
+const isRecording = ref(false)
+let mediaRecorder: RecordRTC | null = null
+
+async function toggleRecording() {
+  if (isRecording.value) {
+    mediaRecorder?.stopRecording(async () => {
+      const audioBlob = mediaRecorder!.getBlob()
+      await uploadVoice(audioBlob)
+      mediaRecorder?.camera?.getTracks().forEach(track => track.stop())
+      isRecording.value = false
+    })
+    return
+  }
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+    mediaRecorder = new RecordRTC(stream, {
+      type: 'audio',
+      mimeType: 'audio/wav',
+      recorderType: RecordRTC.StereoAudioRecorder,
+      desiredSampRate: 16000,
+      numberOfAudioChannels: 1
+    })
+    mediaRecorder.camera = stream
+    mediaRecorder.startRecording()
+    isRecording.value = true
+  } catch (err) {
+    console.error("Mic error:", err)
+    errorText.value = "Cannot access microphone."
+  }
+}
+
+async function uploadVoice(blob: Blob) {
+  loading.value = true
+  errorText.value = ''
+  const formData = new FormData()
+  formData.append('file', blob, 'recording.wav')
+
+  try {
+    const response = await fetch('http://127.0.0.1:8000/api/v1/transcribe', {
+      method: 'POST',
+      body: formData
+    })
+
+    if (!response.ok) {
+      const errData = await response.json()
+      throw new Error(errData.detail || 'Audio upload fail.')
+    }
+    
+    const data = await response.json()
+    if (data.text) {
+      input.value = data.text.trim()
+    }
+  } catch (err: any) {
+    console.error(err)
+    errorText.value = err.message || "Voice recognition fail."
+  } finally {
+    loading.value = false
+  }
+}
 
 async function send() {
   const text = input.value.trim()
@@ -781,11 +851,39 @@ async function scrollBottom() {
   cursor: not-allowed;
 }
 
+.mic-btn {
+  background: transparent;
+  border: none;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+.mic-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .mic-icon {
   width: 30px;
   height: 30px;
-  cursor: pointer;
-  flex-shrink: 0;
+  display: block;
+}
+
+.mic-btn.recording {
+  background-color: #fee2e2;
+  box-shadow: 0 0 0 4px #fee2e2;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
 }
 
 /* ── Error ── */
