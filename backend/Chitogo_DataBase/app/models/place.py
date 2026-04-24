@@ -13,6 +13,7 @@ from app.db import Base
 
 if TYPE_CHECKING:
     from app.models.place_features import PlaceFeatures
+    from app.models.place_social_mention import PlaceSocialMention
     from app.models.place_source_google import PlaceSourceGoogle
 
 
@@ -45,6 +46,13 @@ class Place(Base):
     internal_category: Mapped[str] = mapped_column(
         String(32), nullable=False, index=True, server_default="other"
     )
+    vibe_tags: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
+    mention_count: Mapped[int] = mapped_column(
+        Integer, nullable=False, index=True, server_default="0"
+    )
+    sentiment_score: Mapped[Decimal | None] = mapped_column(
+        Numeric(3, 2), nullable=True
+    )
     trend_score: Mapped[Decimal | None] = mapped_column(Numeric(5, 4), nullable=True)
     confidence_score: Mapped[Decimal | None] = mapped_column(Numeric(5, 4), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
@@ -62,6 +70,9 @@ class Place(Base):
 
     source_records: Mapped[list["PlaceSourceGoogle"]] = relationship(
         "PlaceSourceGoogle", back_populates="place"
+    )
+    social_mentions: Mapped[list["PlaceSocialMention"]] = relationship(
+        "PlaceSocialMention", back_populates="place"
     )
     features: Mapped["PlaceFeatures | None"] = relationship(
         "PlaceFeatures", back_populates="place", uselist=False

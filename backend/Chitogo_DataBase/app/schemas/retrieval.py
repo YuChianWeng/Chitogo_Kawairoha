@@ -18,6 +18,9 @@ class InternalCategory(str, Enum):
 class PlaceSearchSort(str, Enum):
     rating_desc = "rating_desc"
     user_rating_count_desc = "user_rating_count_desc"
+    mention_count_desc = "mention_count_desc"
+    trend_score_desc = "trend_score_desc"
+    sentiment_desc = "sentiment_desc"
 
 
 class NearbySort(str, Enum):
@@ -44,6 +47,11 @@ class PlaceCandidateOut(BaseModel):
     outdoor: bool | None = None
     business_status: str | None = None
     google_maps_uri: str | None = None
+    vibe_tags: list[str] | None = None
+    mention_count: int | None = None
+    sentiment_score: float | None = None
+    trend_score: float | None = None
+    crowd_score: float | None = None
 
     model_config = {"from_attributes": True}
 
@@ -64,6 +72,8 @@ class SearchQueryParams(BaseModel):
     max_budget_level: int | None = Field(default=None, ge=0, le=4)
     indoor: bool | None = None
     open_now: bool | None = None
+    vibe_tag: list[str] | None = None
+    min_mentions: int | None = Field(default=None, ge=0)
     sort: PlaceSearchSort = PlaceSearchSort.rating_desc
     limit: int = Field(default=20, ge=1, le=100)
     offset: int = Field(default=0, ge=0)

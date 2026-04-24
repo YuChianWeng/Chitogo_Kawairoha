@@ -79,4 +79,7 @@ curl "http://localhost:8000/api/v1/places/categories"
 - 002-llm-place-retrieval-apis: Spec + plan + tasks — LLM-friendly search, nearby, batch, recommend, stats APIs; adds `internal_category` column to places
 
 <!-- MANUAL ADDITIONS START -->
+- 003-social-crawl-ingestion Phase 1-2: adds `scripts/migrate_add_social_tables.py`, `scripts/import_crawl_csv.py`, `app/services/social_ingestion.py`, and `app/services/social_aggregation.py` for social mention storage, CSV import, and aggregate refresh
+- 003-social-crawl-ingestion Phase 3: `/api/v1/places/search` now accepts repeatable `vibe_tag` plus `min_mentions`, and supports `mention_count_desc`, `trend_score_desc`, and `sentiment_desc`
+- 003-social-crawl-ingestion Phase 3: place list/search/recommend/detail responses can expose optional social summary fields, and `/api/v1/places/{id}` can include `recent_mentions`
 <!-- MANUAL ADDITIONS END -->

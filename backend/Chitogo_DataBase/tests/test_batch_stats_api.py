@@ -8,6 +8,7 @@ from sqlalchemy.sql import operators
 
 from app.models.place import Place
 from app.models.place_features import PlaceFeatures
+from app.models.place_social_mention import PlaceSocialMention
 from tests.direct_api_client import DirectApiClient
 
 
@@ -132,9 +133,15 @@ class FakeAggregateQuery:
 
 
 class FakeSession:
-    def __init__(self, places_data: list[Place], features_data: list[PlaceFeatures]):
+    def __init__(
+        self,
+        places_data: list[Place],
+        features_data: list[PlaceFeatures],
+        mentions_data: list[PlaceSocialMention] | None = None,
+    ):
         self.places_data = places_data
         self.features_data = features_data
+        self.mentions_data = list(mentions_data or [])
 
     def query(self, *entities):
         if len(entities) == 1:
@@ -142,6 +149,8 @@ class FakeSession:
                 return FakeQuery(self.places_data)
             if entities[0] is PlaceFeatures:
                 return FakeQuery(self.features_data)
+            if entities[0] is PlaceSocialMention:
+                return FakeQuery(self.mentions_data)
 
         return FakeAggregateQuery(self.places_data)
 
