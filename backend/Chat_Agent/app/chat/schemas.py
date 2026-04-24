@@ -83,6 +83,8 @@ class LoopResult(BaseModel):
     places: list[ToolPlace] = Field(default_factory=list)
     summary: str | None = None
     error: str | None = None
+    relaxations_applied: list[str] = Field(default_factory=list)
+    original_filters: dict[str, Any] = Field(default_factory=dict)
 
     model_config = ConfigDict(extra="forbid")
 

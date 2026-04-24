@@ -88,6 +88,32 @@ class PreferenceExtractorTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(delta.district, "大安區")
         self.assertEqual(delta.origin, "大安區")
 
+    async def test_unknown_tag_preserved(self) -> None:
+        extractor = PreferenceExtractor()
+        extractor._client.generate_json = AsyncMock(
+            return_value={
+                "interest_tags": ["japanese", "cafes"],
+            }
+        )
+
+        delta = await extractor.extract("我想吃日式料理或去咖啡廳", Preferences())
+
+        self.assertEqual(delta.interest_tags, ["japanese", "cafes"])
+
+    async def test_message_preserves_specific_japanese_type_hint_when_llm_is_generic(self) -> None:
+        extractor = PreferenceExtractor()
+        extractor._client.generate_json = AsyncMock(
+            return_value={
+                "interest_tags": ["food"],
+                "language": "zh-TW",
+            }
+        )
+
+        delta = await extractor.extract("幫我安排日式餐廳的行程大安區下午出發", Preferences())
+
+        self.assertEqual(delta.interest_tags, ["food", "日式"])
+        self.assertEqual(delta.district, "大安區")
+
     async def test_llm_failure_returns_language_only_preferences(self) -> None:
         extractor = PreferenceExtractor()
         extractor._client.generate_json = AsyncMock(side_effect=RuntimeError("boom"))

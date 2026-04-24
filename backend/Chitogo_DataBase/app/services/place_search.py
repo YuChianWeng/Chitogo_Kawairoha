@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
+from sqlalchemy import or_
 from sqlalchemy.orm import Query
 from sqlalchemy.orm import Session
 
@@ -77,7 +78,13 @@ def apply_place_search_filters(query: Query, params: PlaceSearchParams) -> Query
     if params.internal_category is not None:
         query = query.filter(Place.internal_category == params.internal_category)
     if params.primary_type is not None:
-        query = query.filter(Place.primary_type == params.primary_type)
+        pt = params.primary_type
+        query = query.filter(
+            or_(
+                Place.primary_type == pt,
+                Place.types_json.contains([pt]),
+            )
+        )
     if params.keyword is not None:
         query = query.filter(Place.display_name.ilike(f"%{params.keyword}%"))
     if params.min_rating is not None:

@@ -22,6 +22,7 @@ def _make_place(
     google_place_id: str,
     display_name: str,
     primary_type: str | None,
+    types_json: dict | list | None = None,
     district: str | None,
     rating: float | None,
     user_rating_count: int | None,
@@ -39,7 +40,11 @@ def _make_place(
         display_name=display_name,
         normalized_name=display_name.casefold(),
         primary_type=primary_type,
-        types_json=[primary_type] if primary_type else None,
+        types_json=(
+            types_json
+            if types_json is not None
+            else [primary_type] if primary_type else None
+        ),
         formatted_address=f"Taipei {district}" if district else None,
         district=district,
         latitude=Decimal(str(latitude)),
@@ -130,6 +135,10 @@ class FakeSession:
 
 
 def _matches_condition(item: object, condition) -> bool:
+    clauses = getattr(condition, "clauses", None)
+    if clauses is not None and condition.operator == operators.or_:
+        return any(_matches_condition(item, clause) for clause in clauses)
+
     left = condition.left
     right = condition.right
     operator = condition.operator
@@ -146,6 +155,14 @@ def _matches_condition(item: object, condition) -> bool:
         return needle in (actual_value or "").casefold()
     if operator == operators.in_op:
         return actual_value in expected_value
+    if getattr(operator, "opstring", None) == "@>":
+        if isinstance(actual_value, list) and isinstance(expected_value, list):
+            return all(value in actual_value for value in expected_value)
+        if isinstance(actual_value, dict) and isinstance(expected_value, dict):
+            return all(
+                actual_value.get(key) == value for key, value in expected_value.items()
+            )
+        return False
     is_null_comparison = getattr(right, "__visit_name__", None) == "null"
     if operator == operators.is_:
         if is_null_comparison:
@@ -319,6 +336,51 @@ class SearchApiTests(unittest.TestCase):
         self.assertEqual(
             [item["id"] for item in keyword_response.json()["items"]],
             [2],
+        )
+
+    def test_search_primary_type_matches_types_json(self):
+        self.places.extend(
+            [
+                _make_place(
+                    place_id=7,
+                    google_place_id="gp-7",
+                    display_name="Tokyo Table",
+                    primary_type="japanese_restaurant",
+                    types_json=["japanese_restaurant", "restaurant"],
+                    district="大安區",
+                    rating=4.6,
+                    user_rating_count=180,
+                    price_level="MODERATE",
+                    budget_level="MODERATE",
+                    internal_category="food",
+                    indoor=True,
+                ),
+                _make_place(
+                    place_id=8,
+                    google_place_id="gp-8",
+                    display_name="Neighborhood Diner",
+                    primary_type="restaurant",
+                    types_json=["restaurant", "japanese_restaurant"],
+                    district="中山區",
+                    rating=4.3,
+                    user_rating_count=120,
+                    price_level="MODERATE",
+                    budget_level="MODERATE",
+                    internal_category="food",
+                    indoor=True,
+                ),
+            ]
+        )
+
+        response = self.client.get(
+            "/api/v1/places/search",
+            params={"primary_type": "japanese_restaurant"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            {item["id"] for item in response.json()["items"]},
+            {7, 8},
         )
 
     def test_search_filters_cover_rating_budget_indoor_and_open_now(self):

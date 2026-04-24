@@ -8,6 +8,7 @@ from uuid import uuid4
 
 from app.chat.loop import AgentLoop
 from app.chat.message_handler import MessageHandler
+from app.chat.response_composer import ResponseComposer
 from app.chat.schemas import ChatMessageRequest, ChatUserContext
 from app.chat.trace_store import TraceStore
 from app.core.config import Settings, clear_settings_cache
@@ -19,6 +20,7 @@ from tests.fake_llm import (
     DisabledLLMClient,
     ScriptedClassifierClient,
     ScriptedPreferenceClient,
+    StaticJSONClient,
 )
 
 
@@ -70,22 +72,24 @@ class StubPlaceAdapter:
         search_result: PlaceListResult | None = None,
         nearby_result: PlaceListResult | None = None,
     ) -> None:
+        self.search_results: list[PlaceListResult] = []
+        default_places = [
+            build_place(1, "Cafe A"),
+            build_place(2, "Cafe B"),
+            build_place(3, "Cafe C"),
+            build_place(4, "Cafe D"),
+        ]
         self.recommend_result = recommend_result or PlaceListResult(
             status="ok",
-            items=[
-                build_place(1, "Cafe A"),
-                build_place(2, "Cafe B"),
-                build_place(3, "Cafe C"),
-                build_place(4, "Cafe D"),
-            ],
+            items=default_places,
             total=4,
             limit=5,
             offset=0,
         )
         self.search_result = search_result or PlaceListResult(
             status="ok",
-            items=[build_place(5, "Search Cafe")],
-            total=1,
+            items=default_places,
+            total=4,
             limit=5,
             offset=0,
         )
@@ -100,6 +104,8 @@ class StubPlaceAdapter:
 
     async def search_places(self, **kwargs: object) -> PlaceListResult:
         self.calls.append(("place_search", kwargs))
+        if self.search_results:
+            return self.search_results.pop(0)
         return self.search_result
 
     async def recommend_places(self, **kwargs: object) -> PlaceListResult:
@@ -152,6 +158,37 @@ class StubRouteAdapter:
 class BrokenComposer:
     def compose_general_chat(self, *, preferences: object) -> str:
         raise RuntimeError("composer exploded")
+
+
+class SpyComposer(ResponseComposer):
+    def __init__(self) -> None:
+        super().__init__()
+        self.calls: list[str] = []
+
+    def compose_recommendation(
+        self,
+        *,
+        places: list[ToolPlace],
+        preferences,
+    ):
+        self.calls.append("compose_recommendation")
+        return super().compose_recommendation(places=places, preferences=preferences)
+
+    def compose_recommendation_with_relaxation(
+        self,
+        *,
+        places: list[ToolPlace],
+        preferences,
+        relaxations,
+        original_filters,
+    ):
+        self.calls.append("compose_recommendation_with_relaxation")
+        return super().compose_recommendation_with_relaxation(
+            places=places,
+            preferences=preferences,
+            relaxations=relaxations,
+            original_filters=original_filters,
+        )
 
 
 class MessageHandlerTests(unittest.IsolatedAsyncioTestCase):
@@ -222,7 +259,7 @@ class MessageHandlerTests(unittest.IsolatedAsyncioTestCase):
         self.assertIsNotNone(response.itinerary)
         self.assertEqual(response.routing_status, "full")
         self.assertGreaterEqual(len(response.candidates), 1)
-        self.assertIn("place_recommend", [name for name, _ in adapter.calls])
+        self.assertIn("place_search", [name for name, _ in adapter.calls])
         self.assertGreaterEqual(len(route_adapter.calls), 1)
         self.assertEqual(len(session.turns), 2)
         self.assertEqual(session.turns[1].role, "assistant")
@@ -245,14 +282,14 @@ class MessageHandlerTests(unittest.IsolatedAsyncioTestCase):
         self.assertGreaterEqual(trace.duration_ms, 0)
         self.assertIn("classification", step_names)
         self.assertIn("preferences.extract", step_names)
-        self.assertIn("tool.place_recommend", step_names)
+        self.assertIn("tool.place_search", step_names)
         self.assertIn("tool.route_estimate", step_names)
         self.assertIn("itinerary.build", step_names)
 
     async def test_tool_failure_degrades_gracefully(self) -> None:
         handler, adapter, _ = self._build_handler(
             place_adapter=StubPlaceAdapter(
-                recommend_result=PlaceListResult(status="error", error="timeout"),
+                search_result=PlaceListResult(status="error", error="timeout"),
             )
         )
 
@@ -262,13 +299,13 @@ class MessageHandlerTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(response.tool_results_summary.result_status, "error")
         self.assertEqual(response.candidates, [])
-        self.assertIn("place_recommend", [name for name, _ in adapter.calls])
+        self.assertIn("place_search", [name for name, _ in adapter.calls])
         self.assertIn("推薦資料", response.message)
 
     async def test_tool_failure_is_captured_in_trace(self) -> None:
         handler, _, _ = self._build_handler(
             place_adapter=StubPlaceAdapter(
-                recommend_result=PlaceListResult(status="error", error="timeout"),
+                search_result=PlaceListResult(status="error", error="timeout"),
             )
         )
 
@@ -276,7 +313,7 @@ class MessageHandlerTests(unittest.IsolatedAsyncioTestCase):
             ChatMessageRequest(message="幫我排今晚從台北車站出發的萬華區咖啡行程")
         )
         trace = await self._latest_trace(handler)
-        tool_step = next(step for step in trace.steps if step.name == "tool.place_recommend")
+        tool_step = next(step for step in trace.steps if step.name == "tool.place_search")
 
         self.assertEqual(response.tool_results_summary.result_status, "error")
         self.assertEqual(trace.outcome, "tool_error_degraded")
@@ -304,7 +341,7 @@ class MessageHandlerTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(first.preferences.district, "萬華區")
         self.assertEqual(first.preferences.language, "zh-TW")
         self.assertFalse(second.needs_clarification)
-        self.assertIn("place_recommend", [name for name, _ in adapter.calls])
+        self.assertIn("place_search", [name for name, _ in adapter.calls])
 
     async def test_general_chat_fallback_does_not_call_tools(self) -> None:
         handler, adapter, _ = self._build_handler()
@@ -315,6 +352,57 @@ class MessageHandlerTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response.candidates, [])
         self.assertIsNone(response.tool_results_summary)
         self.assertEqual(adapter.calls, [])
+
+    async def test_discovery_with_relaxation_uses_relaxed_composer(self) -> None:
+        relaxed_places = [
+            build_place(21, "Ramen One", district="中山區", primary_type="ramen_restaurant"),
+            build_place(22, "Ramen Two", district="大安區", primary_type="ramen_restaurant"),
+            build_place(23, "Ramen Three", district="信義區", primary_type="ramen_restaurant"),
+        ]
+        adapter = StubPlaceAdapter()
+        adapter.search_results = [
+            PlaceListResult(status="empty", items=[], total=0, limit=5, offset=0),
+            PlaceListResult(
+                status="ok",
+                items=relaxed_places,
+                total=3,
+                limit=5,
+                offset=0,
+            ),
+        ]
+        composer = SpyComposer()
+        handler, _, _ = self._build_handler(place_adapter=adapter, composer=composer)
+        handler._preference_extractor._client = StaticJSONClient(
+            {
+                "language": "zh-TW",
+                "district": "北投區",
+                "interest_tags": ["拉麵"],
+            }
+        )
+
+        response = await handler.handle(ChatMessageRequest(message="想找北投區的拉麵"))
+
+        self.assertEqual(response.intent.value, "CHAT_GENERAL")
+        self.assertGreaterEqual(len(response.candidates), 1)
+        self.assertIn("擴大到整個台北", response.message)
+        self.assertIn("Ramen One", response.message)
+        self.assertEqual(
+            composer.calls,
+            ["compose_recommendation_with_relaxation"],
+        )
+
+    async def test_first_attempt_hit_still_uses_normal_recommendation_composer(self) -> None:
+        composer = SpyComposer()
+        handler, adapter, _ = self._build_handler(composer=composer)
+
+        response = await handler.handle(ChatMessageRequest(message="推薦萬華區咖啡廳"))
+
+        self.assertEqual(response.intent.value, "CHAT_GENERAL")
+        self.assertGreaterEqual(len(response.candidates), 1)
+        self.assertIn("Cafe A", response.message)
+        self.assertNotIn("擴大", response.message)
+        self.assertEqual(composer.calls, ["compose_recommendation"])
+        self.assertIn("place_search", [name for name, _ in adapter.calls])
 
     async def test_clarification_trace_marks_tools_skipped(self) -> None:
         handler, _, _ = self._build_handler()
@@ -352,7 +440,7 @@ class MessageHandlerTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(second.intent.value, "EXPLAIN")
         self.assertIn("Cafe A", second.message)
         self.assertIn("地區", second.message)
-        self.assertEqual([name for name, _ in adapter.calls].count("place_recommend"), 1)
+        self.assertEqual([name for name, _ in adapter.calls].count("place_search"), 1)
 
     async def test_replan_without_existing_itinerary_requests_clarification(self) -> None:
         handler, adapter, _ = self._build_handler()

@@ -49,11 +49,139 @@ _INTEREST_TO_KEYWORD = {
     "temples": "temple",
     "nature": "park",
 }
+_TYPE_HINT_TO_PRIMARY_TYPE = {
+    # Cuisine
+    "日式": "japanese_restaurant",
+    "日式餐廳": "japanese_restaurant",
+    "日本料理": "japanese_restaurant",
+    "日料": "japanese_restaurant",
+    "japanese": "japanese_restaurant",
+    "拉麵": "ramen_restaurant",
+    "ramen": "ramen_restaurant",
+    "壽司": "sushi_restaurant",
+    "sushi": "sushi_restaurant",
+    "居酒屋": "japanese_izakaya_restaurant",
+    "izakaya": "japanese_izakaya_restaurant",
+    "燒肉": "yakiniku_restaurant",
+    "yakiniku": "yakiniku_restaurant",
+    "炸豬排": "tonkatsu_restaurant",
+    "豬排": "tonkatsu_restaurant",
+    "tonkatsu": "tonkatsu_restaurant",
+    "日式咖哩": "japanese_curry_restaurant",
+    "韓式": "korean_restaurant",
+    "korean": "korean_restaurant",
+    "義式": "italian_restaurant",
+    "italian": "italian_restaurant",
+    "美式": "american_restaurant",
+    "american": "american_restaurant",
+    "泰式": "thai_restaurant",
+    "thai": "thai_restaurant",
+    "越式": "vietnamese_restaurant",
+    "vietnamese": "vietnamese_restaurant",
+    "中式": "chinese_restaurant",
+    "中菜": "chinese_restaurant",
+    "chinese": "chinese_restaurant",
+    "粵菜": "cantonese_restaurant",
+    "港式": "cantonese_restaurant",
+    "台式": "taiwanese_restaurant",
+    "台菜": "taiwanese_restaurant",
+    "taiwanese": "taiwanese_restaurant",
+    "麵": "chinese_noodle_restaurant",
+    "火鍋": "hot_pot_restaurant",
+    "hotpot": "hot_pot_restaurant",
+    "hot pot": "hot_pot_restaurant",
+    "早午餐": "brunch_restaurant",
+    "brunch": "brunch_restaurant",
+    "速食": "fast_food_restaurant",
+    "fast food": "fast_food_restaurant",
+    "小酒館": "bistro",
+    "bistro": "bistro",
+    # Drinks
+    "咖啡廳": "coffee_shop",
+    "咖啡店": "coffee_shop",
+    "coffee": "coffee_shop",
+    "cafes": "cafe",
+    "cafe": "cafe",
+    "酒吧": "bar",
+    "bar": "bar",
+    "調酒": "cocktail_bar",
+    "cocktail": "cocktail_bar",
+    "pub": "pub",
+    # Dessert and bakery
+    "烘焙": "bakery",
+    "麵包": "bakery",
+    "bakery": "bakery",
+    "甜點": "dessert_shop",
+    "甜點店": "dessert_shop",
+    "dessert": "dessert_shop",
+    "冰淇淋": "ice_cream_shop",
+    "冰店": "ice_cream_shop",
+    "ice cream": "ice_cream_shop",
+    "蛋糕": "cake_shop",
+    "cake": "cake_shop",
+    "甜甜圈": "donut_shop",
+    "donut": "donut_shop",
+    "西點": "pastry_shop",
+    "pastry": "pastry_shop",
+    # Attractions and culture
+    "博物館": "museum",
+    "museum": "museum",
+    "museums": "museum",
+    "美術館": "art_gallery",
+    "畫廊": "art_gallery",
+    "art gallery": "art_gallery",
+    "藝術博物館": "art_museum",
+    "景點": "tourist_attraction",
+    "觀光": "tourist_attraction",
+    "attraction": "tourist_attraction",
+    # Nature
+    "公園": "park",
+    "park": "park",
+    "nature": "park",
+    "市區公園": "city_park",
+    "步道": "hiking_area",
+    "登山": "hiking_area",
+    "爬山": "hiking_area",
+    "hiking": "hiking_area",
+    # Shopping
+    "百貨": "department_store",
+    "百貨公司": "department_store",
+    "department store": "department_store",
+    "商場": "shopping_mall",
+    "購物中心": "shopping_mall",
+    "mall": "shopping_mall",
+    "shopping mall": "shopping_mall",
+    "市場": "market",
+    "market": "market",
+    "超市": "supermarket",
+    "超商": "convenience_store",
+    "書店": "book_store",
+    "bookstore": "book_store",
+    "服飾店": "clothing_store",
+    "服飾": "clothing_store",
+    # Lodging
+    "飯店": "hotel",
+    "旅店": "hotel",
+    "hotel": "hotel",
+    "青年旅館": "hostel",
+    "青旅": "hostel",
+    "hostel": "hostel",
+    "民宿": "inn",
+    "旅館": "inn",
+    "inn": "inn",
+}
 _BUDGET_TO_MAX_LEVEL = {
     "budget": 1,
     "mid": 2,
     "luxury": 4,
 }
+_PLACE_SEARCH_RELAXATION_STEPS = (
+    ("open_now", "dropped_open_now"),
+    ("indoor", "dropped_indoor_preference"),
+    ("max_budget_level", "dropped_max_budget_level"),
+    ("district", "dropped_district"),
+    ("primary_type", "dropped_primary_type"),
+)
 _PLANNABLE_TOOL_NAMES = frozenset({"place_search", "place_recommend", "place_nearby"})
 _VALID_INTERNAL_CATEGORIES = frozenset({"food", "attraction", "shopping", "nightlife", "lodging"})
 
@@ -129,6 +257,7 @@ class AgentLoop:
         allowed_tools: set[str],
         tools_used: list[str],
     ) -> LoopResult:
+        preferred_primary_type = self._preferred_primary_type(preferences)
         if (
             user_context
             and user_context.lat is not None
@@ -151,7 +280,11 @@ class AgentLoop:
             if result.status == "ok":
                 return result
 
-        if self._should_use_recommend(message, preferences) and "place_recommend" in allowed_tools:
+        if (
+            preferred_primary_type is None
+            and self._should_use_recommend(message, preferences)
+            and "place_recommend" in allowed_tools
+        ):
             result = await self._invoke_place_list_tool(
                 "place_recommend",
                 tools_used,
@@ -171,12 +304,13 @@ class AgentLoop:
         if "place_search" not in allowed_tools:
             return LoopResult(status="error", tools_used=tools_used, error="tool_unavailable")
 
-        return await self._invoke_place_list_tool(
+        return await self._run_place_search_with_relaxations(
             "place_search",
             tools_used,
             trace_recorder=trace_recorder,
             district=preferences.district,
             internal_category=self._preferred_category(preferences),
+            primary_type=preferred_primary_type,
             keyword=self._search_keyword(message, preferences),
             min_rating=None,
             max_budget_level=self._max_budget_level(preferences),
@@ -209,6 +343,7 @@ class AgentLoop:
             f"tool must be one of: {allowed_tool_names}.\n"
             "params must be an object.\n"
             'For place_search/place_nearby/place_recommend, params may include: district, internal_category, keyword, limit.\n'
+            "For place_search, params may also include primary_type.\n"
             'internal_category must be one of: food, attraction, shopping, nightlife, lodging.\n'
             "limit should be an integer and defaults to 5.\n"
             "Return JSON only, without markdown."
@@ -238,9 +373,18 @@ class AgentLoop:
         limit = params.get("limit", 5)
         district = params.get("district") or preferences.district
         preferred_category = self._preferred_category(preferences)
+        preferred_primary_type = self._preferred_primary_type(preferences)
         preferred_keyword = self._preferred_tag_keyword(preferences)
         internal_category = preferred_category or params.get("internal_category")
+        primary_type = preferred_primary_type or params.get("primary_type")
         keyword = preferred_keyword or params.get("keyword")
+
+        if (
+            tool_name == "place_recommend"
+            and primary_type is not None
+            and "place_search" in allowed_tools
+        ):
+            tool_name = "place_search"
 
         if tool_name == "place_nearby":
             if user_context is None or user_context.lat is None or user_context.lng is None:
@@ -272,31 +416,19 @@ class AgentLoop:
             )
 
         if tool_name == "place_search":
-            result = await self._invoke_place_list_tool(
+            return await self._run_place_search_with_relaxations(
                 tool_name,
                 tools_used,
                 trace_recorder=trace_recorder,
                 district=district,
                 internal_category=internal_category,
+                primary_type=primary_type,
                 keyword=keyword,
                 min_rating=None,
                 max_budget_level=self._max_budget_level(preferences),
                 indoor=preferences.indoor_preference,
                 limit=limit,
                 offset=0,
-            )
-            if result.status != "empty" or "place_recommend" not in allowed_tools:
-                return result
-            return await self._invoke_place_list_tool(
-                "place_recommend",
-                tools_used,
-                trace_recorder=trace_recorder,
-                districts=[district] if district else None,
-                internal_category=internal_category,
-                min_rating=None,
-                max_budget_level=self._max_budget_level(preferences),
-                indoor=preferences.indoor_preference,
-                limit=limit,
             )
         return None
 
@@ -305,6 +437,7 @@ class AgentLoop:
         tool_name: str,
         tools_used: list[str],
         trace_recorder: TraceRecorder | None = None,
+        trace_detail: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> LoopResult:
         step_context = (
@@ -314,7 +447,7 @@ class AgentLoop:
             tool = self._registry.get_tool(tool_name)
             if tool is None:
                 if trace_step is not None:
-                    trace_step.skip(summary="tool_unavailable")
+                    trace_step.skip(summary="tool_unavailable", detail=trace_detail)
                 return LoopResult(
                     status="error",
                     tools_used=list(tools_used),
@@ -328,6 +461,7 @@ class AgentLoop:
                 if trace_step is not None:
                     trace_step.error(
                         summary="tool_exception",
+                        detail=trace_detail,
                         error=exc.__class__.__name__,
                     )
                 return LoopResult(
@@ -338,7 +472,7 @@ class AgentLoop:
             tools_used.append(tool_name)
             if not isinstance(raw_result, PlaceListResult):
                 if trace_step is not None:
-                    trace_step.error(summary="malformed_tool_result")
+                    trace_step.error(summary="malformed_tool_result", detail=trace_detail)
                 return LoopResult(
                     status="error",
                     tools_used=list(tools_used),
@@ -348,12 +482,21 @@ class AgentLoop:
                 if trace_step is not None:
                     trace_step.error(
                         summary=raw_result.error or "tool_error",
-                        detail={"item_count": len(raw_result.items)},
+                        detail={
+                            "item_count": len(raw_result.items),
+                            **(trace_detail or {}),
+                        },
                     )
                 return LoopResult(status="error", tools_used=list(tools_used), error=raw_result.error)
             if raw_result.status == "empty":
                 if trace_step is not None:
-                    trace_step.success(summary="empty", detail={"item_count": 0})
+                    trace_step.success(
+                        summary="empty",
+                        detail={
+                            "item_count": 0,
+                            **(trace_detail or {}),
+                        },
+                    )
                 return LoopResult(
                     status="empty",
                     tools_used=list(tools_used),
@@ -363,7 +506,10 @@ class AgentLoop:
             if trace_step is not None:
                 trace_step.success(
                     summary="ok",
-                    detail={"item_count": len(raw_result.items)},
+                    detail={
+                        "item_count": len(raw_result.items),
+                        **(trace_detail or {}),
+                    },
                 )
             return LoopResult(
                 status="ok",
@@ -371,6 +517,70 @@ class AgentLoop:
                 places=list(raw_result.items),
                 summary=f"{len(raw_result.items)} candidates",
             )
+
+    async def _run_place_search_with_relaxations(
+        self,
+        tool_name: str,
+        tools_used: list[str],
+        trace_recorder: TraceRecorder | None = None,
+        **kwargs: Any,
+    ) -> LoopResult:
+        attempt_filters = {key: value for key, value in kwargs.items() if value is not None}
+        original_filters = dict(attempt_filters)
+        relaxations_applied: list[str] = []
+
+        result = await self._invoke_place_list_tool(
+            tool_name,
+            tools_used,
+            trace_recorder=trace_recorder,
+            trace_detail={"relaxation": None},
+            **attempt_filters,
+        )
+        result = self._with_relaxation_metadata(
+            result,
+            relaxations_applied=relaxations_applied,
+            original_filters=original_filters,
+        )
+        if result.status != "empty":
+            return result
+
+        current_filters = dict(attempt_filters)
+        for filter_name, relaxation_name in _PLACE_SEARCH_RELAXATION_STEPS:
+            if filter_name not in current_filters:
+                continue
+            current_filters = dict(current_filters)
+            current_filters.pop(filter_name, None)
+            relaxations_applied = [*relaxations_applied, relaxation_name]
+            result = await self._invoke_place_list_tool(
+                tool_name,
+                tools_used,
+                trace_recorder=trace_recorder,
+                trace_detail={"relaxation": relaxation_name},
+                **current_filters,
+            )
+            result = self._with_relaxation_metadata(
+                result,
+                relaxations_applied=relaxations_applied,
+                original_filters=original_filters,
+            )
+            if result.status != "empty":
+                return result
+
+        return result
+
+    @staticmethod
+    def _with_relaxation_metadata(
+        result: LoopResult,
+        *,
+        relaxations_applied: list[str],
+        original_filters: dict[str, Any],
+    ) -> LoopResult:
+        return result.model_copy(
+            update={
+                "relaxations_applied": list(relaxations_applied),
+                "original_filters": dict(original_filters),
+            }
+        )
 
     @staticmethod
     def _normalize_planned_call(
@@ -388,7 +598,7 @@ class AgentLoop:
         if not isinstance(params, dict):
             return None
 
-        allowed_param_keys = {"district", "internal_category", "keyword", "limit"}
+        allowed_param_keys = {"district", "internal_category", "primary_type", "keyword", "limit"}
         if any(key not in allowed_param_keys for key in params):
             return None
 
@@ -409,6 +619,16 @@ class AgentLoop:
             ):
                 return None
             normalized["internal_category"] = internal_category
+
+        primary_type = params.get("primary_type")
+        if primary_type is not None:
+            if (
+                not isinstance(primary_type, str)
+                or not primary_type.strip()
+                or len(primary_type.strip()) > 128
+            ):
+                return None
+            normalized["primary_type"] = primary_type.strip()
 
         keyword = params.get("keyword")
         if keyword is not None:
@@ -436,10 +656,20 @@ class AgentLoop:
         return _BUDGET_TO_MAX_LEVEL.get(preferences.budget_level)
 
     @staticmethod
+    def _preferred_primary_type(preferences: Preferences) -> str | None:
+        for tag in preferences.interest_tags:
+            preferred_primary_type = _TYPE_HINT_TO_PRIMARY_TYPE.get(tag.casefold())
+            if preferred_primary_type is not None:
+                return preferred_primary_type
+        return None
+
+    @staticmethod
     def _search_keyword(message: str, preferences: Preferences) -> str | None:
         preferred_keyword = AgentLoop._preferred_tag_keyword(preferences)
         if preferred_keyword is not None:
             return preferred_keyword
+        if AgentLoop._preferred_primary_type(preferences) is not None:
+            return None
         if _SEARCH_PATTERN.search(message):
             cleaned = message.strip()
             return cleaned if len(cleaned) <= 40 else cleaned[:40]
