@@ -57,6 +57,18 @@ class ToolRegistry:
                     intents=frozenset({Intent.GENERATE_ITINERARY}),
                 ),
                 ToolDefinition(
+                    name="place_vibe_tags",
+                    description="List known normalized vibe tags with optional place scope.",
+                    handler=self._place_adapter.get_vibe_tags,
+                    intents=frozenset(
+                        {
+                            Intent.GENERATE_ITINERARY,
+                            Intent.REPLAN,
+                            Intent.CHAT_GENERAL,
+                        }
+                    ),
+                ),
+                ToolDefinition(
                     name="place_stats",
                     description="Get aggregate place counts by district and category.",
                     handler=self._place_adapter.get_stats,

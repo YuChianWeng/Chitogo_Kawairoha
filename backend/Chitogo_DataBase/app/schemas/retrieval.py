@@ -63,6 +63,18 @@ class PlaceSearchResponse(BaseModel):
     offset: int
 
 
+class VibeTagItem(BaseModel):
+    tag: str = Field(min_length=1)
+    place_count: int = Field(ge=0)
+    mention_count: int | None = Field(default=None, ge=0)
+
+
+class VibeTagsResponse(BaseModel):
+    items: list[VibeTagItem]
+    limit: int = Field(ge=1, le=200)
+    scope: dict[str, str | None]
+
+
 class SearchQueryParams(BaseModel):
     district: str | None = None
     internal_category: InternalCategory | None = None

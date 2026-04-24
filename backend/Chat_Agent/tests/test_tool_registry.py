@@ -22,6 +22,9 @@ class StubPlaceAdapter:
     async def get_categories(self) -> object:
         return None
 
+    async def get_vibe_tags(self, **_: object) -> object:
+        return None
+
     async def get_stats(self) -> object:
         return None
 
@@ -42,8 +45,10 @@ class ToolRegistryTests(unittest.TestCase):
         tool_names = [tool.name for tool in self.registry.list_tools()]
 
         self.assertIn("place_search", tool_names)
+        self.assertIn("place_vibe_tags", tool_names)
         self.assertIn("route_estimate", tool_names)
         self.assertIsNotNone(self.registry.get_tool("place_search"))
+        self.assertIsNotNone(self.registry.get_tool("place_vibe_tags"))
         self.assertIsNone(self.registry.get_tool("missing_tool"))
 
     def test_returns_allowed_tools_for_intent(self) -> None:
@@ -52,6 +57,7 @@ class ToolRegistryTests(unittest.TestCase):
         generate_names = [tool.name for tool in self.registry.list_tools_for_intent(Intent.GENERATE_ITINERARY)]
 
         self.assertEqual(explain_names, [])
-        self.assertEqual(chat_names, ["place_search"])
+        self.assertEqual(chat_names, ["place_search", "place_vibe_tags"])
         self.assertIn("place_recommend", generate_names)
+        self.assertIn("place_vibe_tags", generate_names)
         self.assertIn("route_estimate", generate_names)

@@ -69,6 +69,24 @@ class PlaceListResult(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
+class VibeTagItem(BaseModel):
+    tag: str = Field(..., min_length=1)
+    place_count: int = Field(ge=0)
+    mention_count: int | None = Field(default=None, ge=0)
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class VibeTagListResult(BaseModel):
+    status: Literal["ok", "empty", "error"]
+    items: list[VibeTagItem] = Field(default_factory=list)
+    limit: int | None = None
+    scope: dict[str, str | None] = Field(default_factory=dict)
+    error: str | None = None
+
+    model_config = ConfigDict(extra="forbid")
+
+
 class CategoryItem(BaseModel):
     value: str
     label: str

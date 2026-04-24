@@ -31,6 +31,8 @@ from app.schemas.retrieval import (
     PlaceSearchResponse,
     PlaceSearchSort,
     RecommendRequest,
+    VibeTagItem,
+    VibeTagsResponse,
 )
 from app.services.category import get_category_metadata
 from app.services.ingestion import ingest_google_place
@@ -38,6 +40,7 @@ from app.services.place_nearby import MAX_NEARBY_RADIUS_M, NearbyParams, nearby_
 from app.services.place_recommendation import RecommendParams, recommend_places
 from app.services.place_retrieval import batch_get_places, get_place_stats
 from app.services.place_search import PlaceSearchParams, search_places
+from app.services.vibe_tags import list_vibe_tags
 
 router = APIRouter()
 
@@ -242,6 +245,37 @@ def place_categories_endpoint():
         categories=[
             CategoryItem.model_validate(item) for item in get_category_metadata()
         ]
+    )
+
+
+@router.get("/places/vibe-tags", response_model=VibeTagsResponse)
+def place_vibe_tags_endpoint(
+    district: str | None = None,
+    internal_category: InternalCategory | None = None,
+    primary_type: str | None = None,
+    limit: int = Query(default=50, ge=1, le=200),
+    db: Session = Depends(get_db),
+):
+    result = list_vibe_tags(
+        db,
+        district=district,
+        internal_category=(
+            internal_category.value if internal_category is not None else None
+        ),
+        primary_type=primary_type,
+        limit=limit,
+    )
+    return VibeTagsResponse(
+        items=[
+            VibeTagItem(
+                tag=item.tag,
+                place_count=item.place_count,
+                mention_count=item.mention_count,
+            )
+            for item in result.items
+        ],
+        limit=result.limit,
+        scope=result.scope,
     )
 
 

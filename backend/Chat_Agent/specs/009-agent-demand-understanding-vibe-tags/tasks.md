@@ -22,22 +22,22 @@ description: "Task list for 009-agent-demand-understanding-vibe-tags"
 
 **Acceptance target**: Chat_Agent can call a Data Service endpoint that returns known normalized `vibe_tags` scoped by optional district/category/type filters.
 
-- [ ] T001 [P] [US2] Add `VibeTagItem` and `VibeTagsResponse` schemas in `backend/Chitogo_DataBase/app/schemas/retrieval.py`
-- [ ] T002 [US2] Add `backend/Chitogo_DataBase/app/services/vibe_tags.py` with `list_vibe_tags(db, district=None, internal_category=None, primary_type=None, limit=50)`
-- [ ] T003 [US2] Implement PostgreSQL JSONB aggregation over `Place.vibe_tags`, returning distinct tag counts sorted by `place_count DESC`
-- [ ] T004 [US2] Add `GET /api/v1/places/vibe-tags` in `backend/Chitogo_DataBase/app/routers/places.py`
-- [ ] T005 [P] [US2] Add DataBase tests for unfiltered tag catalog, district-scoped catalog, category-scoped catalog, and empty catalog
-- [ ] T006 [P] [US2] Update DataBase README/API notes to document `/places/vibe-tags`
+- [x] T001 [P] [US2] Add `VibeTagItem` and `VibeTagsResponse` schemas in `backend/Chitogo_DataBase/app/schemas/retrieval.py`
+- [x] T002 [US2] Add `backend/Chitogo_DataBase/app/services/vibe_tags.py` with `list_vibe_tags(db, district=None, internal_category=None, primary_type=None, limit=50)`
+- [x] T003 [US2] Implement PostgreSQL JSONB aggregation over `Place.vibe_tags`, returning distinct tag counts sorted by `place_count DESC`
+- [x] T004 [US2] Add `GET /api/v1/places/vibe-tags` in `backend/Chitogo_DataBase/app/routers/places.py`
+- [x] T005 [P] [US2] Add DataBase tests for unfiltered tag catalog, district-scoped catalog, category-scoped catalog, and empty catalog
+- [x] T006 [P] [US2] Update DataBase README/API notes to document `/places/vibe-tags`
 
 ## Phase 2: Chat_Agent Tool Support
 
 **Acceptance target**: Chat_Agent has a safe tool/adapter path for known vibe tags and can forward selected tags to search.
 
-- [ ] T007 [P] [US2] Extend `backend/Chat_Agent/app/tools/models.py` with `VibeTagItem` and `VibeTagListResult`
-- [ ] T008 [US2] Add `PlaceToolAdapter.get_vibe_tags()` in `backend/Chat_Agent/app/tools/place_adapter.py` calling `/api/v1/places/vibe-tags`
-- [ ] T009 [US2] Register `place_vibe_tags` in `backend/Chat_Agent/app/tools/registry.py`
-- [ ] T010 [P] [US2] Add adapter tests for success, empty, malformed payload, timeout, and scoped query params
-- [ ] T011 [P] [US2] Confirm existing `search_places(vibe_tags=[...])` emits repeated `vibe_tag` params and add regression coverage if missing
+- [x] T007 [P] [US2] Extend `backend/Chat_Agent/app/tools/models.py` with `VibeTagItem` and `VibeTagListResult`
+- [x] T008 [US2] Add `PlaceToolAdapter.get_vibe_tags()` in `backend/Chat_Agent/app/tools/place_adapter.py` calling `/api/v1/places/vibe-tags`
+- [x] T009 [US2] Register `place_vibe_tags` in `backend/Chat_Agent/app/tools/registry.py`
+- [x] T010 [P] [US2] Add adapter tests for success, empty, malformed payload, timeout, and scoped query params
+- [x] T011 [P] [US2] Confirm existing `search_places(vibe_tags=[...])` emits repeated `vibe_tag` params and add regression coverage if missing
 
 ## Phase 3: TurnIntentFrame Models and Validation
 

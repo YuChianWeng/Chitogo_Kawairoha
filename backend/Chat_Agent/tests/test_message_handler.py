@@ -124,6 +124,10 @@ class StubPlaceAdapter:
         self.calls.append(("place_categories", {}))
         return None
 
+    async def get_vibe_tags(self, **kwargs: object) -> object:
+        self.calls.append(("place_vibe_tags", kwargs))
+        return None
+
     async def get_stats(self) -> object:
         self.calls.append(("place_stats", {}))
         return None

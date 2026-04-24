@@ -57,6 +57,7 @@ It does not currently implement:
 | GET | `/api/v1/places/stats` | Counts by district, internal category, and primary type |
 | GET | `/api/v1/places/nearby` | Coordinate-based search with `distance_m` per result |
 | GET | `/api/v1/places/categories` | Static category metadata (values, labels, representative types) |
+| GET | `/api/v1/places/vibe-tags` | Known normalized social vibe tags with optional scope filters |
 
 ## Tech Stack
 
@@ -233,11 +234,36 @@ Filtered search with pagination.
 | `max_budget_level` | int | 0–4; see category.py `BUDGET_RANK` |
 | `indoor` | bool | |
 | `open_now` | bool | Best-effort; places without hours data are excluded |
-| `sort` | string | `rating_desc` (default), `user_rating_count_desc` |
+| `vibe_tag` | string[] | Repeatable; all tags must match |
+| `min_mentions` | int | Minimum aggregated social mention count |
+| `sort` | string | `rating_desc` (default), `user_rating_count_desc`, `mention_count_desc`, `trend_score_desc`, `sentiment_desc` |
 | `limit` | int | Default 20, max 100 |
 | `offset` | int | Default 0 |
 
 Response: `{"items": [...], "total": N, "limit": 20, "offset": 0}`
+
+### `GET /api/v1/places/vibe-tags`
+
+Returns known normalized `vibe_tags` from stored place records. Query parameters: `district`, `internal_category`, `primary_type`, `limit`.
+
+The catalog counts distinct places per tag and sorts by `place_count DESC`, then `mention_count DESC`, then tag name.
+
+Example:
+
+```json
+{
+  "items": [
+    {"tag": "romantic", "place_count": 12, "mention_count": 38},
+    {"tag": "scenic", "place_count": 31, "mention_count": 70}
+  ],
+  "limit": 50,
+  "scope": {
+    "district": "信義區",
+    "internal_category": "food",
+    "primary_type": null
+  }
+}
+```
 
 ### `POST /api/v1/places/recommend`
 
@@ -358,7 +384,7 @@ Sample output:
 ## Running Tests
 
 ```bash
-python -m unittest tests.test_ingestion tests.test_search_api tests.test_recommend_api tests.test_batch_stats_api tests.test_nearby_api tests.test_categories_api
+python -m unittest tests.test_ingestion tests.test_search_api tests.test_recommend_api tests.test_batch_stats_api tests.test_nearby_api tests.test_categories_api tests.test_vibe_tags_api
 ```
 
 The test suite uses a fake-session harness — no live database or external HTTP client required.
@@ -371,6 +397,7 @@ Coverage:
 - `test_batch_stats_api.py` — batch ordering, unknown IDs, features, stats aggregate counts
 - `test_nearby_api.py` — radius filtering, distance sort, category/rating filters, limit, missing params
 - `test_categories_api.py` — 7 categories, ordering, source-of-truth consistency
+- `test_vibe_tags_api.py` — normalized tag catalog, scoped counts, sorting, validation, empty results
 - `test_fetch_google_nearby.py` — config loading and district/type group structure
 
 ## Data Model Overview

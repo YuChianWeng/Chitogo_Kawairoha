@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 import httpx
+from pydantic import ValidationError
 
 from app.core.config import Settings, get_settings
 from app.tools.models import (
@@ -12,6 +13,8 @@ from app.tools.models import (
     PlaceSort,
     PlaceStatsResult,
     ToolPlace,
+    VibeTagItem,
+    VibeTagListResult,
 )
 
 _SEARCH_PATH = "/api/v1/places/search"
@@ -19,6 +22,7 @@ _RECOMMEND_PATH = "/api/v1/places/recommend"
 _BATCH_PATH = "/api/v1/places/batch"
 _NEARBY_PATH = "/api/v1/places/nearby"
 _CATEGORIES_PATH = "/api/v1/places/categories"
+_VIBE_TAGS_PATH = "/api/v1/places/vibe-tags"
 _STATS_PATH = "/api/v1/places/stats"
 
 
@@ -163,6 +167,49 @@ class PlaceToolAdapter:
         if not categories:
             return CategoryListResult(status="empty")
         return CategoryListResult(status="ok", categories=categories)
+
+    async def get_vibe_tags(
+        self,
+        *,
+        district: str | None = None,
+        internal_category: str | None = None,
+        primary_type: str | None = None,
+        limit: int = 50,
+    ) -> VibeTagListResult:
+        payload, error = await self._request_json(
+            "GET",
+            _VIBE_TAGS_PATH,
+            params=self._compact_dict(
+                district=district,
+                internal_category=internal_category,
+                primary_type=primary_type,
+                limit=limit,
+            ),
+        )
+        if error is not None:
+            return VibeTagListResult(status="error", error=error)
+        if not isinstance(payload, dict) or not isinstance(payload.get("items"), list):
+            return VibeTagListResult(status="error", error="malformed_payload")
+
+        raw_items = payload["items"]
+        if any(not isinstance(item, dict) for item in raw_items):
+            return VibeTagListResult(status="error", error="malformed_payload")
+
+        try:
+            items = [VibeTagItem.model_validate(item) for item in raw_items]
+            response_limit = int(payload.get("limit", limit) or limit)
+            scope = dict(payload.get("scope") or {})
+        except (TypeError, ValueError, ValidationError):
+            return VibeTagListResult(status="error", error="malformed_payload")
+
+        if not items:
+            return VibeTagListResult(status="empty", limit=response_limit, scope=scope)
+        return VibeTagListResult(
+            status="ok",
+            items=items,
+            limit=response_limit,
+            scope=scope,
+        )
 
     async def get_stats(self) -> PlaceStatsResult:
         payload, error = await self._request_json("GET", _STATS_PATH)

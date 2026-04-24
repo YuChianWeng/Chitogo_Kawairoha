@@ -97,6 +97,9 @@ class StubPlaceAdapter:
     async def get_categories(self) -> object:
         return None
 
+    async def get_vibe_tags(self, **_: object) -> object:
+        return None
+
     async def get_stats(self) -> object:
         return None
 
