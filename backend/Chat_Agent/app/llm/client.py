@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import re
 from typing import Any
 
 import httpx
@@ -38,6 +39,14 @@ def _build_openrouter_client(api_key: str, base_url: str) -> Any:
     }
 
 
+def _strip_json_comments_and_trailing_commas(text: str) -> str:
+    # Remove // line comments (not inside strings — good enough for LLM output)
+    text = re.sub(r"//[^\n]*", "", text)
+    # Remove trailing commas before } or ]
+    text = re.sub(r",\s*([}\]])", r"\1", text)
+    return text
+
+
 def _extract_json_string(text: str) -> str:
     stripped = text.strip()
     if stripped.startswith("```"):
@@ -48,7 +57,7 @@ def _extract_json_string(text: str) -> str:
     end = stripped.rfind("}")
     if start == -1 or end == -1 or end < start:
         raise ValueError("LLM response did not contain a JSON object")
-    return stripped[start : end + 1]
+    return _strip_json_comments_and_trailing_commas(stripped[start : end + 1])
 
 
 class LLMClient:
