@@ -61,6 +61,8 @@ class DirectApiClient:
                     max_budget_level=query.max_budget_level,
                     indoor=query.indoor,
                     open_now=query.open_now,
+                    vibe_tag=query.vibe_tag,
+                    min_mentions=query.min_mentions,
                     sort=query.sort,
                     limit=query.limit,
                     offset=query.offset,

@@ -27,6 +27,8 @@ class PlaceSearchParams:
     max_budget_level: int | None = None
     indoor: bool | None = None
     open_now: bool | None = None
+    vibe_tags: list[str] | None = None
+    min_mentions: int | None = None
     sort: PlaceSearchSort = PlaceSearchSort.rating_desc
     limit: int = 20
     offset: int = 0
@@ -97,10 +99,21 @@ def apply_place_search_filters(query: Query, params: PlaceSearchParams) -> Query
         )
     if params.indoor is not None:
         query = query.filter(Place.indoor == params.indoor)
+    if params.vibe_tags:
+        for tag in params.vibe_tags:
+            query = query.filter(Place.vibe_tags.contains([tag]))
+    if params.min_mentions is not None:
+        query = query.filter(Place.mention_count >= params.min_mentions)
     return query
 
 
 def apply_place_search_sort(query: Query, sort: PlaceSearchSort) -> Query:
+    if sort == PlaceSearchSort.mention_count_desc:
+        return query.order_by(Place.mention_count.desc().nullslast())
+    if sort == PlaceSearchSort.trend_score_desc:
+        return query.order_by(Place.trend_score.desc().nullslast())
+    if sort == PlaceSearchSort.sentiment_desc:
+        return query.order_by(Place.sentiment_score.desc().nullslast())
     if sort == PlaceSearchSort.user_rating_count_desc:
         return query.order_by(Place.user_rating_count.desc().nullslast())
     return query.order_by(Place.rating.desc().nullslast())

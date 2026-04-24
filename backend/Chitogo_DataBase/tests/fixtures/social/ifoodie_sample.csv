@@ -1,0 +1,6 @@
+id,platform,location,address,google_place_id,sentiment_score,crowdedness,vibe_tags,original_text,source_url,created_at
+100,ifoodie,Existing Cafe,106臺北市大安區仁愛路四段100號,gp-db-hit-ifoodie,0.80,0.30,"coffee, cozy",Existing DB hit text,,2026-04-20 10:00:00
+101,ifoodie,Google Bistro,100臺北市中正區北平西路3號,gp-google-ifoodie,0.90,0.70,"trendy, brunch",Needs Google enrichment,https://example.com/google,2026-04-21 11:30:00
+102,ifoodie,Fallback Noodles,110臺北市信義區松仁路1號,gp-fallback-ifoodie,0.60,0.40,"hidden gem, noodles",Fallback insert row,https://example.com/fallback,2026-04-22 09:15:00
+103,ifoodie,Out of Taipei,234新北市永和區永和路一段1號,gp-filter-ifoodie,0.50,0.20,"suburban, noodles",Filtered row,,2026-04-23 08:00:00
+102,ifoodie,Fallback Noodles,110臺北市信義區松仁路1號,gp-fallback-ifoodie,0.60,0.40,"hidden gem, noodles",Duplicate mention row,https://example.com/fallback-dup,2026-04-22 09:15:00

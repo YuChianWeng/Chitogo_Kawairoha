@@ -4,9 +4,11 @@ from sqlalchemy.orm import Session
 from app.db import get_db
 from app.models.place import Place
 from app.models.place_features import PlaceFeatures
+from app.models.place_social_mention import PlaceSocialMention
 from app.schemas.place import (
     GoogleImportRequest,
     ImportResult,
+    MentionOut,
     PlaceDetail,
     PlaceFeaturesOut,
     PlaceListItem,
@@ -77,6 +79,8 @@ def search_places_endpoint(
     max_budget_level: int | None = Query(default=None, ge=0, le=4),
     indoor: bool | None = None,
     open_now: bool | None = None,
+    vibe_tag: list[str] | None = Query(default=None),
+    min_mentions: int | None = Query(default=None, ge=0),
     sort: PlaceSearchSort = Query(default=PlaceSearchSort.rating_desc),
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
@@ -95,13 +99,19 @@ def search_places_endpoint(
             max_budget_level=max_budget_level,
             indoor=indoor,
             open_now=open_now,
+            vibe_tags=vibe_tag,
+            min_mentions=min_mentions,
             sort=sort,
             limit=limit,
             offset=offset,
         ),
     )
+    features_map = _load_place_features_map(db, [place.id for place in result.items])
     return PlaceSearchResponse(
-        items=[PlaceCandidateOut.model_validate(place) for place in result.items],
+        items=[
+            _build_place_candidate(place, features_map.get(place.id))
+            for place in result.items
+        ],
         total=result.total,
         limit=result.limit,
         offset=result.offset,
@@ -143,10 +153,15 @@ def nearby_places_endpoint(
             sort=sort,
         ),
     )
+    features_map = _load_place_features_map(
+        db, [item.place.id for item in result.items]
+    )
     return NearbyResponse(
         items=[
             NearbyPlaceCandidateOut(
-                **PlaceCandidateOut.model_validate(item.place).model_dump(),
+                **_build_place_candidate(
+                    item.place, features_map.get(item.place.id)
+                ).model_dump(),
                 distance_m=item.distance_m,
             )
             for item in result.items
@@ -177,10 +192,15 @@ def recommend_places_endpoint(
             limit=request.limit,
         ),
     )
+    features_map = _load_place_features_map(
+        db, [item.place.id for item in result.items]
+    )
     return PlaceRecommendationResponse(
         items=[
             PlaceRecommendationOut(
-                **PlaceCandidateOut.model_validate(item.place).model_dump(),
+                **_build_place_candidate(
+                    item.place, features_map.get(item.place.id)
+                ).model_dump(),
                 recommendation_score=item.recommendation_score,
             )
             for item in result.items
@@ -232,10 +252,24 @@ def get_place(place_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Place not found")
 
     features = db.query(PlaceFeatures).filter(PlaceFeatures.place_id == place_id).first()
+    recent_mentions = (
+        db.query(PlaceSocialMention)
+        .filter(PlaceSocialMention.place_id == place_id)
+        .order_by(PlaceSocialMention.posted_at.desc().nullslast())
+        .limit(5)
+        .all()
+    )
     detail = PlaceDetail.model_validate(place)
-    if features is None:
+    updates = {}
+    if features is not None:
+        updates["features"] = PlaceFeaturesOut.model_validate(features)
+    if recent_mentions:
+        updates["recent_mentions"] = [
+            MentionOut.model_validate(mention) for mention in recent_mentions
+        ]
+    if not updates:
         return detail
-    return detail.model_copy(update={"features": PlaceFeaturesOut.model_validate(features)})
+    return detail.model_copy(update=updates)
 
 
 def _build_batch_place_detail(
@@ -245,6 +279,30 @@ def _build_batch_place_detail(
     if features is None:
         return detail
     return detail.model_copy(update={"features": PlaceFeaturesOut.model_validate(features)})
+
+
+def _load_place_features_map(
+    db: Session, place_ids: list[int]
+) -> dict[int, PlaceFeatures]:
+    if not place_ids:
+        return {}
+
+    features = (
+        db.query(PlaceFeatures)
+        .filter(PlaceFeatures.place_id.in_(place_ids))
+        .all()
+    )
+    return {feature.place_id: feature for feature in features}
+
+
+def _build_place_candidate(
+    place: Place, features: PlaceFeatures | None
+) -> PlaceCandidateOut:
+    candidate = PlaceCandidateOut.model_validate(place)
+    if features is None or features.crowd_score is None:
+        return candidate
+
+    return candidate.model_copy(update={"crowd_score": float(features.crowd_score)})
 
 
 @router.post("/places/import/google", response_model=ImportResult)

@@ -1,0 +1,6 @@
+id,platform,location,sentiment_score,crowdedness,vibe_tags,original_text,source_url,created_at,address,place_id
+200,Threads,Existing Threads Cafe,0.85,0.20,"[""hidden gem"", ""late-night""]",Existing threads db hit,https://threads.example/200,2026-04-20 20:00:00,104臺北市中山區南京東路一段1號,gp-db-hit-threads
+201,Instagram,Google Ramen,0.95,0.80,"[""popular"", ""ramen""]",Google path for taipei spots,https://ig.example/201,2026-04-21 13:00:00,100臺北市中正區忠孝西路一段1號,gp-google-threads
+202,Reddit,Fallback Gallery,0.70,0.10,"[""artsy"", ""quiet corner""]",Fallback threads row,https://reddit.example/202,2026-04-22 18:00:00,111臺北市士林區中山北路五段1號,gp-fallback-threads
+203,Threads,Outside Taipei,0.40,0.20,"[""weekend trip""]",Should be filtered,https://threads.example/203,2026-04-23 12:00:00,220新北市板橋區文化路一段1號,gp-filter-threads
+202,Reddit,Fallback Gallery,0.70,0.10,"[""artsy"", ""quiet corner""]",Duplicate row,https://reddit.example/202-dup,2026-04-22 18:00:00,111臺北市士林區中山北路五段1號,gp-fallback-threads

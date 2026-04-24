@@ -3,6 +3,18 @@ from datetime import datetime
 from pydantic import BaseModel
 
 
+class MentionOut(BaseModel):
+    platform: str
+    source_url: str | None = None
+    original_text: str | None = None
+    sentiment_score: float | None = None
+    crowdedness: float | None = None
+    vibe_tags: list[str] | None = None
+    posted_at: datetime | None = None
+
+    model_config = {"from_attributes": True}
+
+
 class PlaceFeaturesOut(BaseModel):
     couple_score: float | None = None
     family_score: float | None = None
@@ -30,6 +42,9 @@ class PlaceListItem(BaseModel):
     indoor: bool | None = None
     outdoor: bool | None = None
     budget_level: str | None = None
+    vibe_tags: list[str] | None = None
+    mention_count: int | None = None
+    sentiment_score: float | None = None
     trend_score: float | None = None
 
     model_config = {"from_attributes": True}
@@ -57,12 +72,16 @@ class PlaceDetail(BaseModel):
     indoor: bool | None = None
     outdoor: bool | None = None
     budget_level: str | None = None
+    vibe_tags: list[str] | None = None
+    mention_count: int | None = None
+    sentiment_score: float | None = None
     trend_score: float | None = None
     confidence_score: float | None = None
     created_at: datetime
     updated_at: datetime
     last_synced_at: datetime | None = None
     features: PlaceFeaturesOut | None = None
+    recent_mentions: list[MentionOut] | None = None
 
     model_config = {"from_attributes": True}
 
@@ -76,4 +95,3 @@ class ImportResult(BaseModel):
     place_id: int | None = None
     google_place_id: str
     action: str
-
