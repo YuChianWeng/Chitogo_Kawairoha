@@ -42,7 +42,7 @@ from app.session.manager import (
     stable_preference_delta,
 )
 from app.session.models import Itinerary, Place, Preferences, Session, Turn
-from app.tools.models import ToolPlace
+from app.tools.models import PlaceListResult, ToolPlace
 
 logger = logging.getLogger(__name__)
 
@@ -441,6 +441,26 @@ class MessageHandler:
             )
             return merged_session
 
+    async def _search_legal_lodging_alternatives(
+        self,
+        *,
+        district: str | None,
+        limit: int = 3,
+    ) -> list[ToolPlace]:
+        tool = self._agent_loop._registry.get_tool("place_search")
+        if tool is None:
+            return []
+        try:
+            result: PlaceListResult = await tool.handler(
+                internal_category="lodging",
+                district=district,
+                sort="rating_desc",
+                limit=limit,
+            )
+            return result.items if result.status == "ok" else []
+        except Exception:
+            return []
+
     async def _handle_check_lodging_legal(
         self,
         *,
@@ -568,10 +588,15 @@ class MessageHandler:
                     step.fallback(summary="candidates_error", error=exc.__class__.__name__)
             if candidates_result is not None and candidates_result.status == "ok" and candidates_result.items:
                 step.success(detail={"candidate_count": len(candidates_result.items)})
+                alt_district = district or candidates_result.items[0].district
+                alternatives = await self._search_legal_lodging_alternatives(
+                    district=alt_district
+                )
                 reply = self._composer.compose_lodging_candidates(
                     preferences=preferences,
                     query_name=lodging_name,
                     candidates=candidates_result.items,
+                    alternatives=alternatives,
                 )
                 return ChatMessageResponse(
                     session_id=session_id,
@@ -580,13 +605,16 @@ class MessageHandler:
                     needs_clarification=True,
                     message=reply,
                     preferences=preferences,
+                    candidates=[self._to_cached_place(p) for p in alternatives],
                     source=source,
                 )
             step.success(detail={"candidate_count": 0})
 
-        reply = self._composer.compose_lodging_not_found(
+        alternatives = await self._search_legal_lodging_alternatives(district=district)
+        reply = self._composer.compose_lodging_not_found_with_alternatives(
             preferences=preferences,
             query_name=lodging_name,
+            alternatives=alternatives,
         )
         return ChatMessageResponse(
             session_id=session_id,
@@ -595,6 +623,7 @@ class MessageHandler:
             needs_clarification=False,
             message=reply,
             preferences=preferences,
+            candidates=[self._to_cached_place(p) for p in alternatives],
             source=source,
         )
 

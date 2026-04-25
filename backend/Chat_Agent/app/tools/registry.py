@@ -29,6 +29,7 @@ class ToolRegistry:
                             Intent.GENERATE_ITINERARY,
                             Intent.REPLAN,
                             Intent.CHAT_GENERAL,
+                            Intent.CHECK_LODGING_LEGAL,
                         }
                     ),
                 ),

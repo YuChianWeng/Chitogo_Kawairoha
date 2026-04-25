@@ -227,6 +227,7 @@ class ResponseComposer:
         preferences: Preferences,
         query_name: str,
         candidates: list[Any],
+        alternatives: list[Any] | None = None,
     ) -> str:
         language = preferences.language or "en"
         if language == "zh-TW":
@@ -239,7 +240,13 @@ class ResponseComposer:
                 if c.address:
                     loc = f"{loc}，{c.address}" if loc else c.address
                 lines.append(f"{i}. {c.name}（{loc}）" if loc else f"{i}. {c.name}")
-            lines.append("如果不是以上任何一間，建議向主管機關（台北市觀光傳播局）確認後再入住。")
+            if alternatives:
+                lines.append("\n如果都不是，以下是台北評價較高的合法旅宿，供您參考：")
+                for alt in alternatives:
+                    rating = f"，評分 {alt.rating:.1f}" if getattr(alt, "rating", None) else ""
+                    loc = getattr(alt, "district", "") or ""
+                    lines.append(f"• {alt.name}（{loc}{rating}）" if loc else f"• {alt.name}{rating}")
+            lines.append("\n建議向主管機關（台北市觀光傳播局）確認後再入住。")
             return "\n".join(lines)
         lines = [
             f"⚠️ \"{query_name}\" was not found in Taipei City's registered lodging list, which may indicate a safety risk.",
@@ -250,7 +257,49 @@ class ResponseComposer:
             if c.address:
                 loc = f"{loc}, {c.address}" if loc else c.address
             lines.append(f"{i}. {c.name} ({loc})" if loc else f"{i}. {c.name}")
-        lines.append("If none of these match, we recommend contacting the Taipei City Department of Information and Tourism before your stay.")
+        if alternatives:
+            lines.append("\nIf none of these match, here are some well-rated legal lodgings in Taipei:")
+            for alt in alternatives:
+                rating = f", rated {alt.rating:.1f}" if getattr(alt, "rating", None) else ""
+                loc = getattr(alt, "district", "") or ""
+                lines.append(f"• {alt.name} ({loc}{rating})" if loc else f"• {alt.name}{rating}")
+        lines.append("\nWe recommend contacting the Taipei City Department of Information and Tourism if you have concerns.")
+        return "\n".join(lines)
+
+    def compose_lodging_not_found_with_alternatives(
+        self,
+        *,
+        preferences: Preferences,
+        query_name: str,
+        alternatives: list[Any],
+    ) -> str:
+        language = preferences.language or "en"
+        if not alternatives:
+            return self.compose_lodging_not_found(preferences=preferences, query_name=query_name)
+        if language == "zh-TW":
+            lines = [
+                f"⚠️ 在台北市政府合法旅宿登記名單中找不到「{query_name}」，該旅宿可能未合法登記，建議謹慎。",
+                "\n以下是台北評價較高的合法旅宿，供您參考：",
+            ]
+            for alt in alternatives:
+                rating = f"，評分 {alt.rating:.1f}" if getattr(alt, "rating", None) else ""
+                loc = getattr(alt, "district", "") or ""
+                addr = getattr(alt, "formatted_address", None) or ""
+                detail = f"{loc}，{addr}" if loc and addr else loc or addr
+                lines.append(f"• {alt.name}（{detail}{rating}）" if detail else f"• {alt.name}{rating}")
+            lines.append("\n如需更多資訊，可向台北市觀光傳播局確認。")
+            return "\n".join(lines)
+        lines = [
+            f"⚠️ \"{query_name}\" was not found in Taipei City's registered lodging list. This lodging may not be legally registered — please take caution.",
+            "\nHere are some well-rated legal lodgings in Taipei:",
+        ]
+        for alt in alternatives:
+            rating = f", rated {alt.rating:.1f}" if getattr(alt, "rating", None) else ""
+            loc = getattr(alt, "district", "") or ""
+            addr = getattr(alt, "formatted_address", None) or ""
+            detail = f"{loc}, {addr}" if loc and addr else loc or addr
+            lines.append(f"• {alt.name} ({detail}{rating})" if detail else f"• {alt.name}{rating}")
+        lines.append("\nFor more information, contact the Taipei City Department of Information and Tourism.")
         return "\n".join(lines)
 
     def compose_lodging_not_found(
