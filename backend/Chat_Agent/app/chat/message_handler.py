@@ -7,12 +7,14 @@ from uuid import uuid4
 
 from app.chat.itinerary_builder import ItineraryBuilder
 from app.chat.loop import AgentLoop
+from app.chat.prompt_builder import build_session_context_block
 from app.chat.replanner import Replanner
 from app.chat.response_composer import ResponseComposer
 from app.chat.schemas import (
     ChatCandidate,
     ChatMessageRequest,
     ChatMessageResponse,
+    ChatUserContext,
     LoopResult,
     TraceFinalStatus,
     ToolResultsSummary,
@@ -113,6 +115,23 @@ class MessageHandler:
                             "cached_candidate_count": len(session.cached_candidates),
                         }
                     )
+
+                # Persist GPS location so subsequent turns don't lose context
+                if request.user_context and request.user_context.lat is not None:
+                    session = await self._session_manager.update_user_location(
+                        session_id,
+                        lat=request.user_context.lat,
+                        lng=request.user_context.lng,
+                    )
+
+                # Use session-persisted location as fallback when current request has none
+                effective_user_context: ChatUserContext | None = request.user_context
+                if (effective_user_context is None or effective_user_context.lat is None) and session.user_location:
+                    effective_user_context = ChatUserContext(
+                        lat=session.user_location["lat"],
+                        lng=session.user_location["lng"],
+                    )
+
                 with recorder.step("session.append_user_turn") as step:
                     await self._session_manager.append_turn(
                         session_id,
@@ -166,13 +185,18 @@ class MessageHandler:
 
                 if classifier_result.intent == Intent.GENERATE_ITINERARY:
                     with recorder.step("generate.detect_missing_fields") as step:
+                        has_gps = (
+                            effective_user_context is not None
+                            and effective_user_context.lat is not None
+                        )
                         missing_fields = detect_missing_generate_fields(
                             request.message,
                             preferences,
+                            has_gps_location=has_gps,
                         )
                         classifier_result.missing_fields = missing_fields
                         classifier_result.needs_clarification = bool(missing_fields)
-                        step.success(detail={"missing_fields": missing_fields})
+                        step.success(detail={"missing_fields": missing_fields, "has_gps": has_gps})
 
                 recorder.set_intent(classifier_result.intent.value)
                 recorder.set_needs_clarification(classifier_result.needs_clarification)
@@ -196,6 +220,8 @@ class MessageHandler:
                         preferences=preferences,
                         source=classifier_result.source,
                         trace_recorder=recorder,
+                        effective_user_context=effective_user_context,
+                        current_session=session,
                     )
                 elif classifier_result.needs_clarification:
                     self._record_turn_frame_validation(
@@ -269,6 +295,8 @@ class MessageHandler:
                         preferences=preferences,
                         source=classifier_result.source,
                         trace_recorder=recorder,
+                        effective_user_context=effective_user_context,
+                        current_session=session,
                     )
                 elif discovery_request:
                     response = await self._handle_discovery(
@@ -278,6 +306,8 @@ class MessageHandler:
                         preferences=preferences,
                         source=classifier_result.source,
                         trace_recorder=recorder,
+                        effective_user_context=effective_user_context,
+                        current_session=session,
                     )
                 else:
                     self._record_turn_frame_validation(
@@ -636,6 +666,8 @@ class MessageHandler:
         preferences: Preferences,
         source: str,
         trace_recorder: TraceRecorder,
+        effective_user_context: ChatUserContext | None = None,
+        current_session: Session | None = None,
     ) -> ChatMessageResponse:
         self._record_turn_frame_validation(
             trace_recorder=trace_recorder,
@@ -652,7 +684,8 @@ class MessageHandler:
             preferences=preferences,
             replacement_constraint=None,
             category_mix=None,
-            user_context=request.user_context,
+            user_context=effective_user_context,
+            session=current_session,
             trace_recorder=trace_recorder,
             step_name="agent_loop.chat_general",
         )
@@ -730,6 +763,8 @@ class MessageHandler:
         preferences: Preferences,
         source: str,
         trace_recorder: TraceRecorder,
+        effective_user_context: ChatUserContext | None = None,
+        current_session: Session | None = None,
     ) -> ChatMessageResponse:
         category_mix = await self._extract_category_mix(
             message=request.message,
@@ -751,7 +786,8 @@ class MessageHandler:
             preferences=preferences,
             replacement_constraint=None,
             category_mix=category_mix,
-            user_context=request.user_context,
+            user_context=effective_user_context,
+            session=current_session,
             trace_recorder=trace_recorder,
             step_name="agent_loop.generate_itinerary",
         )
@@ -878,6 +914,8 @@ class MessageHandler:
         preferences: Preferences,
         source: str,
         trace_recorder: TraceRecorder,
+        effective_user_context: ChatUserContext | None = None,
+        current_session: Session | None = None,
     ) -> ChatMessageResponse:
         if session.latest_itinerary is None:
             trace_recorder.record_step(
@@ -1016,7 +1054,8 @@ class MessageHandler:
                     preferences=preferences,
                     replacement_constraint=replan_request.replacement_constraint,
                     category_mix=None,
-                    user_context=request.user_context,
+                    user_context=effective_user_context,
+                    session=current_session,
                     trace_recorder=trace_recorder,
                     step_name="agent_loop.replan",
                 )
@@ -1175,9 +1214,14 @@ class MessageHandler:
         replacement_constraint: PlaceConstraint | None,
         category_mix,
         user_context,
+        session: Session | None = None,
         trace_recorder: TraceRecorder,
         step_name: str,
     ):
+        context_block: str | None = None
+        if session is not None:
+            context_block = build_session_context_block(session, preferences) or None
+
         with trace_recorder.step(step_name) as step:
             try:
                 loop_result = await self._agent_loop.run(
@@ -1187,6 +1231,7 @@ class MessageHandler:
                     replacement_constraint=replacement_constraint,
                     category_mix=category_mix,
                     user_context=user_context,
+                    context_block=context_block,
                     trace_recorder=trace_recorder,
                 )
             except Exception as exc:

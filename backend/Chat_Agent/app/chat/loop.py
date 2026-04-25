@@ -303,6 +303,7 @@ class AgentLoop:
         replacement_constraint: PlaceConstraint | None = None,
         category_mix: list[CategoryMixItem] | None = None,
         user_context: ChatUserContext | None = None,
+        context_block: str | None = None,
         trace_recorder: TraceRecorder | None = None,
     ) -> LoopResult:
         tool_definitions = self._registry.list_tools_for_intent(intent)
@@ -311,7 +312,7 @@ class AgentLoop:
         tools_used: list[str] = []
 
         if replacement_constraint is None and not (intent == Intent.GENERATE_ITINERARY and category_mix):
-            planned_call = await self._plan_tool_call(message, preferences, planning_tools)
+            planned_call = await self._plan_tool_call(message, preferences, planning_tools, context_block=context_block)
             if planned_call is not None:
                 planned_result = await self._run_planned_call(
                     tool_name=planned_call["tool"],
@@ -461,6 +462,8 @@ class AgentLoop:
         message: str,
         preferences: Preferences,
         allowed_tools: list[Any],
+        *,
+        context_block: str | None = None,
     ) -> dict[str, Any] | None:
         if not allowed_tools:
             return None
@@ -470,7 +473,9 @@ class AgentLoop:
             for tool in allowed_tools
         )
         allowed_tool_names = ", ".join(tool.name for tool in allowed_tools)
+        context_section = f"{context_block}\n\n" if context_block else ""
         prompt = (
+            f"{context_section}"
             "Choose the single best place-discovery tool for the latest user message.\n"
             f"User message: {message}\n"
             f"Current preferences summary: {summarize_preferences(preferences)}\n"

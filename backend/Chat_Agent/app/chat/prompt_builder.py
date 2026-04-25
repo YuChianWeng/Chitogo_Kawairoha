@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from app.session.models import Preferences
+from app.session.models import Preferences, Session
 from app.tools.models import ToolPlace
 
 
@@ -45,6 +45,41 @@ def summarize_tool_places(places: list[ToolPlace], *, limit: int = 5) -> str:
             fragments.append(f"budget={place.budget_level}")
         lines.append(", ".join(fragments))
     return "\n".join(lines)
+
+
+def build_session_context_block(session: Session, preferences: Preferences) -> str:
+    """Compact context injected before each LLM call so the model never asks for known info."""
+    lines: list[str] = []
+
+    if session.user_location:
+        lat = session.user_location.get("lat")
+        lng = session.user_location.get("lng")
+        district = preferences.district or "Taipei"
+        lines.append(f"User current location: {district} (~{lat:.3f}, {lng:.3f}) — do NOT ask where to start")
+
+    elif preferences.origin:
+        lines.append(f"User origin: {preferences.origin} — do NOT ask where to start")
+
+    if session.last_transport_config:
+        tc = session.last_transport_config
+        lines.append(f"Transport: {tc.mode}, max {tc.max_minutes_per_leg} min per leg — already set")
+    elif preferences.transport_mode:
+        lines.append(f"Transport preference: {preferences.transport_mode}")
+
+    if session.return_time:
+        dest = session.return_destination or "home"
+        lines.append(f"Must return to {dest} by {session.return_time}")
+
+    if session.visited_stops:
+        visited_names = [s.venue_name for s in session.visited_stops[-5:]]
+        lines.append(f"Already visited today: {', '.join(visited_names)} — avoid re-suggesting these")
+
+    if not lines:
+        return ""
+
+    return "Session context (use this; do NOT re-ask for any of it):\n" + "\n".join(
+        f"- {line}" for line in lines
+    )
 
 
 def build_recommendation_system_prompt(*, language_hint: str) -> str:
