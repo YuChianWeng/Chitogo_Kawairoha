@@ -4,8 +4,17 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.db import get_db
-from app.schemas.lodging import LegalLodgingOut, LodgingLegalStatusResponse
-from app.services.lodging_search import check_by_place_id, search_lodging
+from app.schemas.lodging import (
+    LegalLodgingOut,
+    LodgingCandidateItem,
+    LodgingCandidatesResponse,
+    LodgingLegalStatusResponse,
+)
+from app.services.lodging_search import (
+    check_by_place_id,
+    search_lodging,
+    search_lodging_candidates,
+)
 
 router = APIRouter()
 
@@ -46,6 +55,24 @@ def check_lodging_legal_status(
         match_type=match_type,
         confidence=confidence,
     )
+
+
+@router.get("/lodgings/candidates", response_model=LodgingCandidatesResponse)
+def get_lodging_candidates(
+    name: str = Query(..., min_length=1, description="旅宿名稱（模糊搜尋）"),
+    limit: int = Query(default=5, ge=1, le=10, description="最多回傳幾筆"),
+    db: Session = Depends(get_db),
+):
+    """Return top-N lodging candidates sorted by name similarity."""
+    results = search_lodging_candidates(db, name=name, limit=limit)
+    items = [
+        LodgingCandidateItem(
+            lodging=LegalLodgingOut.model_validate(row),
+            confidence=round(score, 3),
+        )
+        for row, score in results
+    ]
+    return LodgingCandidatesResponse(items=items)
 
 
 @router.get("/lodgings", response_model=list[LegalLodgingOut])

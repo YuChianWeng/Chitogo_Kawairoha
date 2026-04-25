@@ -29,6 +29,7 @@ class ToolRegistry:
                             Intent.GENERATE_ITINERARY,
                             Intent.REPLAN,
                             Intent.CHAT_GENERAL,
+                            Intent.CHECK_LODGING_LEGAL,
                         }
                     ),
                 ),
@@ -89,6 +90,15 @@ class ToolRegistry:
                     ),
                     handler=self._place_adapter.check_lodging_legal_status,
                     intents=frozenset({Intent.CHECK_LODGING_LEGAL, Intent.CHAT_GENERAL}),
+                ),
+                ToolDefinition(
+                    name="lodging_candidates",
+                    description=(
+                        "Return top-N lodging candidates sorted by name similarity. "
+                        "Use when lodging_legal_check returns no match to offer the user disambiguation options."
+                    ),
+                    handler=self._place_adapter.search_lodging_candidates,
+                    intents=frozenset({Intent.CHECK_LODGING_LEGAL}),
                 ),
             ]
         }

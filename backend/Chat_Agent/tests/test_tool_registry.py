@@ -31,6 +31,9 @@ class StubPlaceAdapter:
     async def check_lodging_legal_status(self, **_: object) -> object:
         return None
 
+    async def search_lodging_candidates(self, **_: object) -> object:
+        return None
+
 
 class StubRouteAdapter:
     async def estimate_route(self, **_: object) -> object:
@@ -50,14 +53,18 @@ class ToolRegistryTests(unittest.TestCase):
         self.assertIn("place_search", tool_names)
         self.assertIn("place_vibe_tags", tool_names)
         self.assertIn("route_estimate", tool_names)
+        self.assertIn("lodging_legal_check", tool_names)
+        self.assertIn("lodging_candidates", tool_names)
         self.assertIsNotNone(self.registry.get_tool("place_search"))
         self.assertIsNotNone(self.registry.get_tool("place_vibe_tags"))
+        self.assertIsNotNone(self.registry.get_tool("lodging_candidates"))
         self.assertIsNone(self.registry.get_tool("missing_tool"))
 
     def test_returns_allowed_tools_for_intent(self) -> None:
         explain_names = [tool.name for tool in self.registry.list_tools_for_intent(Intent.EXPLAIN)]
         chat_names = [tool.name for tool in self.registry.list_tools_for_intent(Intent.CHAT_GENERAL)]
         generate_names = [tool.name for tool in self.registry.list_tools_for_intent(Intent.GENERATE_ITINERARY)]
+        check_legal_names = [tool.name for tool in self.registry.list_tools_for_intent(Intent.CHECK_LODGING_LEGAL)]
 
         self.assertEqual(explain_names, [])
         self.assertIn("place_search", chat_names)
@@ -66,3 +73,5 @@ class ToolRegistryTests(unittest.TestCase):
         self.assertIn("place_recommend", generate_names)
         self.assertIn("place_vibe_tags", generate_names)
         self.assertIn("route_estimate", generate_names)
+        self.assertIn("lodging_legal_check", check_legal_names)
+        self.assertIn("lodging_candidates", check_legal_names)

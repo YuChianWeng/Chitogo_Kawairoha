@@ -119,6 +119,16 @@ class ChatGeneralSlots(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
+class CheckLodgingLegalSlots(BaseModel):
+    """Structured slots for lodging legality check requests."""
+
+    lodging_name: str | None = None
+    phone: str | None = None
+    district: str | None = None
+
+    model_config = ConfigDict(extra="forbid")
+
+
 class ClassifierResult(BaseModel):
     """Normalized classifier output for later orchestration phases."""
 
@@ -126,7 +136,12 @@ class ClassifierResult(BaseModel):
     confidence: float = Field(..., ge=0.0, le=1.0)
     needs_clarification: bool = False
     extracted_slots: (
-        GenerateItinerarySlots | ReplanSlots | ExplainSlots | ChatGeneralSlots | None
+        GenerateItinerarySlots
+        | ReplanSlots
+        | ExplainSlots
+        | CheckLodgingLegalSlots
+        | ChatGeneralSlots
+        | None
     ) = None
     missing_fields: list[str] = Field(default_factory=list)
     source: Literal["rules", "llm"] = "rules"
@@ -141,11 +156,14 @@ def slot_model_for_intent(intent: Intent):
         return ReplanSlots
     if intent == Intent.EXPLAIN:
         return ExplainSlots
+    if intent == Intent.CHECK_LODGING_LEGAL:
+        return CheckLodgingLegalSlots
     return ChatGeneralSlots
 
 
 __all__ = [
     "ChatGeneralSlots",
+    "CheckLodgingLegalSlots",
     "ClassifierResult",
     "ExplainSlots",
     "GenerateItinerarySlots",

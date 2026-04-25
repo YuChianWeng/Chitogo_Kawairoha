@@ -9,6 +9,8 @@ from app.core.config import Settings, get_settings
 from app.tools.models import (
     CategoryItem,
     CategoryListResult,
+    LodgingCandidateItem,
+    LodgingCandidatesResult,
     LodgingLegalCheckResult,
     LodgingLegalInfo,
     PlaceListResult,
@@ -26,6 +28,7 @@ _NEARBY_PATH = "/api/v1/places/nearby"
 _CATEGORIES_PATH = "/api/v1/places/categories"
 _VIBE_TAGS_PATH = "/api/v1/places/vibe-tags"
 _LODGING_CHECK_PATH = "/api/v1/lodgings/check"
+_LODGING_CANDIDATES_PATH = "/api/v1/lodgings/candidates"
 _STATS_PATH = "/api/v1/places/stats"
 
 
@@ -244,6 +247,39 @@ class PlaceToolAdapter:
             )
         except (TypeError, ValueError, ValidationError):
             return LodgingLegalCheckResult(status="error", error="malformed_payload")
+
+    async def search_lodging_candidates(
+        self,
+        *,
+        name: str,
+        limit: int = 3,
+    ) -> LodgingCandidatesResult:
+        """Return top-N lodging candidates by name similarity."""
+        payload, error = await self._request_json(
+            "GET",
+            _LODGING_CANDIDATES_PATH,
+            params=self._compact_dict(name=name, limit=limit),
+        )
+        if error is not None:
+            return LodgingCandidatesResult(status="error", error=error)
+        if not isinstance(payload, dict) or not isinstance(payload.get("items"), list):
+            return LodgingCandidatesResult(status="error", error="malformed_payload")
+        try:
+            items = [
+                LodgingCandidateItem(
+                    name=item["lodging"]["name"],
+                    district=item["lodging"].get("district"),
+                    address=item["lodging"].get("address"),
+                    confidence=float(item["confidence"]),
+                )
+                for item in payload["items"]
+                if isinstance(item, dict) and isinstance(item.get("lodging"), dict)
+            ]
+        except (KeyError, TypeError, ValueError):
+            return LodgingCandidatesResult(status="error", error="malformed_payload")
+        if not items:
+            return LodgingCandidatesResult(status="empty")
+        return LodgingCandidatesResult(status="ok", items=items)
 
     async def get_stats(self) -> PlaceStatsResult:
         payload, error = await self._request_json("GET", _STATS_PATH)
