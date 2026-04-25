@@ -82,7 +82,7 @@ export interface SetupResult {
 export interface CandidateCard {
   venue_id: string | number
   name: string
-  category: 'restaurant' | 'attraction'
+  category: 'restaurant' | 'attraction' | 'go_home'
   primary_type: string | null
   address: string | null
   lat: number
@@ -99,6 +99,7 @@ export interface CandidatesResult {
   fallback_reason: string | null
   restaurant_count: number
   attraction_count: number
+  go_home_reminder?: string | null
 }
 
 export interface SelectResult {
