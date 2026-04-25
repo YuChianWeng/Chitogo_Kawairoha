@@ -13,9 +13,11 @@ class CategoryMappingTests(unittest.TestCase):
         )
 
     def test_types_json_is_used_when_primary_type_is_missing(self):
+        # point_of_interest is excluded from CATEGORY_MAP — it's too generic
+        # (nearly every business has it), so the meaningful type shopping_mall wins.
         self.assertEqual(
             map_category(None, ["point_of_interest", "shopping_mall"]),
-            "attraction",
+            "shopping",
         )
 
     def test_unmapped_values_fall_back_to_other(self):
