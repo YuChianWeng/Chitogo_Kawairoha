@@ -30,3 +30,11 @@ Thumbs.db
 
 # Log
 backend/Chitogo_DataBase/log.txt
+
+# Knowledge Base
+knowledge_base/
+raw/
+wiki/
+
+# settings
+settings.local.json
