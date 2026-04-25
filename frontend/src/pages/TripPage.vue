@@ -237,8 +237,10 @@
                   v-for="c in msg.candidates"
                   :key="c.place_id"
                   class="chat-candidate-card"
+                  :class="{ 'chat-candidate-card--loading': chatSelectingId === c.place_id }"
                   type="button"
-                  @click="onVenueSelected(c.place_id)"
+                  :disabled="chatSelectingId !== null"
+                  @click="onChatVenueSelected(c)"
                 >
                   <div class="chat-card-header">
                     <span class="chat-card-name">{{ c.name }}</span>
@@ -250,8 +252,12 @@
                     <span v-if="c.budget_level">· {{ c.budget_level }}</span>
                   </div>
                   <p v-if="c.why_recommended" class="chat-card-why">{{ c.why_recommended }}</p>
-                  <span class="chat-card-action">去這裡 →</span>
+                  <span class="chat-card-action">
+                    <span v-if="chatSelectingId === c.place_id" class="chat-card-spinner" />
+                    <template v-else>去這裡 →</template>
+                  </span>
                 </button>
+                <div v-if="chatSelectError" class="chat-select-error">{{ chatSelectError }}</div>
               </div>
             </div>
           </div>
@@ -380,6 +386,8 @@ const showGoHomeConfirm = ref(false)
 const messages = ref<ChatMessage[]>([])
 const sendingMessage = ref(false)
 const goHomeDialog = ref<HTMLDialogElement | null>(null)
+const chatSelectingId = ref<string | number | null>(null)
+const chatSelectError = ref<string | null>(null)
 
 const transportMode = ref<TransportMode>('transit')
 const maxMinutesPerLeg = ref(30)
@@ -652,6 +660,41 @@ async function onVenueSelected(venueId: string | number) {
     const error = err as { response?: { data?: { detail?: string } } }
     candidatesError.value = error?.response?.data?.detail ?? '選擇失敗，請重試。'
     selectedVenueName.value = ''
+  }
+}
+
+async function onChatVenueSelected(candidate: ChatCandidate) {
+  if (chatSelectingId.value !== null) return
+  const sessionId = localStorage.getItem('chitogo_session_id')
+  if (!sessionId) return
+
+  chatSelectError.value = null
+  chatSelectingId.value = candidate.place_id
+  selectedVenueName.value = candidate.name
+
+  try {
+    selectResult.value = await selectVenue(sessionId, candidate.place_id, effectiveLat.value, effectiveLng.value)
+    selectedVenueName.value = selectResult.value.venue.name
+    clearSpotCandidates()
+    setActiveNavigation({
+      venue: selectResult.value.venue,
+      transportMode: selectResult.value.navigation.transport_mode,
+      googleMapsUrl: selectResult.value.navigation.google_maps_url,
+      appleMapsUrl: selectResult.value.navigation.apple_maps_url,
+      estimatedTravelMin: selectResult.value.navigation.estimated_travel_min,
+    })
+    tripPhase.value = 'NAVIGATING'
+  } catch (err: unknown) {
+    const error = err as { response?: { data?: { detail?: string } } }
+    const detail = error?.response?.data?.detail ?? ''
+    if (detail.startsWith('state_error:')) {
+      chatSelectError.value = '目前行程正在進行中，請先完成當前景點再切換。'
+    } else {
+      chatSelectError.value = '無法前往該景點，請稍後再試。'
+    }
+    selectedVenueName.value = ''
+  } finally {
+    chatSelectingId.value = null
   }
 }
 
@@ -1422,12 +1465,41 @@ async function dismissBanner() {
   border-radius: 10px;
   text-align: left;
   cursor: pointer;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s, opacity 0.15s;
 
-  &:hover {
+  &:hover:not(:disabled) {
     border-color: var(--accent, #5b8dee);
     box-shadow: 0 2px 8px rgba(91, 141, 238, 0.15);
   }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  &.chat-candidate-card--loading {
+    opacity: 1;
+    border-color: var(--accent, #5b8dee);
+    box-shadow: 0 2px 8px rgba(91, 141, 238, 0.2);
+  }
+}
+
+.chat-card-spinner {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border: 1.5px solid rgba(91, 141, 238, 0.35);
+  border-top-color: var(--accent, #5b8dee);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  vertical-align: middle;
+}
+
+.chat-select-error {
+  font-size: 0.78rem;
+  color: #ef4444;
+  padding: 6px 4px 2px;
+  line-height: 1.4;
 }
 
 .chat-card-header {
