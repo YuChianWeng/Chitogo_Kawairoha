@@ -43,24 +43,24 @@ description: "Task list for 009-agent-demand-understanding-vibe-tags"
 
 **Acceptance target**: Current-turn executable constraints are represented separately from stable session preferences.
 
-- [ ] T012 [P] [US1] Add `backend/Chat_Agent/app/orchestration/turn_frame.py` with `TurnIntentFrame`, `PlaceConstraint`, `TargetReference`, `VibeTagSelection`, `CategoryMixItem`, and `CandidateMatchDecision`
-- [ ] T013 [US1] Add validators ensuring replan frames have operation + valid target reference when required
-- [ ] T014 [US2] Add validation that selected vibe tags are a subset of known tags when a catalog is available
-- [ ] T015 [US4] Add stable-vs-turn-specific merge helpers so `TurnIntentFrame.stable_preference_delta` is the only part eligible for session preference merge
-- [ ] T016 [P] [US1] Add unit tests for valid/invalid TurnIntentFrame combinations
-- [ ] T017 [P] [US2] Add unit tests that unknown LLM-proposed vibe tags are rejected and recorded
+- [x] T012 [P] [US1] Add `backend/Chat_Agent/app/orchestration/turn_frame.py` with `TurnIntentFrame`, `PlaceConstraint`, `TargetReference`, `VibeTagSelection`, `CategoryMixItem`, and `CandidateMatchDecision`
+- [x] T013 [US1] Add validators ensuring replan frames have operation + valid target reference when required
+- [x] T014 [US2] Add validation that selected vibe tags are a subset of known tags when a catalog is available
+- [x] T015 [US4] Add stable-vs-turn-specific merge helpers so `TurnIntentFrame.stable_preference_delta` is the only part eligible for session preference merge
+- [x] T016 [P] [US1] Add unit tests for valid/invalid TurnIntentFrame combinations
+- [x] T017 [P] [US2] Add unit tests that unknown LLM-proposed vibe tags are rejected and recorded
 
 ## Phase 4: Structured Extraction Pipeline
 
 **Acceptance target**: Regex fast path handles obvious cases, while LLM structured extraction handles broader natural phrasing and is validated before execution.
 
-- [ ] T018 [P] [US1] Extend ordinal extraction in `backend/Chat_Agent/app/orchestration/slots.py` for `第二個`, `第二間`, `第二家`, and spacing variants
-- [ ] T019 [US1] Add regex fast-path extraction for simple replan constraints such as `換成公園`, `換成景點`, `換成日式餐廳`
-- [ ] T020 [US1] Add LLM structured TurnIntentFrame extraction prompt in `turn_frame.py`
-- [ ] T021 [US2] Add known-tag selection prompt that receives only Data Service tags and returns selected tags + confidence
-- [ ] T022 [US1] Add validation fallback: low confidence or invalid target reference sets `needs_clarification=True`
-- [ ] T023 [P] [US1] Add tests for "可以把第二個換成景點嗎", "第三站換成公園", "last stop", and ambiguous target references
-- [ ] T024 [P] [US2] Add tests for "浪漫日式餐廳" selecting `romantic` only when catalog contains it
+- [x] T018 [P] [US1] Extend ordinal extraction in `backend/Chat_Agent/app/orchestration/slots.py` for `第二個`, `第二間`, `第二家`, and spacing variants
+- [x] T019 [US1] Add regex fast-path extraction for simple replan constraints such as `換成公園`, `換成景點`, `換成日式餐廳`
+- [x] T020 [US1] Add LLM structured TurnIntentFrame extraction prompt in `turn_frame.py`
+- [x] T021 [US2] Add known-tag selection prompt that receives only Data Service tags and returns selected tags + confidence
+- [x] T022 [US1] Add validation fallback: low confidence or invalid target reference sets `needs_clarification=True`
+- [x] T023 [P] [US1] Add tests for "可以把第二個換成景點嗎", "第三站換成公園", "last stop", and ambiguous target references
+- [x] T024 [P] [US2] Add tests for "浪漫日式餐廳" selecting `romantic` only when catalog contains it
 
 ## Phase 5: Replan Cache Filtering and Refetch
 
