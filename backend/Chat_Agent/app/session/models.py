@@ -285,5 +285,6 @@ class Session(BaseModel):
     pending_venue: TripCandidateCard | None = None
     reachable_cache: ReachableCache | None = None
     last_candidate_ids: list[str | int] = Field(default_factory=list)
+    user_location: dict[str, float] | None = None
 
     model_config = ConfigDict(extra="forbid")

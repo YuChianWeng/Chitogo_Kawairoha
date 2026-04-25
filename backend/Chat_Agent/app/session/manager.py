@@ -210,6 +210,29 @@ class SessionManager:
             mutate=assign_candidates,
         )
 
+    async def update_user_location(self, session_id: str, lat: float, lng: float) -> Session:
+        normalized_session_id = self._normalize_session_id(session_id)
+        now = utc_now()
+
+        def create_session() -> Session:
+            return Session(
+                session_id=normalized_session_id,
+                created_at=now,
+                updated_at=now,
+                last_activity_at=now,
+            )
+
+        def assign_location(session: Session) -> None:
+            session.user_location = {"lat": lat, "lng": lng}
+            session.updated_at = now
+            session.last_activity_at = now
+
+        return await self._store.upsert(
+            normalized_session_id,
+            create_session=create_session,
+            mutate=assign_location,
+        )
+
     def is_expired(self, session: Session, ttl_minutes: int) -> bool:
         return utc_now() - session.last_activity_at > timedelta(minutes=ttl_minutes)
 
