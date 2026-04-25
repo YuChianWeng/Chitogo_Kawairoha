@@ -837,6 +837,7 @@ async def post_select(payload: SelectRequest) -> JSONResponse:
             "google_maps_url": google_url,
             "apple_maps_url": apple_url,
             "estimated_travel_min": est_min,
+            "transport_mode": primary_mode,
         },
         "encouragement_message": encouragement,
     })
