@@ -28,14 +28,15 @@ export interface AccommodationInput {
   budget_tier?: 'budget' | 'mid' | 'luxury'
 }
 
+export interface CandidateTransportInput {
+  mode: TransportMode
+  max_minutes_per_leg: number
+}
+
 export interface TripSetup {
   accommodation: AccommodationInput
   return_time?: string
   return_destination?: string
-  transport: {
-    modes: TransportMode[]
-    max_minutes_per_leg: number
-  }
 }
 
 export interface HotelValidation {

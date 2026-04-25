@@ -1,7 +1,5 @@
 <template>
   <div class="trip-container">
-
-    <!-- Go-home reminder banner (T033) -->
     <div v-if="showGoHomeBanner" class="go-home-banner">
       <p>{{ goHomeMessage }}</p>
       <div class="banner-actions">
@@ -10,7 +8,6 @@
       </div>
     </div>
 
-    <!-- Geolocation fallback (T034) -->
     <div v-if="locationDenied" class="location-fallback">
       <p>需要位置資訊才能推薦附近景點。請選擇你所在的區域：</p>
       <select v-model="selectedDistrict" class="district-select" @change="applyDistrictFallback">
@@ -19,33 +16,91 @@
       </select>
     </div>
 
-    <!-- Main content -->
     <div class="trip-content">
-
-      <!-- SELECTING: Candidate grid -->
-      <template v-if="tripPhase === 'SELECTING'">
+      <template v-if="tripPhase === 'TRANSPORT_PROMPT'">
         <div class="phase-header">
-          <h2>附近推薦</h2>
+          <div>
+            <h2>先確認這一輪的交通</h2>
+            <p class="phase-subtitle">每次選景點前都可以調整交通與每段可接受時間。</p>
+          </div>
           <p class="gene-badge">{{ userGene }}</p>
         </div>
-        <div v-if="loadingCandidates" class="loading-state">
-          <p>搜尋附近景點中…</p>
-        </div>
-        <CandidateGrid
-          v-else-if="candidatesResult"
-          :candidates="candidatesResult.candidates"
-          :partial="candidatesResult.partial"
-          :fallback-reason="candidatesResult.fallback_reason"
-          @select="onVenueSelected"
-          @demand="showDemandModal = true"
-        />
-        <div v-else-if="candidatesError" class="error-state">
-          <p>{{ candidatesError }}</p>
-          <button class="retry-btn" @click="loadCandidates">重試</button>
+
+        <div class="transport-card">
+          <div class="transport-grid">
+            <label
+              v-for="mode in transportOptions"
+              :key="mode.value"
+              class="transport-option"
+              :class="{ active: transportMode === mode.value }"
+            >
+              <input
+                v-model="transportMode"
+                type="radio"
+                name="transport-mode"
+                :value="mode.value"
+              />
+              <span>{{ mode.label }}</span>
+            </label>
+          </div>
+
+          <div class="slider-group">
+            <div class="slider-header">
+              <span>每段最長時間</span>
+              <strong>{{ maxMinutesPerLeg }} 分鐘</strong>
+            </div>
+            <input
+              v-model.number="maxMinutesPerLeg"
+              type="range"
+              min="5"
+              max="120"
+              step="5"
+              class="slider"
+            />
+          </div>
+
+          <p class="transport-hint">這一輪會依你現在選的交通方式重新篩選候選景點。</p>
+          <div v-if="candidatesError" class="inline-error">{{ candidatesError }}</div>
+
+          <button class="primary-btn" :disabled="loadingCandidates" @click="submitTransport">
+            {{ loadingCandidates ? '搜尋中…' : '開始找景點' }}
+          </button>
         </div>
       </template>
 
-      <!-- NAVIGATING: Navigation panel -->
+      <template v-else-if="tripPhase === 'SELECTING'">
+        <div class="phase-header">
+          <div>
+            <h2>附近推薦</h2>
+            <p class="transport-summary">
+              {{ transportSummary }}
+            </p>
+          </div>
+          <div class="phase-actions">
+            <p class="gene-badge">{{ userGene }}</p>
+            <button class="secondary-btn" @click="reopenTransportPrompt">改交通</button>
+          </div>
+        </div>
+
+        <div v-if="loadingCandidates" class="loading-state">
+          <p>搜尋附近景點中…</p>
+        </div>
+        <div v-else-if="candidatesResult">
+          <div v-if="candidatesError" class="inline-error">{{ candidatesError }}</div>
+          <CandidateGrid
+            :candidates="candidatesResult.candidates"
+            :partial="candidatesResult.partial"
+            :fallback-reason="candidatesResult.fallback_reason"
+            @select="onVenueSelected"
+            @demand="showDemandModal = true"
+          />
+        </div>
+        <div v-else class="error-state">
+          <p>{{ candidatesError || '還沒有找到候選景點。' }}</p>
+          <button class="retry-btn" @click="retryCurrentRound">重試</button>
+        </div>
+      </template>
+
       <template v-else-if="tripPhase === 'NAVIGATING' && selectResult">
         <NavigationPanel
           :venue="selectResult.venue"
@@ -55,17 +110,11 @@
         />
       </template>
 
-      <!-- RATING: Rating card -->
       <template v-else-if="tripPhase === 'RATING' && selectResult">
-        <RatingCard
-          :venue="selectResult.venue"
-          @rated="onRated"
-        />
+        <RatingCard :venue="selectResult.venue" @rated="onRated" />
       </template>
-
     </div>
 
-    <!-- Fixed go-home button -->
     <button
       v-if="tripPhase !== 'ENDED'"
       class="go-home"
@@ -74,7 +123,6 @@
       我想回家
     </button>
 
-    <!-- Go-home confirmation dialog (T030) -->
     <dialog ref="goHomeDialog" class="confirm-dialog">
       <p>確定要結束旅程嗎？</p>
       <div class="dialog-actions">
@@ -85,7 +133,6 @@
       </div>
     </dialog>
 
-    <!-- Demand modal (T023) -->
     <DemandModal
       v-if="showDemandModal"
       :lat="currentLat"
@@ -93,25 +140,23 @@
       @close="showDemandModal = false"
       @select="onDemandSelect"
     />
-
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import CandidateGrid from '../components/CandidateGrid.vue'
+import DemandModal from '../components/DemandModal.vue'
 import NavigationPanel from '../components/NavigationPanel.vue'
 import RatingCard from '../components/RatingCard.vue'
-import DemandModal from '../components/DemandModal.vue'
-import { getCandidates, selectVenue, checkGoHome, getSummary } from '../services/api'
-import type { CandidatesResult, SelectResult, RateResult, CandidateCard } from '../types/trip'
+import { checkGoHome, getCandidates, getSummary, selectVenue } from '../services/api'
+import type { CandidateCard, CandidateTransportInput, CandidatesResult, RateResult, SelectResult, TransportMode } from '../types/trip'
 
 const router = useRouter()
 
-type TripPhase = 'SELECTING' | 'NAVIGATING' | 'RATING' | 'ENDED'
+type TripPhase = 'TRANSPORT_PROMPT' | 'SELECTING' | 'NAVIGATING' | 'RATING' | 'ENDED'
 
-// Location
 const currentLat = ref(25.0478)
 const currentLng = ref(121.5170)
 const locationDenied = ref(false)
@@ -132,19 +177,13 @@ const DISTRICT_CENTROIDS = [
   { name: '大同區', lat: 25.0633, lng: 121.5131 },
 ]
 
-function applyDistrictFallback() {
-  const centroid = DISTRICT_CENTROIDS.find(d => d.name === selectedDistrict.value)
-  if (centroid) {
-    currentLat.value = centroid.lat
-    currentLng.value = centroid.lng
-    if (tripPhase.value === 'SELECTING') {
-      loadCandidates()
-    }
-  }
-}
+const transportOptions: Array<{ value: TransportMode; label: string }> = [
+  { value: 'walk', label: '步行' },
+  { value: 'transit', label: '大眾運輸' },
+  { value: 'drive', label: '開車' },
+]
 
-// Trip state
-const tripPhase = ref<TripPhase>('SELECTING')
+const tripPhase = ref<TripPhase>('TRANSPORT_PROMPT')
 const candidatesResult = ref<CandidatesResult | null>(null)
 const selectResult = ref<SelectResult | null>(null)
 const loadingCandidates = ref(false)
@@ -154,7 +193,10 @@ const showDemandModal = ref(false)
 const showGoHomeConfirm = ref(false)
 const goHomeDialog = ref<HTMLDialogElement | null>(null)
 
-// Go-home banner
+const transportMode = ref<TransportMode>('transit')
+const maxMinutesPerLeg = ref(30)
+const lastRequestedTransport = ref<CandidateTransportInput | null>(null)
+
 const showGoHomeBanner = ref(false)
 const goHomeMessage = ref('')
 let suppressUntil = 0
@@ -163,7 +205,13 @@ let locationInterval: ReturnType<typeof setInterval> | null = null
 
 const userGene = localStorage.getItem('chitogo_gene') || ''
 
-onMounted(async () => {
+const transportSummary = computed(() => {
+  const currentTransport = lastRequestedTransport.value
+  if (!currentTransport) return '尚未選擇交通'
+  return `${transportLabel(currentTransport.mode)} · 每段 ${currentTransport.max_minutes_per_leg} 分鐘內`
+})
+
+onMounted(() => {
   requestLocation()
   startGoHomePolling()
 })
@@ -173,29 +221,45 @@ onUnmounted(() => {
   if (locationInterval) clearInterval(locationInterval)
 })
 
-watch(showGoHomeConfirm, (val) => {
-  if (val && goHomeDialog.value) {
+watch(showGoHomeConfirm, value => {
+  if (value && goHomeDialog.value) {
     goHomeDialog.value.showModal()
-  } else if (!val && goHomeDialog.value) {
+  } else if (!value && goHomeDialog.value) {
     goHomeDialog.value.close()
   }
 })
+
+function transportLabel(mode: TransportMode) {
+  return transportOptions.find(option => option.value === mode)?.label || mode
+}
+
+function applyDistrictFallback() {
+  const centroid = DISTRICT_CENTROIDS.find(d => d.name === selectedDistrict.value)
+  if (!centroid) return
+
+  currentLat.value = centroid.lat
+  currentLng.value = centroid.lng
+
+  if (tripPhase.value === 'SELECTING' && lastRequestedTransport.value) {
+    void loadCandidates(lastRequestedTransport.value)
+  }
+}
 
 function requestLocation() {
   if (!navigator.geolocation) {
     locationDenied.value = true
     return
   }
+
   navigator.geolocation.getCurrentPosition(
-    (pos) => {
+    pos => {
       currentLat.value = pos.coords.latitude
       currentLng.value = pos.coords.longitude
-      loadCandidates()
       locationInterval = setInterval(() => {
         navigator.geolocation.getCurrentPosition(
-          (p) => {
-            currentLat.value = p.coords.latitude
-            currentLng.value = p.coords.longitude
+          latest => {
+            currentLat.value = latest.coords.latitude
+            currentLng.value = latest.coords.longitude
           },
           () => {}
         )
@@ -203,25 +267,63 @@ function requestLocation() {
     },
     () => {
       locationDenied.value = true
-      loadCandidates()
     }
   )
 }
 
-async function loadCandidates() {
+function buildTransportInput(): CandidateTransportInput {
+  return {
+    mode: transportMode.value,
+    max_minutes_per_leg: maxMinutesPerLeg.value,
+  }
+}
+
+async function submitTransport() {
+  await loadCandidates(buildTransportInput())
+}
+
+async function loadCandidates(transport?: CandidateTransportInput) {
   const sessionId = localStorage.getItem('chitogo_session_id')
-  if (!sessionId) return
+  const activeTransport = transport || lastRequestedTransport.value
+  if (!sessionId || !activeTransport) return
 
   loadingCandidates.value = true
   candidatesError.value = null
+  candidatesResult.value = null
+
   try {
-    candidatesResult.value = await getCandidates(sessionId, currentLat.value, currentLng.value)
+    candidatesResult.value = await getCandidates(
+      sessionId,
+      currentLat.value,
+      currentLng.value,
+      activeTransport
+    )
+    lastRequestedTransport.value = {
+      mode: activeTransport.mode,
+      max_minutes_per_leg: activeTransport.max_minutes_per_leg,
+    }
+    transportMode.value = activeTransport.mode
+    tripPhase.value = 'SELECTING'
   } catch (err: unknown) {
-    const e = err as { response?: { data?: { detail?: string } } }
-    candidatesError.value = e?.response?.data?.detail ?? '無法載入推薦，請重試。'
+    const error = err as { response?: { data?: { detail?: string } } }
+    candidatesError.value = error?.response?.data?.detail ?? '無法載入推薦，請重試。'
+    tripPhase.value = 'TRANSPORT_PROMPT'
   } finally {
     loadingCandidates.value = false
   }
+}
+
+async function retryCurrentRound() {
+  if (lastRequestedTransport.value) {
+    await loadCandidates(lastRequestedTransport.value)
+    return
+  }
+  tripPhase.value = 'TRANSPORT_PROMPT'
+}
+
+function reopenTransportPrompt() {
+  candidatesError.value = null
+  tripPhase.value = 'TRANSPORT_PROMPT'
 }
 
 async function onVenueSelected(venueId: string | number) {
@@ -229,11 +331,12 @@ async function onVenueSelected(venueId: string | number) {
   if (!sessionId) return
 
   try {
+    candidatesError.value = null
     selectResult.value = await selectVenue(sessionId, venueId, currentLat.value, currentLng.value)
     tripPhase.value = 'NAVIGATING'
   } catch (err: unknown) {
-    const e = err as { response?: { data?: { detail?: string } } }
-    candidatesError.value = e?.response?.data?.detail ?? '選擇失敗，請重試。'
+    const error = err as { response?: { data?: { detail?: string } } }
+    candidatesError.value = error?.response?.data?.detail ?? '選擇失敗，請重試。'
   }
 }
 
@@ -243,8 +346,9 @@ function onArrived() {
 
 async function onRated(_result: RateResult) {
   selectResult.value = null
-  tripPhase.value = 'SELECTING'
-  await loadCandidates()
+  candidatesResult.value = null
+  candidatesError.value = null
+  tripPhase.value = 'TRANSPORT_PROMPT'
 }
 
 async function onDemandSelect(card: CandidateCard) {
@@ -270,7 +374,6 @@ async function triggerSummary() {
   }
 }
 
-// Go-home polling (T033)
 function startGoHomePolling() {
   goHomeInterval = setInterval(async () => {
     if (tripPhase.value === 'ENDED') return
@@ -286,7 +389,7 @@ function startGoHomePolling() {
         showGoHomeBanner.value = true
       }
     } catch {
-      // Silently ignore polling errors
+      // Ignore polling errors during the trip loop.
     }
   }, 60000)
 }
@@ -294,12 +397,6 @@ function startGoHomePolling() {
 function dismissBanner() {
   showGoHomeBanner.value = false
   suppressUntil = Date.now() + 600_000
-}
-
-// Banner go-home button
-async function goHomeFromBanner() {
-  showGoHomeBanner.value = false
-  await triggerSummary()
 }
 </script>
 
@@ -387,7 +484,8 @@ async function goHomeFromBanner() {
 .phase-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  gap: 12px;
   margin-bottom: 16px;
 }
 
@@ -395,6 +493,19 @@ async function goHomeFromBanner() {
   font-size: 22px;
   font-weight: 700;
   color: #1e293b;
+  margin-bottom: 4px;
+}
+
+.phase-subtitle {
+  font-size: 14px;
+  color: #64748b;
+}
+
+.phase-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
 }
 
 .gene-badge {
@@ -404,12 +515,118 @@ async function goHomeFromBanner() {
   border-radius: 20px;
   font-size: 13px;
   font-weight: 500;
+  white-space: nowrap;
 }
 
-.loading-state, .error-state {
+.transport-card {
+  background: white;
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 12px 32px rgba(77, 104, 191, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.transport-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.transport-option {
+  border: 1.5px solid #dbe4ff;
+  border-radius: 14px;
+  padding: 14px 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  color: #334155;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.transport-option input {
+  margin: 0;
+}
+
+.transport-option.active {
+  border-color: #4d68bf;
+  background: #eef2ff;
+  color: #31468f;
+}
+
+.slider-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.slider-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #334155;
+}
+
+.slider {
+  width: 100%;
+}
+
+.transport-hint,
+.transport-summary {
+  font-size: 14px;
+  color: #64748b;
+}
+
+.primary-btn,
+.secondary-btn,
+.retry-btn {
+  border: none;
+  border-radius: 12px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.primary-btn {
+  width: 100%;
+  padding: 14px 18px;
+  background: #4d68bf;
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.primary-btn:disabled {
+  background: #cbd5e1;
+  cursor: not-allowed;
+}
+
+.secondary-btn {
+  padding: 9px 14px;
+  background: white;
+  color: #4d68bf;
+  border: 1.5px solid #c7d2fe;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.loading-state,
+.error-state {
   text-align: center;
   padding: 40px 20px;
   color: #64748b;
+}
+
+.inline-error {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
 }
 
 .retry-btn {
@@ -417,11 +634,7 @@ async function goHomeFromBanner() {
   padding: 10px 24px;
   background: #4d68bf;
   color: white;
-  border: none;
-  border-radius: 10px;
-  font-family: inherit;
   font-size: 14px;
-  cursor: pointer;
 }
 
 .go-home {
@@ -498,5 +711,22 @@ async function goHomeFromBanner() {
 .dialog-btn.confirm:disabled {
   background: #fca5a5;
   cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .phase-header {
+    flex-direction: column;
+  }
+
+  .phase-actions {
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .transport-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
