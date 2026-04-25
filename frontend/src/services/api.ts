@@ -132,6 +132,13 @@ export async function checkGoHome(
   return data
 }
 
+export async function snoozeGoHome(sessionId: string): Promise<{ snoozed: boolean }> {
+  const { data } = await client.post<{ snoozed: boolean }>('/trip/snooze', {
+    session_id: sessionId,
+  })
+  return data
+}
+
 export async function getSummary(sessionId: string): Promise<JourneySummary> {
   const { data } = await client.get<JourneySummary>('/trip/summary', {
     params: { session_id: sessionId },
