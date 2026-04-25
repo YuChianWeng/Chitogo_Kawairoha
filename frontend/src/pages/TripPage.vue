@@ -17,7 +17,9 @@
               <div class="hero-topline">
                 <span class="message-label">Chitogo 景點小幫手</span>
                 <span class="gene-badge">{{ userGene || '旅人模式' }}</span>
-                <span class="time-badge">現在時間 {{ currentTime }}</span>
+                <span class="time-badge" :class="{ 'time-badge--sim': isSimulating }">
+                  {{ isSimulating ? '⏱ ' : '' }}{{ currentTime }}
+                </span>
               </div>
               <h1>這一輪想怎麼玩？</h1>
               <p>
@@ -157,7 +159,6 @@
                 <CandidateGrid
                   :candidates="candidatesResult.candidates"
                   @select="onVenueSelected"
-                  @demand="showDemandModal = true"
                 />
               </div>
               <div v-else class="message-surface status-surface status-surface--error">
@@ -213,6 +214,27 @@
           </div>
         </template>
 
+        <template v-for="msg in messages" :key="msg.id">
+          <div v-if="msg.role === 'user'" class="message-row user">
+            <div class="message-bubble user">{{ msg.text }}</div>
+          </div>
+          <div v-else class="message-row assistant">
+            <div class="assistant-avatar">旅</div>
+            <div class="message-stack">
+              <div class="message-bubble assistant">
+                <template v-if="msg.pending">
+                  <div class="loading-dots">
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                  </div>
+                </template>
+                <p v-else>{{ msg.text }}</p>
+              </div>
+            </div>
+          </div>
+        </template>
+
         <div v-if="tripPhase !== 'ENDED'" class="global-actions">
           <button class="go-home-inline" type="button" @click="showGoHomeConfirm = true">
             我想回家
@@ -231,14 +253,14 @@
       </div>
     </dialog>
 
-    <DemandModal
-      v-if="showDemandModal"
-      :lat="currentLat"
-      :lng="currentLng"
-      :current-candidates="candidatesResult?.candidates ?? []"
-      @close="showDemandModal = false"
-      @select="onDemandSelect"
+    <ChatComposer
+      v-if="tripPhase !== 'ENDED'"
+      :sending="sendingMessage"
+      @submit="handleComposerSubmit"
     />
+
+    <DemoTimeTweaker />
+    <DemoLocationTweaker />
   </div>
 </template>
 
@@ -246,10 +268,15 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import CandidateGrid from '../components/CandidateGrid.vue'
-import DemandModal from '../components/DemandModal.vue'
+import ChatComposer from '../components/ChatComposer.vue'
+import DemoLocationTweaker from '../components/DemoLocationTweaker.vue'
+import DemoTimeTweaker from '../components/DemoTimeTweaker.vue'
 import NavigationPanel from '../components/NavigationPanel.vue'
 import RatingCard from '../components/RatingCard.vue'
-import { checkGoHome, getCandidates, getSummary, selectVenue, snoozeGoHome } from '../services/api'
+import { useSimLocation } from '../composables/useSimLocation'
+import { useSimTime } from '../composables/useSimTime'
+import { checkGoHome, getCandidates, getSummary, selectVenue, sendMessage, snoozeGoHome } from '../services/api'
+import type { ChatMessage } from '../types/chat'
 
 const LOADING_STEPS = [
   '找到你附近的地圖…',
@@ -259,7 +286,6 @@ const LOADING_STEPS = [
   '快好了，再等一下…',
 ]
 import type {
-  CandidateCard,
   CandidateTransportInput,
   CandidatesResult,
   RateResult,
@@ -327,8 +353,9 @@ const loadingStepIndex = ref(0)
 let loadingStepInterval: ReturnType<typeof setInterval> | null = null
 const candidatesError = ref<string | null>(null)
 const summaryLoading = ref(false)
-const showDemandModal = ref(false)
 const showGoHomeConfirm = ref(false)
+const messages = ref<ChatMessage[]>([])
+const sendingMessage = ref(false)
 const goHomeDialog = ref<HTMLDialogElement | null>(null)
 
 const transportMode = ref<TransportMode>('transit')
@@ -337,7 +364,12 @@ const lastRequestedTransport = ref<CandidateTransportInput | null>(null)
 const selectedVenueName = ref('')
 const lastRoundFeedback = ref<LastRoundFeedback | null>(null)
 
-const currentTime = ref(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
+const { isSimulating, simTimeHHMM, effectiveDate, formatTime } = useSimTime()
+const currentTime = computed(() => formatTime(effectiveDate.value))
+
+const { isSimLocating, simLat, simLng, simLabel } = useSimLocation()
+const effectiveLat = computed(() => isSimLocating.value && simLat.value !== null ? simLat.value : currentLat.value)
+const effectiveLng = computed(() => isSimLocating.value && simLng.value !== null ? simLng.value : currentLng.value)
 let timeInterval: ReturnType<typeof setInterval> | null = null
 
 const showGoHomeBanner = ref(false)
@@ -398,9 +430,8 @@ const lastRoundFeedbackMessage = computed(() => {
 onMounted(() => {
   requestLocation()
   startGoHomePolling()
-  timeInterval = setInterval(() => {
-    currentTime.value = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-  }, 60000)
+  // Tick every minute so effectiveDate refreshes when not simulating
+  timeInterval = setInterval(() => { /* triggers reactivity via effectiveDate */ }, 60000)
 })
 
 onUnmounted(() => {
@@ -435,7 +466,7 @@ watch(loadingCandidates, loading => {
 })
 
 watch(
-  [currentLat, currentLng, locationSource, selectedDistrict],
+  [currentLat, currentLng, locationSource, selectedDistrict, isSimLocating, effectiveLat, effectiveLng],
   () => {
     syncMapLocation()
   },
@@ -492,17 +523,19 @@ function requestLocation() {
 }
 
 function syncMapLocation() {
-  const label = locationSource.value === 'gps'
-    ? 'GPS 目前位置'
-    : locationSource.value === 'fallback'
-      ? `${selectedDistrict.value || '手動起點'}（手動設定）`
-      : locationDenied.value
-        ? '起點（預設）'
-        : '定位中'
+  const label = isSimLocating.value && simLabel.value
+    ? `📍 模擬位置：${simLabel.value}`
+    : locationSource.value === 'gps'
+      ? 'GPS 目前位置'
+      : locationSource.value === 'fallback'
+        ? `${selectedDistrict.value || '手動起點'}（手動設定）`
+        : locationDenied.value
+          ? '起點（預設）'
+          : '定位中'
 
   setCurrentLocation({
-    lat: currentLat.value,
-    lng: currentLng.value,
+    lat: effectiveLat.value,
+    lng: effectiveLng.value,
     label,
     source: locationSource.value,
   })
@@ -540,9 +573,10 @@ async function loadCandidates(transport?: CandidateTransportInput) {
   try {
     candidatesResult.value = await getCandidates(
       sessionId,
-      currentLat.value,
-      currentLng.value,
+      effectiveLat.value,
+      effectiveLng.value,
       activeTransport,
+      simTimeHHMM.value ?? undefined,
     )
     setSpotCandidates(candidatesResult.value.candidates)
     tripPhase.value = 'SELECTING'
@@ -580,7 +614,7 @@ async function onVenueSelected(venueId: string | number) {
 
   try {
     candidatesError.value = null
-    selectResult.value = await selectVenue(sessionId, venueId, currentLat.value, currentLng.value)
+    selectResult.value = await selectVenue(sessionId, venueId, effectiveLat.value, effectiveLng.value)
     selectedVenueName.value = selectResult.value.venue.name
     clearSpotCandidates()
     setActiveNavigation({
@@ -622,10 +656,35 @@ function onRated(payload: RatingPayload) {
   tripPhase.value = 'TRANSPORT_PROMPT'
 }
 
-async function onDemandSelect(card: CandidateCard) {
-  showDemandModal.value = false
-  selectedVenueName.value = card.name
-  await onVenueSelected(card.venue_id)
+async function handleComposerSubmit(text: string) {
+  const sessionId = localStorage.getItem('chitogo_session_id')
+  if (!sessionId) return
+
+  const userMsgId = crypto.randomUUID()
+  const pendingId = crypto.randomUUID()
+
+  messages.value = [...messages.value, { id: userMsgId, role: 'user', text }]
+  messages.value = [...messages.value, { id: pendingId, role: 'assistant', text: '', pending: true }]
+  sendingMessage.value = true
+
+  try {
+    const res = await sendMessage({
+      session_id: sessionId,
+      message: text,
+      user_context: { lat: effectiveLat.value, lng: effectiveLng.value },
+    })
+    messages.value = messages.value.map(m =>
+      m.id === pendingId ? { ...m, text: res.message, pending: false } : m
+    )
+  } catch {
+    messages.value = messages.value.map(m =>
+      m.id === pendingId
+        ? { ...m, text: '抱歉，無法處理你的訊息，請再試一次。', pending: false }
+        : m
+    )
+  } finally {
+    sendingMessage.value = false
+  }
 }
 
 function closeGoHomeDialog() {
@@ -655,7 +714,7 @@ function startGoHomePolling() {
     if (!sessionId) return
 
     try {
-      const status = await checkGoHome(sessionId, currentLat.value, currentLng.value)
+      const status = await checkGoHome(sessionId, effectiveLat.value, effectiveLng.value, simTimeHHMM.value ?? undefined)
       if (status.remind) {
         goHomeMessage.value = status.message || '該回家啦！'
         showGoHomeBanner.value = true
@@ -738,7 +797,7 @@ async function dismissBanner() {
 
 .trip-content {
   flex: 1;
-  padding: 28px 20px 120px;
+  padding: 28px 20px 140px;
   max-width: 760px;
   margin: 0 auto;
   width: 100%;
@@ -870,6 +929,12 @@ async function dismissBanner() {
   border-radius: 999px;
   font-size: 13px;
   font-weight: 600;
+}
+
+.time-badge--sim {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fcd34d;
 }
 
 .warning-bubble {
@@ -1268,7 +1333,7 @@ async function dismissBanner() {
 
 @media (max-width: 640px) {
   .trip-content {
-    padding: 20px 14px 120px;
+    padding: 20px 14px 140px;
   }
 
   .message-row {

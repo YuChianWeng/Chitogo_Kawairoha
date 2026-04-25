@@ -66,6 +66,9 @@ async function handleSubmit() {
     })
 
     if (result.next_step === 'trip') {
+      if (returnTime.value) {
+        localStorage.setItem(`chitogo_return_time_${sessionId}`, returnTime.value)
+      }
       router.push('/trip')
     }
   } catch (err: unknown) {

@@ -64,7 +64,7 @@
         <div class="divider-handle">
           <div style="position: relative; width: 32px; height: 32px;">
             <img src="/images/116_56.svg" alt="" style="position:absolute;top:0;left:0;width:100%;height:100%;">
-            <img src="/images/116_47.svg" alt="" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:24px;height:24px;">
+            <img src="/images/116_47.svg" alt="" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:20px;height:20px;">
           </div>
         </div>
       </div>
