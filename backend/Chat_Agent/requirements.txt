@@ -10,3 +10,5 @@ pytest-asyncio==0.23.7
 pytest-cov==5.0.0
 respx==0.21.1
 loguru==0.7.2
+rapidfuzz>=3.0
+odfpy>=1.4

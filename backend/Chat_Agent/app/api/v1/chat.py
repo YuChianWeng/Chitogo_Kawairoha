@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import uuid
 
 from fastapi import APIRouter, Depends, Request
 from fastapi import Query
@@ -16,7 +17,7 @@ from app.chat.schemas import (
 )
 from app.chat.trace_store import TraceStore
 from app.core.logging import log_event
-from app.session.manager import InvalidSessionIdError
+from app.session.manager import InvalidSessionIdError, session_manager
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 logger = logging.getLogger(__name__)
@@ -28,6 +29,14 @@ def get_message_handler(request: Request) -> MessageHandler:
 
 def get_trace_store(request: Request) -> TraceStore:
     return request.app.state.trace_store
+
+
+@router.post("/sessions")
+async def create_session() -> JSONResponse:
+    """Create a new session and return its ID."""
+    session_id = str(uuid.uuid4())
+    await session_manager.get_or_create(session_id)
+    return JSONResponse({"session_id": session_id})
 
 
 @router.post("/message", response_model=ChatMessageResponse)

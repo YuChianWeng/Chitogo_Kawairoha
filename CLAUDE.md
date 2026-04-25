@@ -1,6 +1,6 @@
 # ChitoGo (Taipei Trip AI Assistant) — Development Guidelines
 
-Last updated: 2026-04-22
+Last updated: 2026-04-25
 
 ## What This Project Is
 
@@ -120,3 +120,10 @@ frontend/
 - Branch naming: `NNN-feature-description` (e.g. `005-fix-district-extraction`)
 - Commit style: imperative short description (no conventional-commit prefix enforced)
 - PRs merged from feature branches into `main`
+
+## Active Technologies
+- Python 3.11 (backend), TypeScript 5.x (frontend) + FastAPI 0.111, Pydantic v2, httpx, Gemini 2.5 Flash / Claude Sonnet 4.6, Vue 3 + Vite 5, vue-router 4 (011-chitogo-prd-wizard)
+- In-memory session store (existing `InMemorySessionStore`) extended with PRD fields; PostgreSQL via Data Service (places + legal lodging); ODS hotel list loaded at Chat Agent startup into memory (011-chitogo-prd-wizard)
+
+## Recent Changes
+- 011-chitogo-prd-wizard: Added Python 3.11 (backend), TypeScript 5.x (frontend) + FastAPI 0.111, Pydantic v2, httpx, Gemini 2.5 Flash / Claude Sonnet 4.6, Vue 3 + Vite 5, vue-router 4
