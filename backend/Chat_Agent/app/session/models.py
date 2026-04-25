@@ -210,7 +210,7 @@ class AccommodationConfig(BaseModel):
 
 
 class TransportConfig(BaseModel):
-    modes: list[str] = Field(default_factory=list)
+    mode: Literal["walk", "transit", "drive"] = "transit"
     max_minutes_per_leg: int = Field(30, ge=1, le=120)
 
     model_config = ConfigDict(extra="forbid")

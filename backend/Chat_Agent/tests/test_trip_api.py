@@ -85,7 +85,7 @@ class TripApiTests(unittest.IsolatedAsyncioTestCase):
                 {
                     "session_id": session_id,
                     "accommodation": {"booked": False, "district": "大安區"},
-                    "transport": {"modes": ["transit"], "max_minutes_per_leg": 30},
+                    "transport": {"mode": "transit", "max_minutes_per_leg": 30},
                 }
             )
 
@@ -123,7 +123,7 @@ class TripApiTests(unittest.IsolatedAsyncioTestCase):
             )
 
         self.assertEqual(exc_info.exception.status_code, 400)
-        self.assertEqual(exc_info.exception.detail, "candidates_error:empty_transport_modes")
+        self.assertEqual(exc_info.exception.detail, "candidates_error:missing_transport_mode")
 
     async def test_latest_candidate_transport_is_used_for_navigation(self) -> None:
         session_id = str(uuid4())
@@ -140,7 +140,7 @@ class TripApiTests(unittest.IsolatedAsyncioTestCase):
                 why_recommended="近",
             )
         ]
-        seen_transports: list[tuple[list[str], int]] = []
+        seen_transports: list[tuple[str, int]] = []
 
         async def fake_pick_candidates(
             session: Session,
@@ -149,14 +149,14 @@ class TripApiTests(unittest.IsolatedAsyncioTestCase):
             *,
             transport_config: TransportConfig,
         ) -> tuple[list[TripCandidateCard], bool, str | None]:
-            seen_transports.append((list(transport_config.modes), transport_config.max_minutes_per_leg))
+            seen_transports.append((transport_config.mode, transport_config.max_minutes_per_leg))
             session.last_candidate_ids = [card.venue_id for card in cards]
             return cards, False, None
 
         with patch("app.api.v1.trip.picker.pick_candidates", side_effect=fake_pick_candidates):
             first_request = build_request(
                 "/api/v1/trip/candidates",
-                f"session_id={session_id}&lat=25.04&lng=121.5&modes=walk&max_minutes_per_leg=10",
+                f"session_id={session_id}&lat=25.04&lng=121.5&mode=walk&max_minutes_per_leg=10",
             )
             await get_candidates(
                 request=first_request,
@@ -168,7 +168,7 @@ class TripApiTests(unittest.IsolatedAsyncioTestCase):
 
             second_request = build_request(
                 "/api/v1/trip/candidates",
-                f"session_id={session_id}&lat=25.04&lng=121.5&modes=drive&max_minutes_per_leg=25",
+                f"session_id={session_id}&lat=25.04&lng=121.5&mode=drive&max_minutes_per_leg=25",
             )
             await get_candidates(
                 request=second_request,
@@ -179,9 +179,9 @@ class TripApiTests(unittest.IsolatedAsyncioTestCase):
             )
 
         stored = await session_store.get(session_id)
-        self.assertEqual(seen_transports, [(["walk"], 10), (["drive"], 25)])
+        self.assertEqual(seen_transports, [("walk", 10), ("drive", 25)])
         self.assertIsNotNone(stored)
-        self.assertEqual(stored.last_transport_config.model_dump(), TransportConfig(modes=["drive"], max_minutes_per_leg=25).model_dump())
+        self.assertEqual(stored.last_transport_config.model_dump(), TransportConfig(mode="drive", max_minutes_per_leg=25).model_dump())
 
         with patch(
             "app.api.v1.trip.place_tool_adapter.batch_get_places",
@@ -204,7 +204,7 @@ class TripApiTests(unittest.IsolatedAsyncioTestCase):
         session = Session(
             session_id=session_id,
             flow_state=FlowState.RECOMMENDING,
-            last_transport_config=TransportConfig(modes=["walk"], max_minutes_per_leg=15),
+            last_transport_config=TransportConfig(mode="walk", max_minutes_per_leg=15),
         )
         await session_store.set(session)
 
@@ -246,7 +246,7 @@ class TripApiTests(unittest.IsolatedAsyncioTestCase):
 
         body = json.loads(response.body)
         self.assertEqual(body["alternatives"][0]["venue_id"], 202)
-        self.assertEqual(observed[0].model_dump(), TransportConfig(modes=["walk"], max_minutes_per_leg=15).model_dump())
+        self.assertEqual(observed[0].model_dump(), TransportConfig(mode="walk", max_minutes_per_leg=15).model_dump())
 
 
 class CandidatePickerDemandTests(unittest.IsolatedAsyncioTestCase):
@@ -281,7 +281,7 @@ class CandidatePickerDemandTests(unittest.IsolatedAsyncioTestCase):
                 "找咖啡",
                 25.04,
                 121.5,
-                transport_config=TransportConfig(modes=["walk"], max_minutes_per_leg=15),
+                transport_config=TransportConfig(mode="walk", max_minutes_per_leg=15),
             )
 
         self.assertEqual(fallback_reason, "only 1 alternatives found within range")

@@ -56,7 +56,7 @@ export async function getCandidates(
   params.set('session_id', sessionId)
   params.set('lat', String(lat))
   params.set('lng', String(lng))
-  transport.modes.forEach(mode => params.append('modes', mode))
+  params.set('mode', transport.mode)
   params.set('max_minutes_per_leg', String(transport.max_minutes_per_leg))
 
   const { data } = await client.get<CandidatesResult>('/trip/candidates', {

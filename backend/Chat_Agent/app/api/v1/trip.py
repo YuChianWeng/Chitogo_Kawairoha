@@ -70,12 +70,6 @@ class AccommodationInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
-class TransportInput(BaseModel):
-    modes: list[str]
-    max_minutes_per_leg: int = Field(30, ge=1, le=120)
-    model_config = ConfigDict(extra="forbid")
-
-
 class SetupRequest(BaseModel):
     session_id: str
     accommodation: AccommodationInput
@@ -160,33 +154,35 @@ def _card_to_dict(card: TripCandidateCard) -> dict[str, Any]:
     }
 
 
-def _normalize_modes(modes: list[str], *, error_prefix: str) -> list[str]:
-    normalized: list[str] = []
-    for mode in modes:
-        if mode not in _VALID_MODES:
-            raise HTTPException(
-                status_code=400,
-                detail=f"{error_prefix}:invalid_transport_mode:{mode}",
-            )
-        if mode not in normalized:
-            normalized.append(mode)
-
-    if not normalized:
+def _normalize_mode(mode: str | None, *, error_prefix: str) -> str:
+    if not mode:
         raise HTTPException(
             status_code=400,
-            detail=f"{error_prefix}:empty_transport_modes",
+            detail=f"{error_prefix}:missing_transport_mode",
         )
-
-    return normalized
+    if mode not in _VALID_MODES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"{error_prefix}:invalid_transport_mode:{mode}",
+        )
+    return mode
 
 
 def _transport_from_query(request: Request, *, max_minutes_per_leg: int) -> TransportConfig:
-    modes = request.query_params.getlist("modes")
-    if not modes:
-        modes = request.query_params.getlist("modes[]")
+    mode = request.query_params.get("mode")
+    legacy_modes = request.query_params.getlist("modes")
+    if not legacy_modes:
+        legacy_modes = request.query_params.getlist("modes[]")
+    if mode is None and legacy_modes:
+        if len(legacy_modes) > 1:
+            raise HTTPException(
+                status_code=400,
+                detail="candidates_error:multiple_transport_modes_not_allowed",
+            )
+        mode = legacy_modes[0]
 
     return TransportConfig(
-        modes=_normalize_modes(modes, error_prefix="candidates_error"),
+        mode=_normalize_mode(mode, error_prefix="candidates_error"),
         max_minutes_per_leg=max_minutes_per_leg,
     )
 
@@ -399,7 +395,7 @@ async def post_select(payload: SelectRequest) -> JSONResponse:
     candidate_ids = [str(cid) for cid in session.last_candidate_ids]
     if venue_id_str not in candidate_ids:
         raise HTTPException(status_code=400, detail="select_error:venue_not_in_candidates")
-    if session.last_transport_config is None or not session.last_transport_config.modes:
+    if session.last_transport_config is None:
         raise HTTPException(status_code=400, detail="select_error:missing_transport_context")
 
     # Find the candidate from the reachable cache (rebuild minimal card from last known data)
@@ -441,7 +437,7 @@ async def post_select(payload: SelectRequest) -> JSONResponse:
     session.pending_venue = card
 
     # Build navigation URLs
-    primary_mode = session.last_transport_config.modes[0]
+    primary_mode = session.last_transport_config.mode
     google_mode = {"walk": "walking", "transit": "transit", "drive": "driving"}.get(primary_mode, "transit")
     google_url = f"https://maps.google.com/?daddr={card.lat},{card.lng}&travelmode={google_mode}"
     apple_url = f"maps://maps.apple.com/?daddr={card.lat},{card.lng}"

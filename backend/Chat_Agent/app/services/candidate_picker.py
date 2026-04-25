@@ -42,8 +42,7 @@ async def pick_candidates(
 ) -> tuple[list[TripCandidateCard], bool, str | None]:
     """Return (cards, partial, fallback_reason) — exactly 6 cards (3 rest + 3 attr) if possible."""
     max_minutes = transport_config.max_minutes_per_leg
-    modes = transport_config.modes or ["transit"]
-    primary_mode = modes[0] if modes else "transit"
+    primary_mode = transport_config.mode
 
     # Fetch venues from Data Service
     try:
@@ -155,8 +154,7 @@ async def demand_mode(
 ) -> tuple[list[TripCandidateCard], str | None]:
     """Return up to 3 alternative venues matching the demand text."""
     max_minutes = transport_config.max_minutes_per_leg
-    modes = transport_config.modes or ["transit"]
-    primary_mode = modes[0] if modes else "transit"
+    primary_mode = transport_config.mode
 
     try:
         result = await place_tool_adapter.search_places(keyword=demand_text, limit=20)

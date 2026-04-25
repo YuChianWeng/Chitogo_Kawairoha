@@ -29,7 +29,7 @@ export interface AccommodationInput {
 }
 
 export interface CandidateTransportInput {
-  modes: TransportMode[]
+  mode: TransportMode
   max_minutes_per_leg: number
 }
 

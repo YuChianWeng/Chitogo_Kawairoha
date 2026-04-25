@@ -32,11 +32,12 @@
               v-for="mode in transportOptions"
               :key="mode.value"
               class="transport-option"
-              :class="{ active: transportModes.includes(mode.value) }"
+              :class="{ active: transportMode === mode.value }"
             >
               <input
-                v-model="transportModes"
-                type="checkbox"
+                v-model="transportMode"
+                type="radio"
+                name="transport-mode"
                 :value="mode.value"
               />
               <span>{{ mode.label }}</span>
@@ -192,7 +193,7 @@ const showDemandModal = ref(false)
 const showGoHomeConfirm = ref(false)
 const goHomeDialog = ref<HTMLDialogElement | null>(null)
 
-const transportModes = ref<TransportMode[]>(['transit'])
+const transportMode = ref<TransportMode>('transit')
 const maxMinutesPerLeg = ref(30)
 const lastRequestedTransport = ref<CandidateTransportInput | null>(null)
 
@@ -207,8 +208,7 @@ const userGene = localStorage.getItem('chitogo_gene') || ''
 const transportSummary = computed(() => {
   const currentTransport = lastRequestedTransport.value
   if (!currentTransport) return '尚未選擇交通'
-  const labels = currentTransport.modes.map(mode => transportLabel(mode)).join(' / ')
-  return `${labels} · 每段 ${currentTransport.max_minutes_per_leg} 分鐘內`
+  return `${transportLabel(currentTransport.mode)} · 每段 ${currentTransport.max_minutes_per_leg} 分鐘內`
 })
 
 onMounted(() => {
@@ -273,17 +273,12 @@ function requestLocation() {
 
 function buildTransportInput(): CandidateTransportInput {
   return {
-    modes: [...transportModes.value],
+    mode: transportMode.value,
     max_minutes_per_leg: maxMinutesPerLeg.value,
   }
 }
 
 async function submitTransport() {
-  if (!transportModes.value.length) {
-    candidatesError.value = '請至少選擇一種交通方式'
-    return
-  }
-
   await loadCandidates(buildTransportInput())
 }
 
@@ -304,9 +299,10 @@ async function loadCandidates(transport?: CandidateTransportInput) {
       activeTransport
     )
     lastRequestedTransport.value = {
-      modes: [...activeTransport.modes],
+      mode: activeTransport.mode,
       max_minutes_per_leg: activeTransport.max_minutes_per_leg,
     }
+    transportMode.value = activeTransport.mode
     tripPhase.value = 'SELECTING'
   } catch (err: unknown) {
     const error = err as { response?: { data?: { detail?: string } } }
