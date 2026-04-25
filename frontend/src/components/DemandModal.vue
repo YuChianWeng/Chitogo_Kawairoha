@@ -12,7 +12,7 @@
           placeholder="例如：我想找安靜一點、適合散步拍照的地方"
           rows="3"
         ></textarea>
-        <button class="search-btn" type="button" :disabled="loading || !inputText.trim()" @click="doSearch">
+        <button class="search-btn" type="button" :disabled="loading" @click="doSearch">
           {{ loading ? '整理中…' : '幫我重新推薦' }}
         </button>
         <div v-if="errorText" class="error">{{ errorText }}</div>
@@ -57,9 +57,10 @@ const props = defineProps<{
   lng: number
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   close: []
   select: [card: CandidateCard]
+  refresh: []
 }>()
 
 const inputText = ref('')
@@ -71,7 +72,12 @@ const searched = ref(false)
 
 async function doSearch() {
   const sessionId = localStorage.getItem('chitogo_session_id')
-  if (!sessionId || !inputText.value.trim()) return
+  if (!sessionId) return
+
+  if (!inputText.value.trim()) {
+    emit('refresh')
+    return
+  }
 
   loading.value = true
   errorText.value = ''
