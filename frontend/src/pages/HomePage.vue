@@ -1,6 +1,6 @@
 <template>
   <div class="app-container">
-    <!-- Sidebar -->
+    <!-- Sidebar (desktop only) -->
     <aside class="sidebar">
       <div class="logo-container">
         <img src="/images/111_200.svg" alt="Logo" class="logo-icon">
@@ -24,7 +24,7 @@
     <!-- Agent tab: chat + map -->
     <div v-if="activeTab === 'agent'" class="main-content" ref="mainContentEl">
       <!-- Chat Area -->
-      <main class="chat-area" :style="{ width: chatWidth + 'px' }">
+      <main class="chat-area" :style="isMobile ? {} : { width: chatWidth + 'px' }">
         <header class="chat-header">
           <h2 class="chat-title">𨑨迌迌 <span class="chat-title-accent">Chito-Go</span></h2>
           <div class="info-bar">
@@ -43,13 +43,18 @@
           </div>
         </header>
 
-        <div class="chat-content">
-          <RouterView />
+        <div class="chat-content" :class="{ 'chat-content--map-open': isMobile && isMobileMapOpen }">
+          <RouterView v-show="!isMobile || !isMobileMapOpen" />
+          <!-- Mobile map view (inline, toggled) -->
+          <div v-if="isMobile && isMobileMapOpen" class="mobile-map-view">
+            <MapPanel />
+          </div>
         </div>
       </main>
 
-      <!-- Resizable Divider -->
+      <!-- Resizable Divider (desktop only) -->
       <div
+        v-if="!isMobile"
         class="divider"
         role="separator"
         aria-orientation="vertical"
@@ -69,8 +74,20 @@
         </div>
       </div>
 
-      <!-- Map -->
-      <MapPanel />
+      <!-- Map (desktop only) -->
+      <MapPanel v-if="!isMobile" />
+
+      <!-- Mobile map toggle button -->
+      <button
+        v-if="isMobile"
+        class="map-toggle-btn"
+        type="button"
+        :aria-label="isMobileMapOpen ? '返回對話' : '開啟地圖'"
+        @click="isMobileMapOpen = !isMobileMapOpen"
+      >
+        <span class="map-toggle-icon">{{ isMobileMapOpen ? '💬' : '🗺️' }}</span>
+        <span class="map-toggle-label">{{ isMobileMapOpen ? '對話' : '地圖' }}</span>
+      </button>
     </div>
 
     <!-- Placeholder tabs -->
@@ -80,11 +97,26 @@
         <p>即將推出</p>
       </div>
     </div>
+
+    <!-- Bottom nav (mobile only) -->
+    <nav class="mobile-bottom-nav" aria-label="主選單">
+      <button
+        v-for="tab in NAV_TABS"
+        :key="tab.key"
+        type="button"
+        :class="['mobile-nav-item', activeTab === tab.key ? 'active' : '']"
+        @click="activeTab = tab.key"
+      >
+        <img v-if="tab.icon" :src="tab.icon" :alt="tab.label" class="mobile-nav-icon">
+        <span v-else class="mobile-nav-icon-placeholder"></span>
+        <span class="mobile-nav-label">{{ tab.label }}</span>
+      </button>
+    </nav>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onBeforeUnmount } from 'vue'
+import { ref, computed, onBeforeUnmount, onMounted } from 'vue'
 import { RouterView } from 'vue-router'
 import MapPanel from '../components/MapPanel.vue'
 
@@ -101,9 +133,21 @@ const NAV_TABS: { key: TabKey; label: string; icon?: string }[] = [
 const CHAT_MIN = 360
 const CHAT_MAX = 760
 const CHAT_DEFAULT = 520
+const MOBILE_BREAKPOINT = 767
 
 // ── Tab state ──
 const activeTab = ref<TabKey>('agent')
+
+// ── Mobile state ──
+const isMobile = ref(window.innerWidth <= MOBILE_BREAKPOINT)
+const isMobileMapOpen = ref(false)
+
+function onResize() {
+  isMobile.value = window.innerWidth <= MOBILE_BREAKPOINT
+  if (!isMobile.value) isMobileMapOpen.value = false
+}
+
+onMounted(() => window.addEventListener('resize', onResize))
 
 // ── Resizable panel state ──
 const mainContentEl = ref<HTMLElement | null>(null)
@@ -160,6 +204,7 @@ function onDividerKeyDown(e: KeyboardEvent) {
 
 onBeforeUnmount(() => {
   document.body.classList.remove('is-resizing')
+  window.removeEventListener('resize', onResize)
 })
 </script>
 
@@ -441,6 +486,190 @@ onBeforeUnmount(() => {
   font-size: 16px;
 }
 
+/* ── Mobile map toggle button ── */
+.map-toggle-btn {
+  display: none;
+}
+
+/* ── Mobile bottom nav (hidden on desktop) ── */
+.mobile-bottom-nav {
+  display: none;
+}
+
+/* ── Mobile map view ── */
+.mobile-map-view {
+  flex: 1;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ═══════════════════════════════════════════
+   MOBILE  ≤ 767 px
+═══════════════════════════════════════════ */
+@media (max-width: 767px) {
+  /*
+   * Fixed-height root so flex children can resolve heights against it.
+   * padding-bottom carves out the 56 px fixed bottom nav from the layout
+   * flow, keeping all scrollable content above the nav.
+   */
+  .app-container {
+    padding: 0;
+    padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+    flex-direction: column;
+    height: 100dvh;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* Hide desktop sidebar */
+  .sidebar {
+    display: none;
+  }
+
+  /*
+   * flex: 1 + min-height: 0 fills (100dvh - padding-bottom).
+   * No explicit calc needed — the root padding handles the reservation.
+   */
+  .main-content {
+    margin-left: 0;
+    border-radius: 0;
+    flex: 1;
+    min-height: 0;
+    flex-direction: column;
+    box-shadow: none;
+    overflow: hidden;
+  }
+
+  /* Chat area fills full width */
+  .chat-area {
+    width: 100% !important;
+    flex: 1;
+    min-height: 0;
+    min-width: 0;
+  }
+
+  /* Shrink the header on mobile */
+  .chat-header {
+    padding: 10px 0 0;
+  }
+
+  .chat-title {
+    font-size: 15px;
+    margin-bottom: 8px;
+  }
+
+  .info-bar {
+    font-size: 11px;
+    height: 32px;
+  }
+
+  /*
+   * The scroll container for RouterView pages.
+   * padding-bottom ensures content can scroll past the composer/nav area
+   * even when there is not enough content to trigger scrolling naturally.
+   */
+  .chat-content {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* Map toggle FAB */
+  .map-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    position: fixed;
+    bottom: calc(56px + env(safe-area-inset-bottom, 0px) + 12px);
+    right: 16px;
+    z-index: 100;
+    background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+    color: white;
+    border: none;
+    border-radius: 24px;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-family: inherit;
+    font-weight: 700;
+    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.35);
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  .map-toggle-icon {
+    font-size: 16px;
+    line-height: 1;
+  }
+
+  .map-toggle-label {
+    letter-spacing: 0.02em;
+  }
+
+  /* Mobile bottom navigation */
+  .mobile-bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    background: rgba(255, 255, 255, 0.97);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(191, 219, 254, 0.8);
+    box-shadow: 0 -2px 12px rgba(15, 23, 42, 0.06);
+    z-index: 200;
+    padding-bottom: env(safe-area-inset-bottom);
+    align-items: stretch;
+  }
+
+  .mobile-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    border: none;
+    background: transparent;
+    color: #94a3b8;
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 4px 2px;
+    touch-action: manipulation;
+    transition: color 0.15s;
+  }
+
+  .mobile-nav-item.active {
+    color: #2563eb;
+  }
+
+  .mobile-nav-icon {
+    width: 22px;
+    height: 22px;
+    opacity: 0.55;
+    transition: opacity 0.15s;
+  }
+
+  .mobile-nav-item.active .mobile-nav-icon {
+    opacity: 1;
+    filter: none;
+  }
+
+  .mobile-nav-icon-placeholder {
+    width: 22px;
+    height: 22px;
+    display: inline-block;
+  }
+
+  .mobile-nav-label {
+    line-height: 1;
+  }
+
+  /* Placeholder tab on mobile */
+  .placeholder-content {
+    border-radius: 0;
+  }
+}
 </style>
 
 <style>
