@@ -24,23 +24,48 @@
             @input="validationResult = null"
           />
           <div v-if="validationResult" class="validation-badge" :class="validationResult.status">
-            <span v-if="validationResult.status === 'validated' || validationResult.status === 'fuzzy_match'">
-              ✓ {{ validationResult.matched_name || hotelName }}（合法旅宿）
-            </span>
-            <span v-else-if="validationResult.status === 'not_found'">
-              ⚠ 查無此旅宿
-              <div v-if="validationResult.alternatives.length" class="alternatives">
-                是否是指：
-                <button
-                  v-for="alt in validationResult.alternatives"
-                  :key="alt.name"
-                  class="alt-btn"
-                  @click="hotelName = alt.name; validationResult = null"
-                >
-                  {{ alt.name }}（{{ alt.district }}）
-                </button>
+            <template v-if="validationResult.status === 'validated' || validationResult.status === 'fuzzy_match'">
+              <div class="validation-title">
+                ✓ {{ validationResult.matched_name || hotelName }}（合法旅宿）
               </div>
-            </span>
+              <div
+                v-if="validationResult.district || validationResult.address"
+                class="validation-meta"
+              >
+                {{ [validationResult.district, validationResult.address].filter(Boolean).join('｜') }}
+              </div>
+            </template>
+            <template v-else-if="validationResult.status === 'not_found'">
+              <div class="validation-title">⚠ 查無此合法旅宿</div>
+
+              <div v-if="validationResult.alternatives.length" class="alternatives-block">
+                <div class="alternatives-label">你是不是要找：</div>
+                <div class="alternatives">
+                  <button
+                    v-for="alt in validationResult.alternatives"
+                    :key="`alt-${alt.name}`"
+                    class="alt-btn"
+                    @click="chooseHotel(alt.name)"
+                  >
+                    {{ alt.name }}<span v-if="alt.district">（{{ alt.district }}）</span>
+                  </button>
+                </div>
+              </div>
+
+              <div v-if="validationResult.recommendations.length" class="alternatives-block">
+                <div class="alternatives-label">可改訂以下合法旅宿：</div>
+                <div class="alternatives">
+                  <button
+                    v-for="hotel in validationResult.recommendations"
+                    :key="`recommend-${hotel.name}`"
+                    class="alt-btn"
+                    @click="chooseHotel(hotel.name)"
+                  >
+                    {{ hotel.name }}<span v-if="hotel.district">（{{ hotel.district }}）</span>
+                  </button>
+                </div>
+              </div>
+            </template>
           </div>
         </div>
 
@@ -100,9 +125,17 @@ const errorText = ref('')
 interface ValidationResult {
   status: string
   matched_name: string | null
-  alternatives: Array<{ name: string; district: string | null }>
+  district: string | null
+  address: string | null
+  alternatives: Array<{ name: string; district: string | null; address: string | null; confidence: number }>
+  recommendations: Array<{ name: string; district: string | null; address: string | null }>
 }
 const validationResult = ref<ValidationResult | null>(null)
+
+function chooseHotel(name: string) {
+  hotelName.value = name
+  validationResult.value = null
+}
 
 async function handleSubmit() {
   const sessionId = localStorage.getItem('chitogo_session_id')
@@ -127,8 +160,13 @@ async function handleSubmit() {
       validationResult.value = {
         status: result.accommodation_status,
         matched_name: result.hotel_validation.matched_name,
+        district: result.hotel_validation.district,
+        address: result.hotel_validation.address,
         alternatives: result.hotel_validation.alternatives,
+        recommendations: result.hotel_validation.recommendations,
       }
+    } else {
+      validationResult.value = null
     }
 
     if (result.setup_complete) {
@@ -251,6 +289,16 @@ async function handleSubmit() {
   font-size: 13px;
 }
 
+.validation-title {
+  font-weight: 600;
+}
+
+.validation-meta {
+  margin-top: 4px;
+  font-size: 12px;
+  opacity: 0.85;
+}
+
 .validation-badge.validated,
 .validation-badge.fuzzy_match {
   background: #dcfce7;
@@ -268,6 +316,16 @@ async function handleSubmit() {
   flex-wrap: wrap;
   gap: 6px;
   align-items: center;
+}
+
+.alternatives-block + .alternatives-block {
+  margin-top: 10px;
+}
+
+.alternatives-label {
+  margin-top: 8px;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .alt-btn {

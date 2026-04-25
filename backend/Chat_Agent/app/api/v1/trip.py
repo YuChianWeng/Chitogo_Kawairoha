@@ -86,6 +86,7 @@ class HotelValidationResponse(BaseModel):
     district: str | None
     address: str | None
     alternatives: list[dict[str, Any]]
+    recommendations: list[dict[str, Any]]
     last_updated: str
 
 
@@ -187,6 +188,46 @@ def _transport_from_query(request: Request, *, max_minutes_per_leg: int) -> Tran
     )
 
 
+def _serialize_lodging_recommendation(item: Any) -> dict[str, Any]:
+    return {
+        "name": item.name,
+        "district": item.district,
+        "address": item.address,
+    }
+
+
+async def _get_lodging_recommendations(
+    *,
+    district: str | None,
+    limit: int,
+    exclude_names: set[str],
+) -> list[dict[str, Any]]:
+    items: list[dict[str, Any]] = []
+    seen_names = {name.casefold() for name in exclude_names}
+
+    async def _append_recommendations(scope_district: str | None) -> None:
+        recommendations = await place_tool_adapter.list_legal_lodgings(
+            district=scope_district,
+            limit=limit,
+        )
+        if recommendations.status != "ok":
+            return
+
+        for item in recommendations.items:
+            normalized_name = item.name.casefold()
+            if normalized_name in seen_names:
+                continue
+            items.append(_serialize_lodging_recommendation(item))
+            seen_names.add(normalized_name)
+            if len(items) >= limit:
+                return
+
+    await _append_recommendations(district)
+    if district and len(items) < limit:
+        await _append_recommendations(None)
+    return items
+
+
 # ─── POST /quiz ───────────────────────────────────────────────────────────────
 
 @router.post("/quiz", response_model=QuizResponse)
@@ -242,6 +283,7 @@ async def post_setup(payload: SetupRequest) -> SetupResponse:
     acc = payload.accommodation
     hotel_validation: HotelValidationResponse | None = None
     accommodation_status = "not_required"
+    setup_complete = True
 
     if acc.booked:
         if not acc.hotel_name:
@@ -253,6 +295,8 @@ async def post_setup(payload: SetupRequest) -> SetupResponse:
             candidates = await place_tool_adapter.search_lodging_candidates(name=acc.hotel_name, limit=3)
         except httpx.HTTPError as exc:
             raise HTTPException(status_code=503, detail="candidates_error:data_service_unavailable") from exc
+        if legal.status != "ok":
+            raise HTTPException(status_code=503, detail="candidates_error:data_service_unavailable")
 
         alternatives: list[dict[str, Any]] = []
         if candidates.status == "ok" and candidates.items:
@@ -277,10 +321,24 @@ async def post_setup(payload: SetupRequest) -> SetupResponse:
                 district=lodging.district,
                 address=lodging.address,
                 alternatives=[],
+                recommendations=[],
                 last_updated=str(datetime.now(UTC).date()),
             )
         else:
+            preferred_district = next(
+                (item["district"] for item in alternatives if item.get("district")),
+                None,
+            )
+            recommendations = await _get_lodging_recommendations(
+                district=preferred_district,
+                limit=3,
+                exclude_names={
+                    acc.hotel_name,
+                    *(item["name"] for item in alternatives),
+                },
+            )
             accommodation_status = "not_found"
+            setup_complete = False
             hotel_validation = HotelValidationResponse(
                 valid=False,
                 matched_name=None,
@@ -289,6 +347,7 @@ async def post_setup(payload: SetupRequest) -> SetupResponse:
                 district=None,
                 address=None,
                 alternatives=alternatives,
+                recommendations=recommendations,
                 last_updated=str(datetime.now(UTC).date()),
             )
 
@@ -313,7 +372,7 @@ async def post_setup(payload: SetupRequest) -> SetupResponse:
     if payload.return_destination:
         session.return_destination = payload.return_destination
 
-    session.flow_state = FlowState.RECOMMENDING
+    session.flow_state = FlowState.RECOMMENDING if setup_complete else FlowState.TRANSPORT
 
     await _save_session(session)
 
@@ -321,7 +380,7 @@ async def post_setup(payload: SetupRequest) -> SetupResponse:
         session_id=session.session_id,
         accommodation_status=accommodation_status,
         hotel_validation=hotel_validation,
-        setup_complete=True,
+        setup_complete=setup_complete,
     )
 
 

@@ -42,11 +42,12 @@ export interface TripSetup {
 export interface HotelValidation {
   valid: boolean
   matched_name: string | null
-  match_type: 'exact' | 'fuzzy' | null
+  match_type: string | null
   confidence: number | null
   district: string | null
   address: string | null
   alternatives: Array<{ name: string; district: string | null; address: string | null; confidence: number }>
+  recommendations: Array<{ name: string; district: string | null; address: string | null }>
   last_updated: string
 }
 

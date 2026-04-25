@@ -9,6 +9,8 @@ from app.core.config import Settings, get_settings
 from app.tools.models import (
     CategoryItem,
     CategoryListResult,
+    LegalLodgingListResult,
+    LegalLodgingSummary,
     LodgingCandidateItem,
     LodgingCandidatesResult,
     LodgingLegalCheckResult,
@@ -29,6 +31,7 @@ _CATEGORIES_PATH = "/api/v1/places/categories"
 _VIBE_TAGS_PATH = "/api/v1/places/vibe-tags"
 _LODGING_CHECK_PATH = "/api/v1/lodgings/check"
 _LODGING_CANDIDATES_PATH = "/api/v1/lodgings/candidates"
+_LODGINGS_PATH = "/api/v1/lodgings"
 _STATS_PATH = "/api/v1/places/stats"
 
 
@@ -280,6 +283,38 @@ class PlaceToolAdapter:
         if not items:
             return LodgingCandidatesResult(status="empty")
         return LodgingCandidatesResult(status="ok", items=items)
+
+    async def list_legal_lodgings(
+        self,
+        *,
+        district: str | None = None,
+        limit: int = 3,
+        offset: int = 0,
+    ) -> LegalLodgingListResult:
+        payload, error = await self._request_json(
+            "GET",
+            _LODGINGS_PATH,
+            params=self._compact_dict(
+                district=district,
+                limit=limit,
+                offset=offset,
+            ),
+        )
+        if error is not None:
+            return LegalLodgingListResult(status="error", error=error)
+        if not isinstance(payload, list):
+            return LegalLodgingListResult(status="error", error="malformed_payload")
+        try:
+            items = [
+                LegalLodgingSummary.model_validate(item)
+                for item in payload
+                if isinstance(item, dict)
+            ]
+        except ValidationError:
+            return LegalLodgingListResult(status="error", error="malformed_payload")
+        if not items:
+            return LegalLodgingListResult(status="empty")
+        return LegalLodgingListResult(status="ok", items=items)
 
     async def get_stats(self) -> PlaceStatsResult:
         payload, error = await self._request_json("GET", _STATS_PATH)

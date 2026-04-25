@@ -36,11 +36,28 @@ except ModuleNotFoundError:
     httpx.AsyncClient = AsyncClient
     sys.modules["httpx"] = httpx
 
-from app.api.v1.trip import DemandRequest, SelectRequest, SetupRequest, get_candidates, post_demand, post_select, post_setup
+from app.api.v1.trip import (
+    DemandRequest,
+    SelectRequest,
+    SetupRequest,
+    get_candidates,
+    place_tool_adapter,
+    post_demand,
+    post_select,
+    post_setup,
+)
 from app.services import candidate_picker
 from app.session.models import FlowState, Session, TransportConfig, TripCandidateCard
 from app.session.store import session_store
-from app.tools.models import PlaceListResult, ToolPlace
+from app.tools.models import (
+    LegalLodgingListResult,
+    LegalLodgingSummary,
+    LodgingCandidateItem,
+    LodgingCandidatesResult,
+    LodgingLegalCheckResult,
+    PlaceListResult,
+    ToolPlace,
+)
 
 
 def build_request(path: str, query_string: str) -> Request:
@@ -103,6 +120,90 @@ class TripApiTests(unittest.IsolatedAsyncioTestCase):
         self.assertIsNotNone(session)
         self.assertEqual(session.flow_state, FlowState.RECOMMENDING)
         self.assertIsNone(session.last_transport_config)
+
+    async def test_setup_with_invalid_hotel_returns_recommendations_and_stays_on_setup(self) -> None:
+        session_id = str(uuid4())
+        await session_store.set(Session(session_id=session_id, flow_state=FlowState.TRANSPORT))
+
+        with patch.object(
+            place_tool_adapter,
+            "check_lodging_legal_status",
+            new=AsyncMock(
+                return_value=LodgingLegalCheckResult(status="ok", is_legal=False)
+            ),
+        ), patch.object(
+            place_tool_adapter,
+            "search_lodging_candidates",
+            new=AsyncMock(
+                return_value=LodgingCandidatesResult(
+                    status="ok",
+                    items=[
+                        LodgingCandidateItem(
+                            name="合法旅宿A",
+                            district="大安區",
+                            address="台北市大安區仁愛路 1 號",
+                            confidence=0.93,
+                        )
+                    ],
+                )
+            ),
+        ), patch.object(
+            place_tool_adapter,
+            "list_legal_lodgings",
+            new=AsyncMock(
+                return_value=LegalLodgingListResult(
+                    status="ok",
+                    items=[
+                        LegalLodgingSummary(
+                            license_no="L-001",
+                            name="合法旅宿A",
+                            lodging_category="hotel",
+                            district="大安區",
+                            address="台北市大安區仁愛路 1 號",
+                        ),
+                        LegalLodgingSummary(
+                            license_no="L-002",
+                            name="合法旅宿B",
+                            lodging_category="hotel",
+                            district="大安區",
+                            address="台北市大安區信義路 2 號",
+                        ),
+                        LegalLodgingSummary(
+                            license_no="L-003",
+                            name="合法旅宿C",
+                            lodging_category="hotel",
+                            district="中山區",
+                            address="台北市中山區南京東路 3 號",
+                        ),
+                    ],
+                )
+            ),
+        ):
+            response = await post_setup(
+                SetupRequest(
+                    session_id=session_id,
+                    accommodation={"booked": True, "hotel_name": "不存在飯店"},
+                )
+            )
+
+        session = await session_store.get(session_id)
+
+        self.assertFalse(response.setup_complete)
+        self.assertEqual(response.accommodation_status, "not_found")
+        self.assertIsNotNone(response.hotel_validation)
+        self.assertEqual(
+            [item["name"] for item in response.hotel_validation.alternatives],
+            ["合法旅宿A"],
+        )
+        self.assertEqual(
+            [item["name"] for item in response.hotel_validation.recommendations],
+            ["合法旅宿B", "合法旅宿C"],
+        )
+        self.assertIsNotNone(session)
+        self.assertEqual(session.flow_state, FlowState.TRANSPORT)
+        self.assertIsNotNone(session.accommodation)
+        self.assertEqual(session.accommodation.hotel_name, "不存在飯店")
+        self.assertFalse(session.accommodation.hotel_valid)
 
     async def test_get_candidates_requires_transport_query(self) -> None:
         session_id = str(uuid4())
