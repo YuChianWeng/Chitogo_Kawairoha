@@ -10,6 +10,7 @@ from typing import Any
 
 from app.llm.client import llm_client
 from app.services.reachability import haversine_pre_filter, route_time_estimate
+from app.services.weather import WeatherContext, get_weather_context
 from app.session.models import ReachableCache, Session, TransportConfig, TripCandidateCard
 from app.tools.place_adapter import place_tool_adapter
 
@@ -95,11 +96,18 @@ async def pick_candidates(
     origin_lng: float,
     *,
     transport_config: TransportConfig,
-) -> tuple[list[TripCandidateCard], bool, str | None]:
-    """Return up to 6 cards, preferring a 3 restaurant + 3 attraction mix."""
+) -> tuple[list[TripCandidateCard], list[TripCandidateCard], bool, str | None]:
+    """Return up to 6 cards plus any rain-filtered cards.
+
+    Returns (cards, rain_cards, partial, fallback_reason).
+    rain_cards are outdoor venues excluded due to rain forecast; they carry a rain_note.
+    """
     base_max_minutes = transport_config.max_minutes_per_leg
     widest_max_minutes = _widest_max_minutes(base_max_minutes)
     visited_ids = {str(vs.venue_id) for vs in session.visited_stops}
+
+    # Fetch weather concurrently with initial pool load sentinel
+    weather_ctx: WeatherContext = await get_weather_context()
 
     pool_cache: dict[bool, tuple[list[Any], list[Any]]] = {}
     prepared_cache: dict[bool, tuple[list[_PreparedVenue], list[_PreparedVenue]]] = {}
@@ -109,11 +117,18 @@ async def pick_candidates(
         if cached is not None:
             return cached
 
-        rest_venues, attr_venues = await _load_trip_pools(
+        rest_venues_raw, attr_venues_raw = await _load_trip_pools(
             open_now=open_now,
             visited_ids=visited_ids,
             pool_cache=pool_cache,
         )
+
+        if weather_ctx.is_raining_likely:
+            rest_venues, _ = _filter_outdoor_on_rain(rest_venues_raw)
+            attr_venues, _ = _filter_outdoor_on_rain(attr_venues_raw)
+        else:
+            rest_venues, attr_venues = rest_venues_raw, attr_venues_raw
+
         prepared = await asyncio.gather(
             _prepare_venues(
                 rest_venues,
@@ -174,6 +189,31 @@ async def pick_candidates(
         partial=partial,
     )
 
+    # Build rain-filtered disclosure cards (attraction only; restaurants are rarely purely outdoor)
+    rain_cards: list[TripCandidateCard] = []
+    if weather_ctx.is_raining_likely:
+        _, rest_excluded = _filter_outdoor_on_rain(
+            await _get_pool_raw(pool_cache, open_now=True, category="food", visited_ids=visited_ids)
+        )
+        _, attr_excluded = _filter_outdoor_on_rain(
+            await _get_pool_raw(pool_cache, open_now=True, category="attraction", visited_ids=visited_ids)
+        )
+        all_excluded = _dedupe_venues(rest_excluded + attr_excluded)
+        if all_excluded:
+            rain_note = _build_rain_note(weather_ctx)
+            rain_ranked = await _prepare_venues(
+                all_excluded,
+                origin_lat,
+                origin_lng,
+                max_minutes=widest_max_minutes,
+                primary_mode=transport_config.mode,
+            )
+            rain_ranked_sorted = sorted(
+                rain_ranked,
+                key=lambda p: (-p.quality_score, p.travel_min, getattr(p.venue, "name", "")),
+            )
+            rain_cards = await _build_rain_cards(rain_ranked_sorted[:_TRIP_TARGET_TOTAL], rain_note=rain_note)
+
     session.reachable_cache = ReachableCache(
         origin_lat=origin_lat,
         origin_lng=origin_lng,
@@ -182,7 +222,7 @@ async def pick_candidates(
     )
     session.last_candidate_ids = [c.venue_id for c in cards]
 
-    return cards, partial, fallback_reason
+    return cards, rain_cards, partial, fallback_reason
 
 
 async def demand_mode(
@@ -192,11 +232,19 @@ async def demand_mode(
     origin_lng: float,
     *,
     transport_config: TransportConfig,
-) -> tuple[list[TripCandidateCard], str | None]:
-    """Return up to 3 alternative venues matching the demand text."""
+) -> tuple[list[TripCandidateCard], list[TripCandidateCard], str | None]:
+    """Return up to 3 alternative venues matching the demand text plus any rain-filtered cards.
+
+    Returns (cards, rain_cards, fallback_reason).
+    """
     base_max_minutes = transport_config.max_minutes_per_leg * 2
     widest_max_minutes = _widest_max_minutes(base_max_minutes)
-    llm_category, llm_primary_type = await _llm_parse_demand(demand_text)
+
+    (llm_category, llm_primary_type), weather_ctx = await asyncio.gather(
+        _llm_parse_demand(demand_text),
+        get_weather_context(),
+    )
+
     logger.info(
         "demand_mode LLM parse: text=%r → category=%r, primary_type=%r",
         demand_text,
@@ -212,6 +260,7 @@ async def demand_mode(
     )
 
     prepared_cache: dict[tuple[_DemandQueryPlan, bool], list[_PreparedVenue]] = {}
+    raw_venue_cache: dict[tuple[_DemandQueryPlan, bool], list[Any]] = {}
 
     async def get_prepared(plan: _DemandQueryPlan, open_now: bool) -> list[_PreparedVenue]:
         cache_key = (plan, open_now)
@@ -219,11 +268,13 @@ async def demand_mode(
         if cached is not None:
             return cached
 
-        venues = await _load_demand_venues(
-            plan,
-            open_now=open_now,
-            visited_ids=visited_ids,
-        )
+        venues_raw = await _load_demand_venues(plan, open_now=open_now, visited_ids=visited_ids)
+        raw_venue_cache[cache_key] = venues_raw
+
+        venues = venues_raw
+        if weather_ctx.is_raining_likely:
+            venues, _ = _filter_outdoor_on_rain(venues_raw)
+
         prepared = await _prepare_venues(
             venues,
             origin_lat,
@@ -260,6 +311,27 @@ async def demand_mode(
         partial=False,
     )
 
+    # Build rain-filtered disclosure cards from the chosen stage's raw pool
+    rain_cards: list[TripCandidateCard] = []
+    if weather_ctx.is_raining_likely:
+        chosen_key = (chosen_stage.query_plan, chosen_stage.open_now)
+        raw_venues = raw_venue_cache.get(chosen_key, [])
+        _, excluded = _filter_outdoor_on_rain(raw_venues)
+        if excluded:
+            rain_note = _build_rain_note(weather_ctx)
+            excluded_prepared = await _prepare_venues(
+                excluded,
+                origin_lat,
+                origin_lng,
+                max_minutes=widest_max_minutes,
+                primary_mode=transport_config.mode,
+            )
+            excluded_sorted = sorted(
+                excluded_prepared,
+                key=lambda p: (p.travel_min, -p.quality_score, getattr(p.venue, "name", "")),
+            )
+            rain_cards = await _build_rain_cards(excluded_sorted[:_DEMAND_TARGET_TOTAL], rain_note=rain_note)
+
     session.reachable_cache = ReachableCache(
         origin_lat=origin_lat,
         origin_lng=origin_lng,
@@ -268,7 +340,7 @@ async def demand_mode(
     )
     session.last_candidate_ids = [c.venue_id for c in cards]
 
-    return cards, fallback_reason
+    return cards, rain_cards, fallback_reason
 
 
 async def _load_trip_pools(
@@ -336,6 +408,80 @@ async def _search_places_or_raise(**kwargs: Any) -> list[Any]:
             f"candidates_error:data_service_unavailable:{result.error or 'search_error'}"
         )
     return list(result.items)
+
+
+def _filter_outdoor_on_rain(venues: list[Any]) -> tuple[list[Any], list[Any]]:
+    """Split venues into (kept, excluded) when rain is forecast.
+
+    A venue is excluded only if outdoor=True AND indoor is not True.
+    Unknown outdoor status (None) → kept, to avoid over-filtering.
+    """
+    kept: list[Any] = []
+    excluded: list[Any] = []
+    for venue in venues:
+        outdoor = getattr(venue, "outdoor", None)
+        indoor = getattr(venue, "indoor", None)
+        if outdoor is True and indoor is not True:
+            excluded.append(venue)
+        else:
+            kept.append(venue)
+    return kept, excluded
+
+
+def _build_rain_note(weather_ctx: WeatherContext) -> str:
+    if weather_ctx.rain_probability is not None:
+        return f"預報降雨（機率約 {weather_ctx.rain_probability}%），此景點為戶外場地，雨天體驗較差"
+    return "預報有雨，此景點為戶外場地，雨天體驗較差"
+
+
+async def _get_pool_raw(
+    pool_cache: dict[bool, tuple[list[Any], list[Any]]],
+    *,
+    open_now: bool,
+    category: str,
+    visited_ids: set[str],
+) -> list[Any]:
+    """Return the raw venue pool from cache, fetching if not yet populated."""
+    cached = pool_cache.get(open_now)
+    if cached is not None:
+        rest_raw, attr_raw = cached
+        return rest_raw if category == "food" else attr_raw
+    # Not yet cached — fetch directly (this path only hit when pool_cache was never populated)
+    venues = await _search_places_or_raise(
+        internal_category=category,
+        open_now=True if open_now else None,
+        limit=_SEARCH_LIMIT,
+    )
+    return _dedupe_venues(_filter_visited(venues, visited_ids))
+
+
+async def _build_rain_cards(
+    prepared: list[_PreparedVenue],
+    *,
+    rain_note: str,
+) -> list[TripCandidateCard]:
+    """Build TripCandidateCard list for rain-filtered venues with rain_note set."""
+    if not prepared:
+        return []
+    cards: list[TripCandidateCard] = []
+    for idx, item in enumerate(prepared):
+        venue = item.venue
+        cards.append(
+            TripCandidateCard(
+                venue_id=getattr(venue, "venue_id", str(idx)),
+                name=venue.name,
+                category="restaurant" if _is_restaurant(venue) else "attraction",
+                primary_type=getattr(venue, "primary_type", None),
+                address=getattr(venue, "formatted_address", None),
+                lat=venue.lat or 0.0,
+                lng=venue.lng or 0.0,
+                rating=getattr(venue, "rating", None),
+                distance_min=item.travel_min,
+                why_recommended="",
+                rain_note=rain_note,
+            )
+        )
+    return cards
 
 
 def _filter_visited(venues: list[Any], visited_ids: set[str]) -> list[Any]:

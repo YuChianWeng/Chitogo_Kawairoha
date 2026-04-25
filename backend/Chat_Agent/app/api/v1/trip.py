@@ -185,6 +185,7 @@ def _card_to_dict(card: TripCandidateCard) -> dict[str, Any]:
         "rating": card.rating,
         "distance_min": card.distance_min,
         "why_recommended": card.why_recommended,
+        "rain_note": card.rain_note,
     }
 
 
@@ -717,7 +718,7 @@ async def get_candidates(
     )
 
     try:
-        cards, partial, fallback_reason = await picker.pick_candidates(
+        cards, rain_cards, partial, fallback_reason = await picker.pick_candidates(
             session,
             lat,
             lng,
@@ -771,6 +772,7 @@ async def get_candidates(
     return JSONResponse({
         "session_id": session_id,
         "candidates": [_card_to_dict(c) for c in cards],
+        "rain_filtered": [_card_to_dict(c) for c in rain_cards],
         "partial": partial,
         "fallback_reason": fallback_reason,
         "restaurant_count": len(restaurants),
@@ -972,7 +974,7 @@ async def post_demand(payload: DemandRequest) -> JSONResponse:
         raise HTTPException(status_code=400, detail="demand_error:missing_transport_context")
 
     try:
-        cards, fallback_reason = await picker.demand_mode(
+        cards, rain_cards, fallback_reason = await picker.demand_mode(
             session,
             payload.demand_text,
             payload.lat,
@@ -990,6 +992,7 @@ async def post_demand(payload: DemandRequest) -> JSONResponse:
     return JSONResponse({
         "session_id": payload.session_id,
         "alternatives": [_card_to_dict(c) for c in cards],
+        "rain_filtered": [_card_to_dict(c) for c in rain_cards],
         "fallback_reason": fallback_reason,
     })
 

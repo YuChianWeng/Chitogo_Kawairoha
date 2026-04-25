@@ -244,6 +244,7 @@ class TripCandidateCard(BaseModel):
     distance_min: int = 0
     why_recommended: str = ""
     partial: bool = False
+    rain_note: str | None = None
 
     model_config = ConfigDict(extra="forbid")
 
