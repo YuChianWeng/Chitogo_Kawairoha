@@ -30,6 +30,15 @@ class LodgingLegalStatusResponse(BaseModel):
     confidence: float | None = None
 
 
+class LodgingCandidateItem(BaseModel):
+    lodging: LegalLodgingOut
+    confidence: float
+
+
+class LodgingCandidatesResponse(BaseModel):
+    items: list[LodgingCandidateItem]
+
+
 class LodgingCheckQuery(BaseModel):
     name: str
     phone: str | None = None

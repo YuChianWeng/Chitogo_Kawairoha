@@ -142,6 +142,23 @@ class LodgingLegalCheckResult(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
+class LodgingCandidateItem(BaseModel):
+    name: str
+    district: str | None = None
+    address: str | None = None
+    confidence: float
+
+    model_config = ConfigDict(extra="ignore")
+
+
+class LodgingCandidatesResult(BaseModel):
+    status: Literal["ok", "empty", "error"]
+    items: list[LodgingCandidateItem] = Field(default_factory=list)
+    error: str | None = None
+
+    model_config = ConfigDict(extra="forbid")
+
+
 class RouteResult(BaseModel):
     """Structured route estimate with explicit fallback state."""
 

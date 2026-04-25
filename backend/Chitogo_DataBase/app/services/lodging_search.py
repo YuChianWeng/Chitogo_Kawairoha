@@ -81,3 +81,18 @@ def search_lodging(
         return best, "name", round(best_score, 3)
 
     return None, None, None
+
+
+def search_lodging_candidates(
+    db: Session,
+    *,
+    name: str,
+    limit: int = 5,
+    min_score: float = 0.5,
+) -> list[tuple[LegalLodging, float]]:
+    """Return top-N candidates sorted by name similarity, above min_score."""
+    all_rows = db.query(LegalLodging).all()
+    scored = [(row, _name_similarity(name, row.name)) for row in all_rows]
+    scored = [(row, score) for row, score in scored if score >= min_score]
+    scored.sort(key=lambda x: x[1], reverse=True)
+    return scored[:limit]

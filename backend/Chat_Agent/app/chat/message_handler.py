@@ -25,7 +25,11 @@ from app.orchestration.classifier import IntentClassifier, detect_missing_genera
 from app.orchestration.intents import Intent
 from app.orchestration.language import detect_language_hint
 from app.orchestration.preferences import PreferenceExtractor
-from app.orchestration.slots import ChatGeneralSlots, ClassifierResult
+from app.orchestration.slots import (
+    ChatGeneralSlots,
+    CheckLodgingLegalSlots,
+    ClassifierResult,
+)
 from app.orchestration.turn_frame import (
     CandidateMatchDecision,
     extract_category_mix,
@@ -173,7 +177,17 @@ class MessageHandler:
                 recorder.set_intent(classifier_result.intent.value)
                 recorder.set_needs_clarification(classifier_result.needs_clarification)
 
-                if classifier_result.intent == Intent.REPLAN:
+                if classifier_result.intent == Intent.CHECK_LODGING_LEGAL:
+                    response = await self._handle_check_lodging_legal(
+                        session_id=session_id,
+                        turn_id=assistant_turn_id,
+                        request=request,
+                        preferences=preferences,
+                        classifier_result=classifier_result,
+                        source=classifier_result.source,
+                        trace_recorder=recorder,
+                    )
+                elif classifier_result.intent == Intent.REPLAN:
                     response = await self._handle_replan(
                         session=session,
                         session_id=session_id,
@@ -426,6 +440,163 @@ class MessageHandler:
                 }
             )
             return merged_session
+
+    async def _handle_check_lodging_legal(
+        self,
+        *,
+        session_id: str,
+        turn_id: str,
+        request: ChatMessageRequest,
+        preferences: Preferences,
+        classifier_result: ClassifierResult,
+        source: str,
+        trace_recorder: TraceRecorder,
+    ) -> ChatMessageResponse:
+        self._record_turn_frame_validation(
+            trace_recorder=trace_recorder,
+            message=request.message,
+            intent=Intent.CHECK_LODGING_LEGAL,
+            preferences=preferences,
+            route="check_lodging_legal",
+            needs_clarification=False,
+            missing_fields=[],
+        )
+
+        slots = classifier_result.extracted_slots
+        lodging_name = (
+            slots.lodging_name
+            if isinstance(slots, CheckLodgingLegalSlots) and slots.lodging_name
+            else request.message.strip()
+        )
+        phone = slots.phone if isinstance(slots, CheckLodgingLegalSlots) else None
+        district = slots.district if isinstance(slots, CheckLodgingLegalSlots) else None
+
+        with trace_recorder.step("orchestration.lodging_legal_check") as step:
+            legal_tool = self._agent_loop._registry.get_tool("lodging_legal_check")
+            if legal_tool is None:
+                step.fallback(summary="tool_not_found", error="lodging_legal_check")
+                reply = self._composer.compose_tool_error(preferences=preferences)
+                return ChatMessageResponse(
+                    session_id=session_id,
+                    turn_id=turn_id,
+                    intent=Intent.CHECK_LODGING_LEGAL,
+                    needs_clarification=False,
+                    message=reply,
+                    preferences=preferences,
+                    source=source,
+                )
+            try:
+                legal_result = await legal_tool.handler(
+                    name=lodging_name,
+                    phone=phone,
+                    district=district,
+                )
+            except Exception as exc:
+                step.fallback(summary="tool_error", error=exc.__class__.__name__)
+                reply = self._composer.compose_tool_error(preferences=preferences)
+                return ChatMessageResponse(
+                    session_id=session_id,
+                    turn_id=turn_id,
+                    intent=Intent.CHECK_LODGING_LEGAL,
+                    needs_clarification=False,
+                    message=reply,
+                    preferences=preferences,
+                    source=source,
+                )
+            step.success(
+                detail={
+                    "is_legal": legal_result.is_legal,
+                    "match_type": legal_result.match_type,
+                    "confidence": legal_result.confidence,
+                }
+            )
+
+        # High confidence or phone match → direct answer
+        if legal_result.is_legal and (
+            legal_result.match_type == "phone"
+            or legal_result.confidence is None
+            or legal_result.confidence >= 0.90
+        ):
+            reply = self._composer.compose_lodging_legal_status(
+                preferences=preferences,
+                lodging_name=lodging_name,
+                lodging=legal_result.lodging,
+                match_type=legal_result.match_type,
+                confidence=legal_result.confidence,
+                high_confidence=True,
+            )
+            return ChatMessageResponse(
+                session_id=session_id,
+                turn_id=turn_id,
+                intent=Intent.CHECK_LODGING_LEGAL,
+                needs_clarification=False,
+                message=reply,
+                preferences=preferences,
+                source=source,
+            )
+
+        # Medium confidence → answer with caveat
+        if legal_result.is_legal:
+            reply = self._composer.compose_lodging_legal_status(
+                preferences=preferences,
+                lodging_name=lodging_name,
+                lodging=legal_result.lodging,
+                match_type=legal_result.match_type,
+                confidence=legal_result.confidence,
+                high_confidence=False,
+            )
+            return ChatMessageResponse(
+                session_id=session_id,
+                turn_id=turn_id,
+                intent=Intent.CHECK_LODGING_LEGAL,
+                needs_clarification=False,
+                message=reply,
+                preferences=preferences,
+                source=source,
+            )
+
+        # No match → try to find candidates for disambiguation
+        with trace_recorder.step("orchestration.lodging_candidates") as step:
+            candidates_tool = self._agent_loop._registry.get_tool("lodging_candidates")
+            candidates_result = None
+            if candidates_tool is not None:
+                try:
+                    candidates_result = await candidates_tool.handler(
+                        name=lodging_name, limit=3
+                    )
+                except Exception as exc:
+                    step.fallback(summary="candidates_error", error=exc.__class__.__name__)
+            if candidates_result is not None and candidates_result.status == "ok" and candidates_result.items:
+                step.success(detail={"candidate_count": len(candidates_result.items)})
+                reply = self._composer.compose_lodging_candidates(
+                    preferences=preferences,
+                    query_name=lodging_name,
+                    candidates=candidates_result.items,
+                )
+                return ChatMessageResponse(
+                    session_id=session_id,
+                    turn_id=turn_id,
+                    intent=Intent.CHECK_LODGING_LEGAL,
+                    needs_clarification=True,
+                    message=reply,
+                    preferences=preferences,
+                    source=source,
+                )
+            step.success(detail={"candidate_count": 0})
+
+        reply = self._composer.compose_lodging_not_found(
+            preferences=preferences,
+            query_name=lodging_name,
+        )
+        return ChatMessageResponse(
+            session_id=session_id,
+            turn_id=turn_id,
+            intent=Intent.CHECK_LODGING_LEGAL,
+            needs_clarification=False,
+            message=reply,
+            preferences=preferences,
+            source=source,
+        )
 
     async def _handle_discovery(
         self,
