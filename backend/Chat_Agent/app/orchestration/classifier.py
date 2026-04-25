@@ -14,7 +14,8 @@ from app.orchestration.slots import (
 from app.session.models import Preferences
 
 _TIME_HINT_PATTERN = re.compile(
-    r"(\d{1,2}:\d{2}|今晚|今天|明天|下午|早上|晚上|tonight|tomorrow|morning|afternoon|evening)",
+    r"(\d{1,2}:\d{2}|今晚|今天|明天|下午|早上|晚上|tonight|tomorrow|morning|afternoon|evening"
+    r"|\d+\s*(?:分鐘|分|mins?|minutes?|小時|hrs?|hours?))",
     re.IGNORECASE,
 )
 logger = logging.getLogger(__name__)
@@ -56,9 +57,14 @@ def _coerce_generate_slots(raw_slots: dict[str, object]) -> dict[str, object]:
     return normalized
 
 
-def _detect_missing_generate_info(message: str, slots: GenerateItinerarySlots) -> list[str]:
+def _detect_missing_generate_info(
+    message: str,
+    slots: GenerateItinerarySlots,
+    *,
+    has_gps_location: bool = False,
+) -> list[str]:
     missing_fields: list[str] = []
-    has_origin = bool(slots.origin)
+    has_origin = has_gps_location or bool(slots.origin) or bool(slots.district)
     has_time = bool(slots.time_window) or bool(_TIME_HINT_PATTERN.search(message))
     has_context = any(
         [
@@ -83,6 +89,8 @@ def _detect_missing_generate_info(message: str, slots: GenerateItinerarySlots) -
 def detect_missing_generate_fields(
     message: str,
     preferences: Preferences,
+    *,
+    has_gps_location: bool = False,
 ) -> list[str]:
     return _detect_missing_generate_info(
         message,
@@ -96,6 +104,7 @@ def detect_missing_generate_fields(
             interest_tags=list(preferences.interest_tags),
             avoid_tags=list(preferences.avoid_tags),
         ),
+        has_gps_location=has_gps_location,
     )
 
 
@@ -186,7 +195,7 @@ class IntentClassifier:
         if intent == Intent.GENERATE_ITINERARY and isinstance(result.extracted_slots, GenerateItinerarySlots):
             if not result.missing_fields:
                 result.missing_fields = _detect_missing_generate_info(message, result.extracted_slots)
-            result.needs_clarification = result.needs_clarification or bool(result.missing_fields)
+            result.needs_clarification = bool(result.missing_fields)
         return result
 
 
