@@ -1,14 +1,11 @@
 <template>
   <div class="candidate-grid">
-    <div v-if="fallbackReason && partial" class="fallback-notice">
-      ⚠ {{ fallbackReason }}
-    </div>
-
     <div class="grid">
-      <div
+      <button
         v-for="card in candidates"
         :key="card.venue_id"
         class="candidate-card"
+        type="button"
         @click="$emit('select', card.venue_id)"
       >
         <div class="card-header">
@@ -19,13 +16,13 @@
         </div>
         <h3 class="venue-name">{{ card.name }}</h3>
         <p class="address">{{ card.address || '台北市' }}</p>
-        <div class="rating" v-if="card.rating">★ {{ card.rating.toFixed(1) }}</div>
+        <div v-if="card.rating" class="rating">★ {{ card.rating.toFixed(1) }}</div>
         <p class="why">{{ card.why_recommended }}</p>
-      </div>
+      </button>
     </div>
 
-    <button class="none-btn" @click="$emit('demand')">
-      沒有想去的？告訴我你想找什麼
+    <button class="none-btn" type="button" @click="$emit('demand')">
+      這些都還好，換一種條件幫我找
     </button>
   </div>
 </template>
@@ -35,8 +32,6 @@ import type { CandidateCard } from '../types/trip'
 
 defineProps<{
   candidates: CandidateCard[]
-  partial?: boolean
-  fallbackReason?: string | null
 }>()
 
 defineEmits<{
@@ -48,15 +43,6 @@ defineEmits<{
 <style scoped>
 .candidate-grid {
   width: 100%;
-}
-
-.fallback-notice {
-  background: #fef9c3;
-  color: #92400e;
-  padding: 10px 14px;
-  border-radius: 10px;
-  font-size: 13px;
-  margin-bottom: 14px;
 }
 
 .grid {
@@ -73,17 +59,19 @@ defineEmits<{
 }
 
 .candidate-card {
-  background: white;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
   border: 1.5px solid #e2e8f0;
   border-radius: 14px;
   padding: 14px;
   cursor: pointer;
   transition: all 0.2s;
+  text-align: left;
+  width: 100%;
 }
 
 .candidate-card:hover {
-  border-color: #4d68bf;
-  box-shadow: 0 4px 16px rgba(77, 104, 191, 0.15);
+  border-color: #3b82f6;
+  box-shadow: 0 10px 24px rgba(59, 130, 246, 0.16);
   transform: translateY(-2px);
 }
 
@@ -114,6 +102,7 @@ defineEmits<{
 .distance {
   font-size: 12px;
   color: #64748b;
+  font-weight: 500;
 }
 
 .venue-name {
@@ -126,13 +115,13 @@ defineEmits<{
 .address {
   font-size: 12px;
   color: #94a3b8;
-  margin-bottom: 4px;
+  margin-bottom: 8px;
 }
 
 .rating {
   font-size: 12px;
   color: #f59e0b;
-  margin-bottom: 4px;
+  margin-bottom: 8px;
 }
 
 .why {
@@ -144,7 +133,7 @@ defineEmits<{
 .none-btn {
   width: 100%;
   padding: 12px;
-  background: transparent;
+  background: #f8fafc;
   border: 1.5px dashed #94a3b8;
   border-radius: 12px;
   color: #64748b;
@@ -155,8 +144,8 @@ defineEmits<{
 }
 
 .none-btn:hover {
-  border-color: #4d68bf;
-  color: #4d68bf;
-  background: #f0f4ff;
+  border-color: #3b82f6;
+  color: #1d4ed8;
+  background: #eff6ff;
 }
 </style>
