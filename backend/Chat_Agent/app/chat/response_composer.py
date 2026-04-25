@@ -230,21 +230,27 @@ class ResponseComposer:
     ) -> str:
         language = preferences.language or "en"
         if language == "zh-TW":
-            lines = [f"找不到「{query_name}」的完整比對，以下是名稱相似的旅宿："]
+            lines = [
+                f"⚠️ 在台北市政府合法旅宿登記名單中找不到「{query_name}」，若確實如此可能有安全風險。",
+                "以下是名稱相似的合法登記旅宿，請確認您訂的是否是其中一間：",
+            ]
             for i, c in enumerate(candidates, 1):
                 loc = c.district or ""
                 if c.address:
                     loc = f"{loc}，{c.address}" if loc else c.address
                 lines.append(f"{i}. {c.name}（{loc}）" if loc else f"{i}. {c.name}")
-            lines.append("請問是哪一間？可以直接告訴我完整名稱或提供電話讓我精確查詢。")
+            lines.append("如果不是以上任何一間，建議向主管機關（台北市觀光傳播局）確認後再入住。")
             return "\n".join(lines)
-        lines = [f"I couldn't find an exact match for \"{query_name}\". Here are the closest lodgings:"]
+        lines = [
+            f"⚠️ \"{query_name}\" was not found in Taipei City's registered lodging list, which may indicate a safety risk.",
+            "Here are the closest legally registered lodgings — please confirm if one of these is where you booked:",
+        ]
         for i, c in enumerate(candidates, 1):
             loc = c.district or ""
             if c.address:
                 loc = f"{loc}, {c.address}" if loc else c.address
             lines.append(f"{i}. {c.name} ({loc})" if loc else f"{i}. {c.name}")
-        lines.append("Which one did you book? You can tell me the exact name or provide a phone number for a precise lookup.")
+        lines.append("If none of these match, we recommend contacting the Taipei City Department of Information and Tourism before your stay.")
         return "\n".join(lines)
 
     def compose_lodging_not_found(
