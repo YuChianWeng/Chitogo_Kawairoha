@@ -700,6 +700,7 @@ async def get_candidates(
     lat: float = Query(...),
     lng: float = Query(...),
     max_minutes_per_leg: int = Query(..., ge=1, le=120),
+    sim_time: str | None = Query(None, description="Demo only: HH:MM simulated Taipei time"),
 ) -> JSONResponse:
     if not (-90 <= lat <= 90 and -180 <= lng <= 180):
         raise HTTPException(status_code=400, detail="candidates_error:invalid_coordinates")
@@ -734,22 +735,23 @@ async def get_candidates(
     await _save_session(session)
 
     # Check for go-home reminder
+    now_override = go_home_advisor.parse_sim_time(sim_time)
     go_home_reminder = None
     if session.return_time:
         dest_lat, dest_lng = lat, lng
         if session.accommodation and session.accommodation.hotel_lat and session.accommodation.hotel_lng:
             dest_lat = session.accommodation.hotel_lat
             dest_lng = session.accommodation.hotel_lng
-        
+
         dist_km = haversine_distance(lat, lng, dest_lat, dest_lng)
         transit_min = max(1, int(dist_km / 12.0 * 60))
-        
+
         # Proactive reminder (banner/message)
-        if go_home_advisor.should_remind(session, transit_min):
+        if go_home_advisor.should_remind(session, transit_min, now_override):
             go_home_reminder = f"距離回程的時間快到了（預計 {session.return_time}）"
 
         # Candidate card visibility
-        if go_home_advisor.is_in_window(session):
+        if go_home_advisor.is_in_window(session, now_override):
             # Add a Go Home card
             go_home_card = TripCandidateCard(
                 venue_id="GO_HOME",
@@ -999,6 +1001,7 @@ async def get_should_go_home(
     session_id: str = Query(...),
     lat: float = Query(...),
     lng: float = Query(...),
+    sim_time: str | None = Query(None, description="Demo only: HH:MM simulated Taipei time"),
 ) -> JSONResponse:
     session = await _get_session(session_id)
     try:
@@ -1014,6 +1017,8 @@ async def get_should_go_home(
             "time_remaining_min": None,
         })
 
+    now_override = go_home_advisor.parse_sim_time(sim_time)
+
     # Estimate transit time to return destination using haversine
     dest_lat, dest_lng = lat, lng  # fallback: use current location
     if session.accommodation and session.accommodation.hotel_lat and session.accommodation.hotel_lng:
@@ -1023,20 +1028,19 @@ async def get_should_go_home(
     dist_km = haversine_distance(lat, lng, dest_lat, dest_lng)
     transit_min = max(1, int(dist_km / 12.0 * 60))  # transit ~12 km/h
 
-    should = go_home_advisor.should_remind(session, transit_min)
+    should = go_home_advisor.should_remind(session, transit_min, now_override)
 
     if should:
         go_home_advisor.record_reminded(session)
         await _save_session(session)
 
-        # Calculate time remaining using Taipei timezone
         from zoneinfo import ZoneInfo
         taipei_tz = ZoneInfo("Asia/Taipei")
-        
+
         hh, mm = map(int, session.return_time.split(":"))
-        now_taipei = datetime.now(taipei_tz)
+        now_taipei = go_home_advisor._now_taipei(now_override)
         return_dt = now_taipei.replace(hour=hh, minute=mm, second=0, microsecond=0)
-        
+
         time_remaining = max(0, int((return_dt - now_taipei).total_seconds() / 60))
 
         return JSONResponse({
