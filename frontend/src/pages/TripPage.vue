@@ -231,6 +231,27 @@
                 </template>
                 <p v-else>{{ msg.text }}</p>
               </div>
+              <div v-if="!msg.pending && msg.candidates?.length" class="message-surface chat-candidates-surface">
+                <button
+                  v-for="c in msg.candidates"
+                  :key="c.place_id"
+                  class="chat-candidate-card"
+                  type="button"
+                  @click="onVenueSelected(c.place_id)"
+                >
+                  <div class="chat-card-header">
+                    <span class="chat-card-name">{{ c.name }}</span>
+                    <span v-if="c.rating" class="chat-card-rating">★ {{ c.rating.toFixed(1) }}</span>
+                  </div>
+                  <div class="chat-card-meta">
+                    <span v-if="c.district">{{ c.district }}</span>
+                    <span v-if="c.category">· {{ c.category }}</span>
+                    <span v-if="c.budget_level">· {{ c.budget_level }}</span>
+                  </div>
+                  <p v-if="c.why_recommended" class="chat-card-why">{{ c.why_recommended }}</p>
+                  <span class="chat-card-action">去這裡 →</span>
+                </button>
+              </div>
             </div>
           </div>
         </template>
@@ -277,6 +298,7 @@ import { useSimLocation } from '../composables/useSimLocation'
 import { useSimTime } from '../composables/useSimTime'
 import { checkGoHome, getCandidates, getSummary, selectVenue, sendMessage, snoozeGoHome } from '../services/api'
 import type { ChatMessage } from '../types/chat'
+import type { ChatCandidate } from '../types/itinerary'
 
 const LOADING_STEPS = [
   '找到你附近的地圖…',
@@ -674,7 +696,9 @@ async function handleComposerSubmit(text: string) {
       user_context: { lat: effectiveLat.value, lng: effectiveLng.value },
     })
     messages.value = messages.value.map(m =>
-      m.id === pendingId ? { ...m, text: res.message, pending: false } : m
+      m.id === pendingId
+        ? { ...m, text: res.message, pending: false, candidates: res.candidates?.length ? res.candidates : undefined }
+        : m
     )
   } catch {
     messages.value = messages.value.map(m =>
@@ -1376,5 +1400,70 @@ async function dismissBanner() {
     width: 100%;
     padding: 14px 20px;
   }
+}
+
+.chat-candidates-surface {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: var(--surface-2, #f5f5f5);
+  border-radius: 12px;
+}
+
+.chat-candidate-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  background: #fff;
+  border: 1px solid var(--border, #e0e0e0);
+  border-radius: 10px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &:hover {
+    border-color: var(--accent, #5b8dee);
+    box-shadow: 0 2px 8px rgba(91, 141, 238, 0.15);
+  }
+}
+
+.chat-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.chat-card-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-primary, #111);
+}
+
+.chat-card-rating {
+  font-size: 0.8rem;
+  color: #f59e0b;
+  white-space: nowrap;
+}
+
+.chat-card-meta {
+  font-size: 0.75rem;
+  color: var(--text-secondary, #666);
+}
+
+.chat-card-why {
+  font-size: 0.8rem;
+  color: var(--text-secondary, #555);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.chat-card-action {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--accent, #5b8dee);
+  margin-top: 2px;
 }
 </style>
