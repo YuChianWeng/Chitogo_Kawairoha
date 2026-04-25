@@ -276,7 +276,7 @@ class Session(BaseModel):
     accommodation: AccommodationConfig | None = None
     return_time: str | None = None
     return_destination: str | None = None
-    transport_config: TransportConfig | None = None
+    last_transport_config: TransportConfig | None = None
     visited_stops: list[VisitedStop] = Field(default_factory=list)
     gene_affinity_weights: dict[str, float] = Field(default_factory=dict)
     go_home_reminded_at: datetime | None = None

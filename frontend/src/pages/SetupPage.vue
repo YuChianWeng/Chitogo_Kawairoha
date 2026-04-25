@@ -69,24 +69,9 @@
         />
       </section>
 
-      <!-- Transport -->
-      <section class="section">
-        <h3 class="section-title">交通方式</h3>
-        <div class="checkbox-group">
-          <label v-for="m in ['walk', 'transit', 'drive']" :key="m" class="checkbox-label">
-            <input type="checkbox" :value="m" v-model="modes">
-            {{ { walk: '步行', transit: '大眾運輸', drive: '開車' }[m] }}
-          </label>
-        </div>
-        <div class="slider-group">
-          <label>每段最長時間：{{ maxMinutes }} 分鐘</label>
-          <input type="range" v-model.number="maxMinutes" min="5" max="120" step="5" class="slider" />
-        </div>
-      </section>
-
       <div v-if="errorText" class="error">{{ errorText }}</div>
 
-      <button class="submit-btn" :disabled="loading || modes.length === 0" @click="handleSubmit">
+      <button class="submit-btn" :disabled="loading" @click="handleSubmit">
         {{ loading ? '設定中…' : '開始探索' }}
       </button>
     </div>
@@ -109,8 +94,6 @@ const district = ref('')
 const budgetTier = ref<'budget' | 'mid' | 'luxury'>('mid')
 const returnTime = ref('')
 const returnDestination = ref('')
-const modes = ref<string[]>(['transit'])
-const maxMinutes = ref(30)
 const loading = ref(false)
 const errorText = ref('')
 
@@ -128,11 +111,6 @@ async function handleSubmit() {
     return
   }
 
-  if (modes.value.length === 0) {
-    errorText.value = '請至少選擇一種交通方式'
-    return
-  }
-
   loading.value = true
   errorText.value = ''
 
@@ -143,10 +121,6 @@ async function handleSubmit() {
         : { booked: false, district: district.value || undefined, budget_tier: budgetTier.value },
       return_time: returnTime.value || undefined,
       return_destination: returnDestination.value || undefined,
-      transport: {
-        modes: modes.value as ('walk' | 'transit' | 'drive')[],
-        max_minutes_per_leg: maxMinutes.value,
-      },
     })
 
     if (result.hotel_validation) {
