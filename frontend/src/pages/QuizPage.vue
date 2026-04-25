@@ -37,7 +37,7 @@
       </div>
       <h2 class="gene-title">你的旅遊基因：{{ gene }}</h2>
       <p class="gene-desc">{{ geneDescription }}</p>
-      <button class="start-btn" @click="goToSetup">開始規劃行程</button>
+      <button class="start-btn" @click="goToAccommodation">開始規劃行程</button>
     </div>
   </div>
 </template>
@@ -47,6 +47,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { createSession, submitQuiz } from '../services/api'
 import type { QuizAnswers } from '../types/trip'
+import { clearAccommodationState } from '../utils/accommodation'
 
 const router = useRouter()
 
@@ -144,6 +145,9 @@ onMounted(async () => {
     const session = await createSession()
     sessionId.value = session.session_id
     localStorage.setItem('chitogo_session_id', session.session_id)
+    localStorage.removeItem('chitogo_gene')
+    localStorage.removeItem('chitogo_mascot')
+    clearAccommodationState()
   } catch {
     errorText.value = '無法建立對話，請重新整理頁面。'
   }
@@ -185,8 +189,8 @@ function onMascotImgError(e: Event) {
   (e.target as HTMLImageElement).style.display = 'none'
 }
 
-function goToSetup() {
-  router.push('/setup')
+function goToAccommodation() {
+  router.push('/accommodation')
 }
 </script>
 

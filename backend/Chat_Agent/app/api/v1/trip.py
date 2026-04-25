@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import re
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, Literal
 
 import httpx
 from fastapi import APIRouter, HTTPException, Query, Request
@@ -28,6 +28,7 @@ from app.session.models import (
 )
 from app.session.store import session_store
 from app.tools.place_adapter import place_tool_adapter
+from app.tools.models import ToolPlace
 
 router = APIRouter(prefix="/trip", tags=["trip"])
 logger = logging.getLogger(__name__)
@@ -35,6 +36,19 @@ logger = logging.getLogger(__name__)
 _TIME_RE = re.compile(r"^\d{2}:\d{2}$")
 _gene_classifier = TravelGeneClassifier()
 _VALID_MODES = {"walk", "transit", "drive"}
+_ACCOMMODATION_MODES = {"booked", "need_hotel", "no_stay"}
+_BUDGET_TO_MAX_LEVEL = {
+    "budget": 1,
+    "mid": 2,
+    "luxury": 4,
+}
+_BUDGET_RANK = {
+    "PRICE_LEVEL_FREE": 0,
+    "INEXPENSIVE": 1,
+    "MODERATE": 2,
+    "EXPENSIVE": 3,
+    "VERY_EXPENSIVE": 4,
+}
 
 
 # ─── FSM guard ────────────────────────────────────────────────────────────────
@@ -63,19 +77,31 @@ class QuizResponse(BaseModel):
 
 
 class AccommodationInput(BaseModel):
-    booked: bool
+    mode: Literal["booked", "need_hotel", "no_stay"]
     hotel_name: str | None = None
     district: str | None = None
-    budget_tier: str | None = None
+    budget_tier: Literal["budget", "mid", "luxury"] | None = None
     model_config = ConfigDict(extra="forbid")
 
 
 class SetupRequest(BaseModel):
     session_id: str
-    accommodation: AccommodationInput
+    accommodation: AccommodationInput | None = None
     return_time: str | None = None
     return_destination: str | None = None
     model_config = ConfigDict(extra="forbid")
+
+
+class HotelRecommendationCard(BaseModel):
+    license_no: str | None = None
+    place_id: int | None = None
+    name: str
+    district: str | None = None
+    address: str | None = None
+    rating: float | None = None
+    budget_level: str | None = None
+    google_maps_uri: str | None = None
+    confidence: float | None = None
 
 
 class HotelValidationResponse(BaseModel):
@@ -85,8 +111,7 @@ class HotelValidationResponse(BaseModel):
     confidence: float | None
     district: str | None
     address: str | None
-    alternatives: list[dict[str, Any]]
-    recommendations: list[dict[str, Any]]
+    alternatives: list[HotelRecommendationCard]
     last_updated: str
 
 
@@ -94,6 +119,9 @@ class SetupResponse(BaseModel):
     session_id: str
     accommodation_status: str
     hotel_validation: HotelValidationResponse | None
+    hotel_recommendations: list[HotelRecommendationCard]
+    recommendation_status: str | None
+    next_step: Literal["accommodation", "setup", "trip"]
     setup_complete: bool
 
 
@@ -188,44 +216,277 @@ def _transport_from_query(request: Request, *, max_minutes_per_leg: int) -> Tran
     )
 
 
-def _serialize_lodging_recommendation(item: Any) -> dict[str, Any]:
-    return {
-        "name": item.name,
-        "district": item.district,
-        "address": item.address,
-    }
+def _normalize_lodging_name(name: str) -> str:
+    return " ".join(name.split()).casefold()
+
+
+def _budget_rank(value: str | None) -> int | None:
+    if value is None:
+        return None
+    return _BUDGET_RANK.get(value)
+
+
+def _place_lookup_key(value: str | int | None) -> int | None:
+    if value is None:
+        return None
+    if isinstance(value, int):
+        return value
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _is_exact_lodging_match(query_name: str, matched_name: str) -> bool:
+    return _normalize_lodging_name(query_name) == _normalize_lodging_name(matched_name)
+
+
+def _serialize_hotel_card(
+    *,
+    license_no: str | None,
+    place_id: int | None,
+    name: str,
+    district: str | None,
+    address: str | None,
+    place: ToolPlace | None = None,
+    confidence: float | None = None,
+) -> HotelRecommendationCard:
+    return HotelRecommendationCard(
+        license_no=license_no,
+        place_id=place_id,
+        name=name,
+        district=district or getattr(place, "district", None),
+        address=address or getattr(place, "formatted_address", None),
+        rating=getattr(place, "rating", None),
+        budget_level=getattr(place, "budget_level", None),
+        google_maps_uri=getattr(place, "google_maps_uri", None),
+        confidence=confidence,
+    )
+
+
+async def _load_place_map(place_ids: list[int]) -> dict[int, ToolPlace]:
+    unique_place_ids = list(dict.fromkeys(place_ids))
+    if not unique_place_ids:
+        return {}
+
+    result = await place_tool_adapter.batch_get_places(place_ids=unique_place_ids)
+    if result.status != "ok":
+        return {}
+
+    place_map: dict[int, ToolPlace] = {}
+    for item in result.items:
+        place_id = _place_lookup_key(item.venue_id)
+        if place_id is not None:
+            place_map[place_id] = item
+    return place_map
+
+
+def _recommendation_scope_steps(
+    *,
+    district: str | None,
+    max_budget_level: int | None,
+) -> list[tuple[str, str | None, int | None]]:
+    steps: list[tuple[str, str | None, int | None]] = []
+    seen: set[tuple[str | None, int | None]] = set()
+
+    def _add(status: str, scope_district: str | None, scope_budget: int | None) -> None:
+        key = (scope_district, scope_budget)
+        if key in seen:
+            return
+        seen.add(key)
+        steps.append((status, scope_district, scope_budget))
+
+    _add("matched_preferences", district, max_budget_level)
+    if max_budget_level is not None:
+        _add("relaxed_budget", district, None)
+    if district is not None:
+        _add("expanded_citywide", None, max_budget_level)
+    if district is not None or max_budget_level is not None:
+        _add("expanded_citywide_and_budget", None, None)
+    return steps
+
+
+async def _list_recommendation_cards(
+    *,
+    district: str | None,
+    max_budget_level: int | None,
+    limit: int,
+    exclude_names: set[str],
+) -> list[HotelRecommendationCard]:
+    lodgings = await place_tool_adapter.list_legal_lodgings(
+        district=district,
+        limit=100,
+    )
+    if lodgings.status != "ok":
+        return []
+
+    place_map = await _load_place_map(
+        [item.place_id for item in lodgings.items if item.place_id is not None]
+    )
+    excluded = {_normalize_lodging_name(name) for name in exclude_names if name}
+    ranked_rows: list[tuple[float, int, str, HotelRecommendationCard]] = []
+
+    for item in lodgings.items:
+        normalized_name = _normalize_lodging_name(item.name)
+        if normalized_name in excluded:
+            continue
+
+        place = place_map.get(item.place_id) if item.place_id is not None else None
+        if max_budget_level is not None:
+            rank = _budget_rank(getattr(place, "budget_level", None))
+            if rank is None or rank > max_budget_level:
+                continue
+
+        card = _serialize_hotel_card(
+            license_no=item.license_no,
+            place_id=item.place_id,
+            name=item.name,
+            district=item.district,
+            address=item.address,
+            place=place,
+        )
+        rating = card.rating if card.rating is not None else -1.0
+        rating_count = getattr(place, "user_rating_count", 0) or 0
+        ranked_rows.append((rating, rating_count, normalized_name, card))
+
+    ranked_rows.sort(key=lambda row: (-row[0], -row[1], row[2]))
+    return [row[3] for row in ranked_rows[:limit]]
 
 
 async def _get_lodging_recommendations(
     *,
     district: str | None,
+    budget_tier: str | None,
     limit: int,
     exclude_names: set[str],
-) -> list[dict[str, Any]]:
-    items: list[dict[str, Any]] = []
-    seen_names = {name.casefold() for name in exclude_names}
+) -> tuple[list[HotelRecommendationCard], str | None]:
+    max_budget_level = _BUDGET_TO_MAX_LEVEL.get(budget_tier)
+    steps = _recommendation_scope_steps(
+        district=district,
+        max_budget_level=max_budget_level,
+    )
 
-    async def _append_recommendations(scope_district: str | None) -> None:
-        recommendations = await place_tool_adapter.list_legal_lodgings(
+    for status, scope_district, scope_budget in steps:
+        cards = await _list_recommendation_cards(
             district=scope_district,
+            max_budget_level=scope_budget,
             limit=limit,
+            exclude_names=exclude_names,
         )
-        if recommendations.status != "ok":
-            return
+        if cards:
+            return cards, status
 
-        for item in recommendations.items:
-            normalized_name = item.name.casefold()
-            if normalized_name in seen_names:
-                continue
-            items.append(_serialize_lodging_recommendation(item))
-            seen_names.add(normalized_name)
-            if len(items) >= limit:
-                return
+    return [], "no_results"
 
-    await _append_recommendations(district)
-    if district and len(items) < limit:
-        await _append_recommendations(None)
-    return items
+
+async def _get_candidate_cards(
+    candidates: list[Any],
+) -> list[HotelRecommendationCard]:
+    place_map = await _load_place_map(
+        [item.place_id for item in candidates if getattr(item, "place_id", None) is not None]
+    )
+    cards: list[HotelRecommendationCard] = []
+    for item in candidates:
+        place_id = getattr(item, "place_id", None)
+        place = place_map.get(place_id) if place_id is not None else None
+        cards.append(
+            _serialize_hotel_card(
+                license_no=getattr(item, "license_no", None),
+                place_id=place_id,
+                name=item.name,
+                district=item.district,
+                address=item.address,
+                place=place,
+                confidence=getattr(item, "confidence", None),
+            )
+        )
+    return cards
+
+
+def _store_accommodation(
+    session: Session,
+    *,
+    mode: Literal["booked", "need_hotel", "no_stay"],
+    booked: bool,
+    hotel_name: str | None = None,
+    hotel_valid: bool | None = None,
+    matched_name: str | None = None,
+    district: str | None = None,
+    budget_tier: str | None = None,
+    place: ToolPlace | None = None,
+) -> None:
+    session.accommodation = AccommodationConfig(
+        mode=mode,
+        booked=booked,
+        hotel_name=hotel_name,
+        hotel_lat=getattr(place, "lat", None),
+        hotel_lng=getattr(place, "lng", None),
+        hotel_valid=hotel_valid,
+        matched_name=matched_name,
+        district=district,
+        budget_tier=budget_tier,
+    )
+
+
+async def _validate_lodging_selection(
+    *,
+    lodging_name: str,
+    budget_tier: str | None = None,
+) -> tuple[HotelValidationResponse, list[HotelRecommendationCard], str | None, ToolPlace | None, str]:
+    try:
+        legal = await place_tool_adapter.check_lodging_legal_status(name=lodging_name)
+        candidates = await place_tool_adapter.search_lodging_candidates(name=lodging_name, limit=3)
+    except httpx.HTTPError as exc:
+        raise HTTPException(status_code=503, detail="candidates_error:data_service_unavailable") from exc
+
+    if legal.status != "ok":
+        raise HTTPException(status_code=503, detail="candidates_error:data_service_unavailable")
+
+    alternatives = await _get_candidate_cards(candidates.items if candidates.status == "ok" else [])
+
+    if legal.is_legal and legal.lodging:
+        matched_name = legal.lodging.name
+        exact_match = _is_exact_lodging_match(lodging_name, matched_name)
+        matched_place = None
+        if legal.lodging.place_id is not None:
+            place_map = await _load_place_map([legal.lodging.place_id])
+            matched_place = place_map.get(legal.lodging.place_id)
+        hotel_validation = HotelValidationResponse(
+            valid=True,
+            matched_name=matched_name,
+            match_type="exact" if exact_match else "fuzzy",
+            confidence=1.0 if exact_match else legal.confidence,
+            district=legal.lodging.district,
+            address=legal.lodging.address,
+            alternatives=[],
+            last_updated=str(datetime.now(UTC).date()),
+        )
+        return hotel_validation, [], None, matched_place, ("validated" if exact_match else "fuzzy_match")
+
+    preferred_district = next(
+        (item.district for item in alternatives if item.district),
+        None,
+    )
+    recommendations, recommendation_status = await _get_lodging_recommendations(
+        district=preferred_district,
+        budget_tier=budget_tier,
+        limit=3,
+        exclude_names={
+            lodging_name,
+            *(item.name for item in alternatives),
+        },
+    )
+    hotel_validation = HotelValidationResponse(
+        valid=False,
+        matched_name=None,
+        match_type=None,
+        confidence=None,
+        district=None,
+        address=None,
+        alternatives=alternatives,
+        last_updated=str(datetime.now(UTC).date()),
+    )
+    return hotel_validation, recommendations, recommendation_status, None, "not_found"
 
 
 # ─── POST /quiz ───────────────────────────────────────────────────────────────
@@ -280,99 +541,137 @@ async def post_setup(payload: SetupRequest) -> SetupResponse:
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
-    acc = payload.accommodation
     hotel_validation: HotelValidationResponse | None = None
+    hotel_recommendations: list[HotelRecommendationCard] = []
+    recommendation_status: str | None = None
     accommodation_status = "not_required"
-    setup_complete = True
+    next_step: Literal["accommodation", "setup", "trip"] = "accommodation"
+    setup_complete = False
 
-    if acc.booked:
-        if not acc.hotel_name:
-            raise HTTPException(status_code=400, detail="setup_error:hotel_name_required")
+    if payload.accommodation is not None:
+        acc = payload.accommodation
+        if acc.mode not in _ACCOMMODATION_MODES:
+            raise HTTPException(status_code=400, detail="setup_error:invalid_accommodation_mode")
 
-        # Call Data Service for hotel validation
-        try:
-            legal = await place_tool_adapter.check_lodging_legal_status(name=acc.hotel_name)
-            candidates = await place_tool_adapter.search_lodging_candidates(name=acc.hotel_name, limit=3)
-        except httpx.HTTPError as exc:
-            raise HTTPException(status_code=503, detail="candidates_error:data_service_unavailable") from exc
-        if legal.status != "ok":
-            raise HTTPException(status_code=503, detail="candidates_error:data_service_unavailable")
+        if acc.mode == "booked":
+            if not acc.hotel_name:
+                raise HTTPException(status_code=400, detail="setup_error:hotel_name_required")
 
-        alternatives: list[dict[str, Any]] = []
-        if candidates.status == "ok" and candidates.items:
-            alternatives = [
-                {
-                    "name": item.name,
-                    "district": item.district,
-                    "address": item.address,
-                    "confidence": item.confidence,
-                }
-                for item in candidates.items
-            ]
-
-        if legal.status == "ok" and legal.is_legal and legal.lodging:
-            lodging = legal.lodging
-            accommodation_status = "validated" if legal.match_type == "exact" else "fuzzy_match"
-            hotel_validation = HotelValidationResponse(
-                valid=True,
-                matched_name=lodging.name,
-                match_type=legal.match_type,
-                confidence=legal.confidence,
-                district=lodging.district,
-                address=lodging.address,
-                alternatives=[],
-                recommendations=[],
-                last_updated=str(datetime.now(UTC).date()),
+            hotel_validation, hotel_recommendations, recommendation_status, matched_place, accommodation_status = (
+                await _validate_lodging_selection(
+                    lodging_name=acc.hotel_name,
+                    budget_tier=acc.budget_tier,
+                )
             )
+            if hotel_validation.valid:
+                _store_accommodation(
+                    session,
+                    mode="booked",
+                    booked=True,
+                    hotel_name=hotel_validation.matched_name,
+                    hotel_valid=True,
+                    matched_name=hotel_validation.matched_name,
+                    district=hotel_validation.district,
+                    place=matched_place,
+                )
+                next_step = "setup"
+            else:
+                _store_accommodation(
+                    session,
+                    mode="booked",
+                    booked=True,
+                    hotel_name=acc.hotel_name,
+                    hotel_valid=False,
+                    matched_name=None,
+                )
+                next_step = "accommodation"
+
+        elif acc.mode == "need_hotel":
+            if acc.hotel_name:
+                hotel_validation, hotel_recommendations, recommendation_status, matched_place, accommodation_status = (
+                    await _validate_lodging_selection(
+                        lodging_name=acc.hotel_name,
+                        budget_tier=acc.budget_tier,
+                    )
+                )
+                if hotel_validation.valid:
+                    _store_accommodation(
+                        session,
+                        mode="need_hotel",
+                        booked=True,
+                        hotel_name=hotel_validation.matched_name,
+                        hotel_valid=True,
+                        matched_name=hotel_validation.matched_name,
+                        district=hotel_validation.district or acc.district,
+                        budget_tier=acc.budget_tier,
+                        place=matched_place,
+                    )
+                    next_step = "setup"
+                else:
+                    _store_accommodation(
+                        session,
+                        mode="need_hotel",
+                        booked=False,
+                        hotel_name=acc.hotel_name,
+                        hotel_valid=False,
+                        district=acc.district,
+                        budget_tier=acc.budget_tier,
+                    )
+                    next_step = "accommodation"
+            else:
+                hotel_recommendations, recommendation_status = await _get_lodging_recommendations(
+                    district=acc.district,
+                    budget_tier=acc.budget_tier,
+                    limit=3,
+                    exclude_names=set(),
+                )
+                accommodation_status = "recommending"
+                _store_accommodation(
+                    session,
+                    mode="need_hotel",
+                    booked=False,
+                    district=acc.district,
+                    budget_tier=acc.budget_tier,
+                )
+                next_step = "accommodation"
+
         else:
-            preferred_district = next(
-                (item["district"] for item in alternatives if item.get("district")),
-                None,
+            _store_accommodation(
+                session,
+                mode="no_stay",
+                booked=False,
             )
-            recommendations = await _get_lodging_recommendations(
-                district=preferred_district,
-                limit=3,
-                exclude_names={
-                    acc.hotel_name,
-                    *(item["name"] for item in alternatives),
-                },
-            )
-            accommodation_status = "not_found"
-            setup_complete = False
-            hotel_validation = HotelValidationResponse(
-                valid=False,
-                matched_name=None,
-                match_type=None,
-                confidence=None,
-                district=None,
-                address=None,
-                alternatives=alternatives,
-                recommendations=recommendations,
-                last_updated=str(datetime.now(UTC).date()),
-            )
+            next_step = "setup"
 
-        session.accommodation = AccommodationConfig(
-            booked=True,
-            hotel_name=acc.hotel_name,
-            hotel_valid=hotel_validation.valid,
-            matched_name=hotel_validation.matched_name,
-        )
+        if payload.return_time:
+            if not _TIME_RE.fullmatch(payload.return_time):
+                raise HTTPException(status_code=400, detail="setup_error:invalid_return_time")
+            session.return_time = payload.return_time
+
+        if payload.return_destination:
+            session.return_destination = payload.return_destination
+
+        session.flow_state = FlowState.TRANSPORT
     else:
-        session.accommodation = AccommodationConfig(
-            booked=False,
-            district=acc.district,
-            budget_tier=acc.budget_tier,
-        )
+        if session.accommodation is None:
+            raise HTTPException(status_code=400, detail="setup_error:accommodation_required")
+        if (
+            session.accommodation.mode != "no_stay"
+            and session.accommodation.hotel_valid is not True
+        ):
+            raise HTTPException(status_code=400, detail="setup_error:accommodation_incomplete")
 
-    if payload.return_time:
-        if not _TIME_RE.fullmatch(payload.return_time):
-            raise HTTPException(status_code=400, detail="setup_error:invalid_return_time")
-        session.return_time = payload.return_time
+        if payload.return_time:
+            if not _TIME_RE.fullmatch(payload.return_time):
+                raise HTTPException(status_code=400, detail="setup_error:invalid_return_time")
+            session.return_time = payload.return_time
 
-    if payload.return_destination:
-        session.return_destination = payload.return_destination
+        if payload.return_destination:
+            session.return_destination = payload.return_destination
 
-    session.flow_state = FlowState.RECOMMENDING if setup_complete else FlowState.TRANSPORT
+        session.flow_state = FlowState.RECOMMENDING
+        next_step = "trip"
+        setup_complete = True
 
     await _save_session(session)
 
@@ -380,6 +679,9 @@ async def post_setup(payload: SetupRequest) -> SetupResponse:
         session_id=session.session_id,
         accommodation_status=accommodation_status,
         hotel_validation=hotel_validation,
+        hotel_recommendations=hotel_recommendations,
+        recommendation_status=recommendation_status,
+        next_step=next_step,
         setup_complete=setup_complete,
     )
 
