@@ -150,7 +150,6 @@ import CandidateGrid from '../components/CandidateGrid.vue'
 import DemandModal from '../components/DemandModal.vue'
 import NavigationPanel from '../components/NavigationPanel.vue'
 import RatingCard from '../components/RatingCard.vue'
-import DemandModal from '../components/DemandModal.vue'
 import { getCandidates, selectVenue, checkGoHome, getSummary } from '../services/api'
 import type { CandidatesResult, SelectResult, RateResult, CandidateCard } from '../types/trip'
 import { useMapState } from '../composables/useMapState'
@@ -289,15 +288,26 @@ async function submitTransport() {
 async function loadCandidates(transport?: CandidateTransportInput) {
   const sessionId = localStorage.getItem('chitogo_session_id')
   const activeTransport = transport || lastRequestedTransport.value
-  if (!sessionId || !activeTransport) return
+  if (!sessionId || !activeTransport) {
+    candidatesError.value = '缺少行程資料，請重新開始。'
+    tripPhase.value = 'TRANSPORT_PROMPT'
+    return
+  }
 
   loadingCandidates.value = true
   candidatesError.value = null
   candidatesResult.value = null
+  lastRequestedTransport.value = activeTransport
 
   try {
-    candidatesResult.value = await getCandidates(sessionId, currentLat.value, currentLng.value)
+    candidatesResult.value = await getCandidates(
+      sessionId,
+      currentLat.value,
+      currentLng.value,
+      activeTransport,
+    )
     setSpotCandidates(candidatesResult.value.candidates)
+    tripPhase.value = 'SELECTING'
   } catch (err: unknown) {
     const error = err as { response?: { data?: { detail?: string } } }
     candidatesError.value = error?.response?.data?.detail ?? '無法載入推薦，請重試。'
