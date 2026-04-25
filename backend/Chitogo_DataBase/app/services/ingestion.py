@@ -8,6 +8,17 @@ from app.models.place_features import PlaceFeatures
 from app.models.place_source_google import PlaceSourceGoogle
 from app.services.category import map_category
 
+_BLOCKED_TYPES: frozenset[str] = frozenset({
+    "real_estate_agency", "insurance_agency", "lawyer", "accounting",
+    "doctor", "dentist", "hospital", "pharmacy", "veterinary_care",
+    "bank", "atm",
+    "gas_station", "car_wash", "car_repair", "car_dealer",
+    "storage", "moving_company",
+    "funeral_home", "cemetery",
+})
+
+_MIN_RATING_COUNT = 10
+
 TAIPEI_DISTRICT_TYPE_PRIORITY = [
     "administrative_area_level_2",
     "sublocality",
@@ -128,6 +139,40 @@ def ingest_google_place(
             "place_id": None,
             "google_place_id": google_place_id,
             "action": "filtered_out",
+        }
+
+    # Layer A-1 — type blocklist: non-tourist venue types
+    all_types: list[str] = payload.get("types") or []
+    primary_type_raw: str | None = payload.get("primaryType")
+    if primary_type_raw in _BLOCKED_TYPES or any(t in _BLOCKED_TYPES for t in all_types):
+        db.add(raw_record)
+        db.commit()
+        return {
+            "place_id": None,
+            "google_place_id": google_place_id,
+            "action": "blocked_type",
+        }
+
+    # Layer A-2 — business status: skip closed places
+    business_status: str | None = payload.get("businessStatus")
+    if business_status is not None and business_status != "OPERATIONAL":
+        db.add(raw_record)
+        db.commit()
+        return {
+            "place_id": None,
+            "google_place_id": google_place_id,
+            "action": "blocked_status",
+        }
+
+    # Layer A-3 — quality gate: skip places with very few reviews
+    user_rating_count = payload.get("userRatingCount")
+    if user_rating_count is not None and user_rating_count < _MIN_RATING_COUNT:
+        db.add(raw_record)
+        db.commit()
+        return {
+            "place_id": None,
+            "google_place_id": google_place_id,
+            "action": "blocked_quality",
         }
 
     place_data = {
