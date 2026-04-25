@@ -32,13 +32,24 @@
     </div>
 
     <div class="result-card" v-else-if="phase === 'result'">
-      <div class="mascot-img">
-        <img :src="`/images/mascot_${mascot}.svg`" :alt="gene" @error="onMascotImgError">
-      </div>
-      <h2 class="gene-title">你的旅遊基因：{{ gene }}</h2>
-      <p class="gene-desc">{{ geneDescription }}</p>
-      <button class="start-btn" @click="goToAccommodation">開始規劃行程</button>
+  <div class="result-header">
+    <div class="mascot-container">
+      <img :src="`/images/mascot_${mascot}.png`" :alt="gene" class="mascot-animate" @error="onMascotImgError">
     </div>
+    <p class="result-subtitle">測驗完成！你的旅遊靈魂是...</p>
+    <h2 class="gene-title">{{ gene }}</h2>
+  </div>
+
+  <div class="description-box">
+    <p class="gene-desc">{{ geneDescription }}</p>
+  </div>
+
+  <div class="action-group">
+    <button class="start-btn" @click="goToSetup">開始規劃行程</button>
+    <button class="retry-link" @click="resetQuiz">重新測驗</button>
+  </div>
+</div>
+
   </div>
 </template>
 
@@ -192,6 +203,13 @@ function onMascotImgError(e: Event) {
 function goToAccommodation() {
   router.push('/accommodation')
 }
+function resetQuiz() {
+  phase.value = 'quiz'
+  currentQ.value = 1
+  answers.value = {}
+  selectedAnswer.value = ''
+  errorText.value = ''
+}
 </script>
 
 <style scoped>
@@ -329,6 +347,7 @@ function goToAccommodation() {
   font-size: 15px;
   line-height: 1.7;
   margin-bottom: 28px;
+  white-space: pre-wrap;
 }
 
 .start-btn {
@@ -346,5 +365,84 @@ function goToAccommodation() {
 
 .start-btn:hover {
   background: #3d55a0;
+}
+.result-card {
+  text-align: center;
+  animation: slideUp 0.6s ease-out;
+}
+
+.result-header {
+  margin-bottom: 24px;
+}
+
+.mascot-container {
+  border-radius: 12px; 
+  width: 100%;
+  max-width: 320px; 
+  height: auto;
+  aspect-ratio: 2336 / 1824; 
+  margin: 0 auto 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f0f4ff;
+  overflow: hidden;
+}
+
+.mascot-animate {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: float 3s ease-in-out infinite;
+}
+
+.result-subtitle {
+  font-size: 14px;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+
+.gene-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: #4d68bf;
+  letter-spacing: 1px;
+}
+
+.description-box {
+  background: #f8fafc;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 32px;
+  border-left: 4px solid #4d68bf;
+  text-align: left;
+}
+
+.gene-desc {
+  color: #475569;
+  font-size: 15px;
+  line-height: 1.8;
+  margin: 0;
+}
+
+.retry-link {
+  display: block;
+  margin: 16px auto 0;
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
 }
 </style>
