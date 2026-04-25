@@ -4,7 +4,7 @@
     <aside class="sidebar">
       <div class="logo-container">
         <img src="/images/111_200.svg" alt="Logo" class="logo-icon">
-        <h1 class="logo-text">𨑨迌迌<br>Chito-Go</h1>
+        <h1 class="logo-text">𨑨迌迌<br><span class="logo-sub">Chito-Go</span></h1>
       </div>
       <nav class="nav-menu">
         <button
@@ -26,7 +26,7 @@
       <!-- Chat Area -->
       <main class="chat-area" :style="{ width: chatWidth + 'px' }">
         <header class="chat-header">
-          <h2>𨑨迌迌 Chito-Go</h2>
+          <h2 class="chat-title">𨑨迌迌 <span class="chat-title-accent">Chito-Go</span></h2>
           <div class="info-bar">
             <div class="info-item">
               <img src="/images/111_361.svg" alt="Weather">
@@ -167,97 +167,135 @@ onBeforeUnmount(() => {
 /* ── Outer shell ── */
 .app-container {
   display: flex;
-  width: 1440px;
+  width: full;
   min-height: 100vh;
   padding: 20px 80px;
   gap: 0;
   margin: 0 auto;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(191, 219, 254, 0.55) 0%, transparent 40%),
+    radial-gradient(circle at 100% 100%, rgba(199, 210, 254, 0.45) 0%, transparent 40%),
+    linear-gradient(180deg, #eff6ff 0%, #f8fbff 50%, #f8fafc 100%);
 }
 
 /* ── Sidebar ── */
 .sidebar {
   width: 193px;
-  background: white;
-  border-radius: 15px;
+  background: linear-gradient(180deg, #f0f6ff 0%, #ffffff 100%);
+  border-radius: 20px;
+  border: 1px solid rgba(191, 219, 254, 0.6);
   flex-shrink: 0;
-  padding: 40px 20px;
+  padding: 36px 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  box-shadow: 0 8px 32px rgba(37, 99, 235, 0.08), 0 1px 4px rgba(37, 99, 235, 0.06);
 }
 
+/* ── Logo ── */
 .logo-container {
   text-align: center;
-  margin-bottom: 60px;
+  margin-bottom: 52px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
 }
 
 .logo-icon {
   width: 40px;
   height: 40px;
-  margin-bottom: 10px;
 }
 
 .logo-text {
-  font-size: 16px;
-  font-weight: bold;
-  color: #000;
-  line-height: 1.4;
+  font-size: 15px;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.35;
+  margin: 0;
 }
 
+.logo-sub {
+  font-size: 13px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 0.02em;
+}
+
+/* ── Nav ── */
 .nav-menu {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
 }
 
 .nav-item {
   display: flex;
   align-items: center;
-  padding: 12px 20px;
+  padding: 11px 16px;
   border: none;
   background: transparent;
-  color: #6c7072;
-  border-radius: 15px;
-  font-size: 16px;
+  color: #64748b;
+  border-radius: 14px;
+  font-size: 14px;
   font-family: inherit;
-  gap: 15px;
+  font-weight: 500;
+  gap: 12px;
   cursor: pointer;
   text-align: left;
   width: 100%;
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+}
+
+.nav-item:hover:not(.active) {
+  background: rgba(37, 99, 235, 0.07);
+  color: #1d4ed8;
 }
 
 .nav-item img {
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  opacity: 0.7;
+  transition: opacity 0.18s;
+}
+
+.nav-item:hover:not(.active) img {
+  opacity: 1;
 }
 
 .nav-icon-placeholder {
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   display: inline-block;
   flex-shrink: 0;
 }
 
 .nav-item.active {
-  background-color: #4d68bf;
+  background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
   color: #fff;
-  box-shadow: 0 4px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.28), 0 2px 6px rgba(79, 70, 229, 0.18);
+  font-weight: 700;
 }
 
 .nav-item.active img {
   filter: brightness(0) invert(1);
+  opacity: 1;
 }
 
 /* ── Main content ── */
 .main-content {
   display: flex;
-  margin-left: 24px;
+  margin-left: 20px;
   height: calc(100vh - 40px);
   flex: 1;
-  border-radius: 15px;
+  border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 0 20px rgba(0,0,0,0.05);
+  box-shadow: 0 8px 40px rgba(15, 23, 42, 0.1), 0 2px 8px rgba(15, 23, 42, 0.06);
   min-width: 0;
 }
 
@@ -272,24 +310,38 @@ onBeforeUnmount(() => {
 
 .chat-header {
   text-align: center;
-  padding-top: 20px;
+  padding: 18px 0 0;
   flex-shrink: 0;
+  background: white;
 }
 
-.chat-header h2 {
-  font-size: 18px;
-  margin-bottom: 15px;
-  color: #000;
+.chat-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 14px;
+  letter-spacing: -0.01em;
+}
+
+.chat-title-accent {
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .info-bar {
-  background-color: #4d68bf;
-  color: white;
+  background: rgba(239, 246, 255, 0.9);
+  border-top: 1px solid rgba(191, 219, 254, 0.7);
+  border-bottom: 1px solid rgba(191, 219, 254, 0.7);
+  backdrop-filter: blur(8px);
+  color: #1d4ed8;
   display: flex;
   justify-content: space-around;
   align-items: center;
-  height: 33px;
+  height: 36px;
   font-size: 12px;
+  font-weight: 600;
 }
 
 .info-item {
@@ -299,8 +351,9 @@ onBeforeUnmount(() => {
 }
 
 .info-item img {
-  width: 16px;
-  height: 16px;
+  width: 15px;
+  height: 15px;
+  opacity: 0.75;
 }
 
 /* ── Chat content (wizard host) ── */
@@ -322,7 +375,7 @@ onBeforeUnmount(() => {
 
 /* ── Divider ── */
 .divider {
-  width: 24px;
+  width: 20px;
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -339,7 +392,7 @@ onBeforeUnmount(() => {
 }
 
 .divider:focus-visible {
-  outline: 2px solid #4d68bf;
+  outline: 2px solid #2563eb;
 }
 
 .divider-line {
@@ -347,9 +400,9 @@ onBeforeUnmount(() => {
   top: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 3px;
+  width: 2px;
   height: 100%;
-  background-color: #4d68bf;
+  background: linear-gradient(180deg, transparent 0%, #bfdbfe 15%, #93c5fd 50%, #bfdbfe 85%, transparent 100%);
   pointer-events: none;
 }
 
@@ -377,13 +430,17 @@ onBeforeUnmount(() => {
 
 .placeholder-view h2 {
   font-size: 24px;
-  color: #4d68bf;
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   margin-bottom: 12px;
 }
 
 .placeholder-view p {
   font-size: 16px;
 }
+
 </style>
 
 <style>

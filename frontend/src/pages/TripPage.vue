@@ -70,7 +70,7 @@
               <div v-if="candidatesError" class="message-bubble assistant error-bubble">
                 <p>{{ candidatesError }}</p>
               </div>
-              <div class="message-surface composer-surface">
+              <div class="message-surface composer-surface" :class="{ 'composer-surface--loading': loadingCandidates }">
                 <div class="transport-grid">
                   <label
                     v-for="mode in transportOptions"
@@ -105,9 +105,27 @@
 
                 <p class="transport-hint">你一送出，我就會依這組交通條件重新整理這一輪的候選景點。</p>
 
-                <button class="primary-btn" type="button" :disabled="loadingCandidates" @click="submitTransport">
-                  {{ loadingCandidates ? '整理推薦中…' : '開始聽推薦' }}
-                </button>
+                <Transition name="loading-swap" mode="out-in">
+                  <div v-if="loadingCandidates" class="loading-panel" key="loading">
+                    <div class="loading-orb-wrap">
+                      <div class="loading-orb-ring"></div>
+                      <div class="loading-orb">GO</div>
+                    </div>
+                    <Transition name="step-fade" mode="out-in">
+                      <p class="loading-step" :key="loadingStepIndex">
+                        {{ LOADING_STEPS[loadingStepIndex] }}
+                      </p>
+                    </Transition>
+                    <div class="loading-dots">
+                      <span class="dot"></span>
+                      <span class="dot"></span>
+                      <span class="dot"></span>
+                    </div>
+                  </div>
+                  <button v-else class="primary-btn" type="button" key="btn" @click="submitTransport">
+                    開始聽推薦
+                  </button>
+                </Transition>
               </div>
             </div>
           </div>
@@ -231,7 +249,15 @@ import CandidateGrid from '../components/CandidateGrid.vue'
 import DemandModal from '../components/DemandModal.vue'
 import NavigationPanel from '../components/NavigationPanel.vue'
 import RatingCard from '../components/RatingCard.vue'
-import { checkGoHome, getCandidates, getSummary, selectVenue } from '../services/api'
+import { checkGoHome, getCandidates, getSummary, selectVenue, snoozeGoHome } from '../services/api'
+
+const LOADING_STEPS = [
+  '找到你附近的地圖…',
+  'AI 正在篩選景點…',
+  '計算交通時間中…',
+  '整理最適合的推薦…',
+  '快好了，再等一下…',
+]
 import type {
   CandidateCard,
   CandidateTransportInput,
@@ -297,6 +323,8 @@ const tripPhase = ref<TripPhase>('TRANSPORT_PROMPT')
 const candidatesResult = ref<CandidatesResult | null>(null)
 const selectResult = ref<SelectResult | null>(null)
 const loadingCandidates = ref(false)
+const loadingStepIndex = ref(0)
+let loadingStepInterval: ReturnType<typeof setInterval> | null = null
 const candidatesError = ref<string | null>(null)
 const summaryLoading = ref(false)
 const showDemandModal = ref(false)
@@ -379,6 +407,7 @@ onUnmounted(() => {
   if (goHomeInterval) clearInterval(goHomeInterval)
   if (locationInterval) clearInterval(locationInterval)
   if (timeInterval) clearInterval(timeInterval)
+  if (loadingStepInterval) clearInterval(loadingStepInterval)
   clearSpotCandidates()
   resetMapState()
 })
@@ -388,6 +417,20 @@ watch(showGoHomeConfirm, value => {
     goHomeDialog.value.showModal()
   } else if (!value && goHomeDialog.value) {
     goHomeDialog.value.close()
+  }
+})
+
+watch(loadingCandidates, loading => {
+  if (loading) {
+    loadingStepIndex.value = 0
+    loadingStepInterval = setInterval(() => {
+      loadingStepIndex.value = (loadingStepIndex.value + 1) % LOADING_STEPS.length
+    }, 1800)
+  } else {
+    if (loadingStepInterval) {
+      clearInterval(loadingStepInterval)
+      loadingStepInterval = null
+    }
   }
 })
 
@@ -866,6 +909,14 @@ async function dismissBanner() {
   backdrop-filter: blur(12px);
 }
 
+.composer-surface--loading .transport-grid,
+.composer-surface--loading .slider-group,
+.composer-surface--loading .transport-hint {
+  opacity: 0.35;
+  pointer-events: none;
+  user-select: none;
+}
+
 .location-surface {
   display: flex;
   flex-direction: column;
@@ -1104,6 +1155,115 @@ async function dismissBanner() {
 .dialog-btn.confirm:disabled {
   background: #fca5a5;
   cursor: not-allowed;
+}
+
+.loading-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 0 8px;
+}
+
+.loading-orb-wrap {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-orb {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+  color: white;
+  font-size: 16px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.3);
+  position: relative;
+  z-index: 1;
+}
+
+.loading-orb-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: transparent;
+  border: 3px solid rgba(37, 99, 235, 0.35);
+  animation: pulse-ring 1.6s ease-out infinite;
+}
+
+.loading-step {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1d4ed8;
+  text-align: center;
+  margin: 0;
+  min-height: 1.5em;
+}
+
+.loading-dots {
+  display: flex;
+  gap: 7px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #93c5fd;
+  animation: bounce-dot 1.2s ease-in-out infinite;
+}
+
+.dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(1); opacity: 0.7; }
+  70% { transform: scale(1.55); opacity: 0; }
+  100% { transform: scale(1.55); opacity: 0; }
+}
+
+@keyframes bounce-dot {
+  0%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-8px); }
+}
+
+.loading-swap-enter-active,
+.loading-swap-leave-active {
+  transition: opacity 0.22s, transform 0.22s;
+}
+
+.loading-swap-enter-from,
+.loading-swap-leave-to {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+.step-fade-enter-active,
+.step-fade-leave-active {
+  transition: opacity 0.3s, transform 0.3s;
+}
+
+.step-fade-enter-from {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.step-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
 }
 
 @media (max-width: 640px) {

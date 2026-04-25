@@ -43,16 +43,35 @@
       </ol>
     </div>
 
-    <div class="map-buttons">
-      <a :href="navigation.google_maps_url" target="_blank" rel="noreferrer" class="map-btn google">
-        外跳 Google Maps
-      </a>
-      <a :href="navigation.apple_maps_url" target="_blank" rel="noreferrer" class="map-btn apple">
-        外跳 Apple Maps
-      </a>
+    <div class="action-area">
+      <p class="action-label">選一個地圖 App 開始導航</p>
+      <div class="map-buttons">
+        <a :href="navigation.google_maps_url" target="_blank" rel="noreferrer" class="map-btn google">
+          <span class="map-btn-icon google-icon">G</span>
+          <span class="map-btn-text">
+            <span class="map-btn-name">Google Maps</span>
+            <span class="map-btn-hint">開啟導航</span>
+          </span>
+          <span class="map-btn-arrow">↗</span>
+        </a>
+        <a :href="navigation.apple_maps_url" target="_blank" rel="noreferrer" class="map-btn apple">
+          <span class="map-btn-icon apple-icon">⌘</span>
+          <span class="map-btn-text">
+            <span class="map-btn-name">Apple Maps</span>
+            <span class="map-btn-hint">開啟導航</span>
+          </span>
+          <span class="map-btn-arrow">↗</span>
+        </a>
+      </div>
     </div>
 
-    <button class="arrived-btn" type="button" @click="$emit('arrived')">我到了，繼續</button>
+    <button class="arrived-btn" type="button" @click="$emit('arrived')">
+      <span class="arrived-check">✓</span>
+      <span class="arrived-text">
+        <span class="arrived-main">我到了！</span>
+        <span class="arrived-sub">繼續下一站</span>
+      </span>
+    </button>
   </div>
 </template>
 
@@ -241,51 +260,165 @@ function transportModeLabel(mode: TransportMode) {
   font-size: 12px;
 }
 
-.map-buttons {
+.action-area {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
+.action-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.map-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
 .map-btn {
-  display: block;
-  padding: 13px;
-  text-align: center;
-  border-radius: 12px;
-  font-size: 15px;
-  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 16px;
   text-decoration: none;
-  transition: opacity 0.2s;
+  transition: transform 0.18s, box-shadow 0.18s, filter 0.18s;
+  border: 1.5px solid transparent;
 }
 
 .map-btn:hover {
-  opacity: 0.85;
+  transform: translateY(-2px);
 }
 
 .map-btn.google {
-  background: #4285f4;
-  color: white;
+  background: #f0f6ff;
+  border-color: #bfdbfe;
+  color: #1d4ed8;
+}
+
+.map-btn.google:hover {
+  background: #dbeafe;
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.14);
 }
 
 .map-btn.apple {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+  color: #1e293b;
+}
+
+.map-btn.apple:hover {
+  background: #f1f5f9;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.1);
+}
+
+.map-btn-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+
+.google-icon {
+  background: linear-gradient(135deg, #4285f4 0%, #34a853 100%);
+  color: white;
+  font-style: italic;
+}
+
+.apple-icon {
   background: #0f172a;
   color: white;
+  font-size: 16px;
+  font-style: normal;
+}
+
+.map-btn-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  flex: 1;
+}
+
+.map-btn-name {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.map-btn-hint {
+  font-size: 11px;
+  opacity: 0.6;
+  line-height: 1;
+}
+
+.map-btn-arrow {
+  font-size: 14px;
+  opacity: 0.4;
+  flex-shrink: 0;
 }
 
 .arrived-btn {
-  padding: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 16px 20px;
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: white;
   border: none;
-  border-radius: 12px;
-  font-size: 16px;
+  border-radius: 18px;
   font-family: inherit;
-  font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
+  box-shadow: 0 10px 28px rgba(16, 185, 129, 0.28), 0 4px 10px rgba(5, 150, 105, 0.2);
+  transition: transform 0.18s, box-shadow 0.18s, filter 0.18s;
 }
 
 .arrived-btn:hover {
-  filter: brightness(0.96);
+  transform: translateY(-2px);
+  box-shadow: 0 14px 34px rgba(16, 185, 129, 0.35), 0 4px 12px rgba(5, 150, 105, 0.25);
+}
+
+.arrived-check {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.arrived-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.arrived-main {
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.arrived-sub {
+  font-size: 12px;
+  opacity: 0.8;
+  line-height: 1;
 }
 </style>
