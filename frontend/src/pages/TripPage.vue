@@ -240,7 +240,14 @@ import type {
 import { useMapState } from '../composables/useMapState'
 
 const router = useRouter()
-const { setSpotCandidates, clearSpotCandidates } = useMapState()
+const {
+  setSpotCandidates,
+  clearSpotCandidates,
+  setCurrentLocation,
+  setActiveNavigation,
+  clearNavigation,
+  resetMapState,
+} = useMapState()
 
 type TripPhase = 'TRANSPORT_PROMPT' | 'SELECTING' | 'NAVIGATING' | 'RATING' | 'ENDED'
 
@@ -260,6 +267,7 @@ const currentLat = ref(25.0478)
 const currentLng = ref(121.5170)
 const locationDenied = ref(false)
 const selectedDistrict = ref('')
+const locationSource = ref<'approximate' | 'gps' | 'fallback'>('approximate')
 
 const DISTRICT_CENTROIDS = [
   { name: '大安區', lat: 25.0264, lng: 121.5432 },
@@ -356,7 +364,7 @@ onMounted(() => {
 onUnmounted(() => {
   if (goHomeInterval) clearInterval(goHomeInterval)
   if (locationInterval) clearInterval(locationInterval)
-  clearSpotCandidates()
+  resetMapState()
 })
 
 watch(showGoHomeConfirm, value => {
@@ -366,6 +374,14 @@ watch(showGoHomeConfirm, value => {
     goHomeDialog.value.close()
   }
 })
+
+watch(
+  [currentLat, currentLng, locationSource, selectedDistrict],
+  () => {
+    syncMapLocation()
+  },
+  { immediate: true },
+)
 
 function transportLabel(mode: TransportMode) {
   return transportOptions.find(option => option.value === mode)?.label || mode
@@ -377,6 +393,7 @@ function applyDistrictFallback() {
 
   currentLat.value = centroid.lat
   currentLng.value = centroid.lng
+  locationSource.value = 'fallback'
 
   if (tripPhase.value === 'SELECTING' && lastRequestedTransport.value) {
     void loadCandidates(lastRequestedTransport.value)
@@ -391,11 +408,14 @@ function requestLocation() {
 
   navigator.geolocation.getCurrentPosition(
     pos => {
+      locationDenied.value = false
+      locationSource.value = 'gps'
       currentLat.value = pos.coords.latitude
       currentLng.value = pos.coords.longitude
       locationInterval = setInterval(() => {
         navigator.geolocation.getCurrentPosition(
           latest => {
+            locationSource.value = 'gps'
             currentLat.value = latest.coords.latitude
             currentLng.value = latest.coords.longitude
           },
@@ -405,8 +425,28 @@ function requestLocation() {
     },
     () => {
       locationDenied.value = true
+      if (locationSource.value !== 'fallback') {
+        locationSource.value = 'approximate'
+      }
     }
   )
+}
+
+function syncMapLocation() {
+  const label = locationSource.value === 'gps'
+    ? 'GPS 目前位置'
+    : locationSource.value === 'fallback'
+      ? `${selectedDistrict.value || '手動起點'}（手動設定）`
+      : locationDenied.value
+        ? '起點（預設）'
+        : '定位中'
+
+  setCurrentLocation({
+    lat: currentLat.value,
+    lng: currentLng.value,
+    label,
+    source: locationSource.value,
+  })
 }
 
 function buildTransportInput(): CandidateTransportInput {
@@ -435,6 +475,8 @@ async function loadCandidates(transport?: CandidateTransportInput) {
   selectedVenueName.value = ''
   lastRequestedTransport.value = activeTransport
   lastRoundFeedback.value = null
+  clearNavigation()
+  clearSpotCandidates()
 
   try {
     candidatesResult.value = await getCandidates(
@@ -448,6 +490,7 @@ async function loadCandidates(transport?: CandidateTransportInput) {
   } catch (err: unknown) {
     const error = err as { response?: { data?: { detail?: string } } }
     candidatesError.value = error?.response?.data?.detail ?? '無法載入推薦，請重試。'
+    clearSpotCandidates()
     tripPhase.value = 'TRANSPORT_PROMPT'
   } finally {
     loadingCandidates.value = false
@@ -481,6 +524,13 @@ async function onVenueSelected(venueId: string | number) {
     selectResult.value = await selectVenue(sessionId, venueId, currentLat.value, currentLng.value)
     selectedVenueName.value = selectResult.value.venue.name
     clearSpotCandidates()
+    setActiveNavigation({
+      venue: selectResult.value.venue,
+      transportMode: selectResult.value.navigation.transport_mode,
+      googleMapsUrl: selectResult.value.navigation.google_maps_url,
+      appleMapsUrl: selectResult.value.navigation.apple_maps_url,
+      estimatedTravelMin: selectResult.value.navigation.estimated_travel_min,
+    })
     tripPhase.value = 'NAVIGATING'
   } catch (err: unknown) {
     const error = err as { response?: { data?: { detail?: string } } }
@@ -490,6 +540,7 @@ async function onVenueSelected(venueId: string | number) {
 }
 
 function onArrived() {
+  clearNavigation()
   tripPhase.value = 'RATING'
 }
 
@@ -504,6 +555,7 @@ function onRated(payload: RatingPayload) {
   selectedVenueName.value = ''
   candidatesResult.value = null
   candidatesError.value = null
+  clearNavigation()
   tripPhase.value = 'TRANSPORT_PROMPT'
 }
 

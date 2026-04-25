@@ -438,6 +438,7 @@ class TripApiTests(unittest.IsolatedAsyncioTestCase):
 
         body = json.loads(response.body)
         self.assertEqual(body["navigation"]["google_maps_url"], "https://maps.google.com/?daddr=0.0,0.0&travelmode=driving")
+        self.assertEqual(body["navigation"]["transport_mode"], "drive")
 
     async def test_post_demand_uses_last_transport_context(self) -> None:
         session_id = str(uuid4())
