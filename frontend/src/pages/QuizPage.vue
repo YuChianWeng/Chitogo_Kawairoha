@@ -200,8 +200,8 @@ function onMascotImgError(e: Event) {
   (e.target as HTMLImageElement).style.display = 'none'
 }
 
-function goToAccommodation() {
-  router.push('/accommodation')
+function goToSetup() {
+  router.push('/setup') 
 }
 function resetQuiz() {
   phase.value = 'quiz'
