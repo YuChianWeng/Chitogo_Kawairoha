@@ -12,6 +12,7 @@
           placeholder="例如：我想找安靜一點、適合散步拍照的地方"
           rows="3"
         ></textarea>
+        <p class="input-hint">留白也可以，我會先給你同一輪原本的推薦景點。</p>
         <button class="search-btn" type="button" :disabled="loading" @click="doSearch">
           {{ loading ? '整理中…' : '幫我重新推薦' }}
         </button>
@@ -22,7 +23,9 @@
       </div>
 
       <div v-else>
-        <p class="result-intro">我幫你整理了幾個比較接近你剛剛描述的地方。</p>
+        <p class="result-intro">
+          {{ showingOriginalCandidates ? '這是你這一輪原本的推薦景點。' : '我幫你整理了幾個比較接近你剛剛描述的地方。' }}
+        </p>
         <p v-if="fallbackReason" class="fallback-note">{{ fallbackReason }}</p>
         <div class="results">
           <div
@@ -48,19 +51,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { submitDemand } from '../services/api'
 import type { CandidateCard } from '../types/trip'
 
 const props = defineProps<{
   lat: number
   lng: number
+  currentCandidates: CandidateCard[]
 }>()
 
 const emit = defineEmits<{
   close: []
   select: [card: CandidateCard]
-  refresh: []
 }>()
 
 const inputText = ref('')
@@ -69,19 +72,29 @@ const errorText = ref('')
 const results = ref<CandidateCard[]>([])
 const fallbackReason = ref<string | null>(null)
 const searched = ref(false)
+const reusedCurrentCandidates = ref(false)
+
+const showingOriginalCandidates = computed(() => (
+  reusedCurrentCandidates.value && inputText.value.trim().length === 0
+))
 
 async function doSearch() {
   const sessionId = localStorage.getItem('chitogo_session_id')
   if (!sessionId) return
 
   if (!inputText.value.trim()) {
-    emit('refresh')
+    fallbackReason.value = null
+    errorText.value = ''
+    results.value = [...props.currentCandidates]
+    reusedCurrentCandidates.value = true
+    searched.value = true
     return
   }
 
   loading.value = true
   errorText.value = ''
   searched.value = false
+  reusedCurrentCandidates.value = false
   try {
     const result = await submitDemand(sessionId, inputText.value, props.lat, props.lng)
     results.value = result.alternatives
@@ -163,6 +176,13 @@ async function doSearch() {
 .demand-input:focus {
   outline: none;
   border-color: #4d68bf;
+}
+
+.input-hint {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.5;
 }
 
 .search-btn {
