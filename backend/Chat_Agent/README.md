@@ -4,7 +4,7 @@
 
 Chitogo Chat Agent Backend is a FastAPI-based orchestration backend for a Taipei travel chat assistant. It accepts natural-language user messages, identifies intent, extracts preferences, maintains session state, and calls external place-data and routing tools when needed to return either place candidates or a structured short itinerary.
 
-This repository does not solve place-data storage itself. Its job is to make the chat workflow concrete: intent classification, preference understanding, tool orchestration, itinerary generation, partial replanning, and request trace/debug capture. Place data currently comes from an external Data Service. Travel-time estimation uses Google Maps Directions first and falls back to distance-based estimates when needed.
+This repository does not solve place-data storage itself. Its job is to make the chat workflow concrete: intent classification, preference understanding, turn-level constraint validation, tool orchestration, itinerary generation, partial replanning, and request trace/debug capture. Place data currently comes from an external Data Service. Travel-time estimation uses Google Maps Directions first and falls back to distance-based estimates when needed.
 
 At the moment, this project is a runnable, test-covered backend prototype. The main APIs and core flow are in place, but session state and traces are still stored in memory, so the service is not yet production-grade in areas such as persistence, authentication, rate limiting, or multi-instance state sharing.
 
@@ -30,9 +30,10 @@ At the moment, this project is a runnable, test-covered backend prototype. The m
 ### Recommendations and Place Lookup
 
 - The backend queries an external Data Service for `search`, `recommend`, and `nearby` place results and normalizes them into `ToolPlace`.
-- General chat messages that look like discovery queries such as “recommend”, “find”, or “nearby” can enter the recommendation flow and return place candidates.
+- Direct place-finding messages such as “幫我找一個好玩的公園” or “找一間浪漫的日式餐廳” enter discovery/search instead of falling back to generic chat or itinerary-only clarification.
 - `AgentLoop` now uses an LLM planning step for `place_recommend`, `place_search`, and `place_nearby`, with deterministic validation and fallback when the plan is invalid or the LLM call fails.
 - For known interest tags such as `cafes`, deterministic query mapping still wins over free-text tool params so the final query stays aligned with Data Service vocabulary like `food` + `cafe`.
+- When vibe language is present, Chat_Agent first requests the known Data Service `vibe_tags`, records the selection decision in trace, and only sends validated tags downstream.
 - Planned `place_search` requests automatically fall back to `place_recommend` when the search returns no matches.
 - The place adapter retries once on 5xx responses, and returns structured error results for timeouts or malformed payloads instead of crashing the request.
 
@@ -40,6 +41,8 @@ At the moment, this project is a runnable, test-covered backend prototype. The m
 
 - The backend can build a structured `Itinerary` with `stops`, `legs`, `arrival_time`, and `total_duration_min`.
 - It currently uses simple heuristics to choose between 2 and 4 stops based on the requested time window. If no time window is available, it defaults to 3 stops.
+- Relative time hints such as `下午` / `afternoon` are normalized into an afternoon window, so itinerary arrival times do not silently fall back to the morning default.
+- Mixed requests such as `有玩有吃` or `逛街吃飯` trigger one retrieval per requested category and the itinerary builder now tries to preserve category diversity before falling back to generic ranking.
 - Travel time between stops is estimated through Google Maps Directions when available.
 - If Google Maps is unavailable, or `ROUTE_PROVIDER=fallback` is configured, the backend falls back to Haversine-distance estimates.
 - The response includes `routing_status`, which can be `full`, `partial_fallback`, or `failed`.
@@ -54,6 +57,7 @@ At the moment, this project is a runnable, test-covered backend prototype. The m
 ### Trace, Debug, and Logging
 
 - Every chat request produces a trace with step names, status, duration, warnings, and error summary.
+- Trace detail now includes validated turn-frame summaries, selected known vibe tags, cache candidate filtering for replans, and category-mix retrieval / relaxation decisions.
 - The API exposes both recent-trace listing and single-trace detail endpoints, with optional `session_id` filtering.
 - Trace storage is a bounded in-memory buffer that evicts older entries once the configured limit is exceeded.
 - Application logs are emitted as structured JSON events.
@@ -215,11 +219,11 @@ OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
 | --- | --- |
 | `AGENT_LOOP_MAX_ITERATIONS` | Defined and validated in `Settings`, but not currently used by `AgentLoop`. |
 | `REQUEST_TIMEOUT_S` | Defined and validated in `Settings`, but not currently consumed by the main request flow. |
-| `DEFAULT_START_TIME` | Defined and validated in `Settings`, but `ItineraryBuilder` and `Replanner` still hardcode `"10:00"` directly. |
+| `DEFAULT_START_TIME` | Default itinerary start time when the current turn and retained preferences do not provide a time window. Defaults to `10:00`. |
 
 ## Testing
 
-The test suite runs through `pytest`, while most individual tests are written in `unittest` style. The current suite has 110 passing tests. Because the repo is not currently installed as a package, add the repo root to `PYTHONPATH` when running tests:
+The test suite runs through `pytest`, while most individual tests are written in `unittest` style. The current suite has 178 passing tests. Because the repo is not currently installed as a package, add the repo root to `PYTHONPATH` when running tests:
 
 ```bash
 PYTHONPATH=. .venv/bin/pytest -q
@@ -241,13 +245,15 @@ PYTHONPATH=. .venv/bin/pytest tests/test_trace_api.py tests/test_trace_store.py 
 - Even with `ROUTE_PROVIDER=fallback`, the current settings validation still requires `GOOGLE_MAPS_API_KEY`.
 - `HOST` and `PORT` are required settings, but they do not automatically control the actual `uvicorn` bind address.
 - `EXPLAIN` depends on cached session candidates. If the cache is empty, the explanation degrades to a generic response.
+- Discovery routing still relies on bounded heuristics plus validated LLM output. Unsupported phrasing should degrade into broader search or clarification, but the system is not a free-form semantic planner.
+- Mixed-category itineraries still use bounded heuristics for stop selection and route ordering; they do not yet solve a global optimization problem.
 - The current scope is Taipei recommendations and short itineraries, not a general-purpose trip planner.
 - Some helper documents in the repo still contain early-phase path or structure references. Treat the implementation under `app/` and the tests as authoritative.
 
 ## Recommended Next Steps
 
 - Move session and trace storage to a persistent backing store if the service needs longer-lived or multi-instance state.
-- Clean up configuration wiring so `GOOGLE_MAPS_API_KEY`, `AGENT_LOOP_MAX_ITERATIONS`, `REQUEST_TIMEOUT_S`, and `DEFAULT_START_TIME` either fully work or are removed.
+- Clean up configuration wiring so `GOOGLE_MAPS_API_KEY`, `AGENT_LOOP_MAX_ITERATIONS`, and `REQUEST_TIMEOUT_S` either fully work or are removed.
 - Add formal packaging or a task runner so tests do not require manual `PYTHONPATH=.` setup.
 - If the external Data Service contract will evolve frequently, add contract tests or stub-server-backed integration tests.
 

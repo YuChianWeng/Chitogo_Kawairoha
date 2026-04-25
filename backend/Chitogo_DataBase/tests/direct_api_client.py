@@ -11,12 +11,18 @@ from app.routers.places import (
     nearby_places_endpoint,
     place_categories_endpoint,
     place_stats_endpoint,
+    place_vibe_tags_endpoint,
     recommend_places_endpoint,
     search_places_endpoint,
 )
 from app.schemas.place import PlaceDetail, PlaceListItem
-from app.schemas.retrieval import BatchRequest, NearbyQueryParams, RecommendRequest
-from app.schemas.retrieval import SearchQueryParams
+from app.schemas.retrieval import (
+    BatchRequest,
+    InternalCategory,
+    NearbyQueryParams,
+    RecommendRequest,
+    SearchQueryParams,
+)
 
 
 class DirectResponse:
@@ -40,14 +46,14 @@ class DirectApiClient:
                 payload = [
                     PlaceListItem.model_validate(item)
                     for item in list_places(
-                    district=params.get("district"),
-                    primary_type=params.get("primary_type"),
-                    indoor=params.get("indoor"),
-                    budget_level=params.get("budget_level"),
-                    min_rating=params.get("min_rating"),
-                    limit=params.get("limit", 50),
-                    offset=params.get("offset", 0),
-                    db=self.session,
+                        district=params.get("district"),
+                        primary_type=params.get("primary_type"),
+                        indoor=params.get("indoor"),
+                        budget_level=params.get("budget_level"),
+                        min_rating=params.get("min_rating"),
+                        limit=params.get("limit", 50),
+                        offset=params.get("offset", 0),
+                        db=self.session,
                     )
                 ]
             elif path == "/api/v1/places/search":
@@ -86,6 +92,20 @@ class DirectApiClient:
                 payload = place_stats_endpoint(db=self.session)
             elif path == "/api/v1/places/categories":
                 payload = place_categories_endpoint()
+            elif path == "/api/v1/places/vibe-tags":
+                internal_category = _parse_internal_category(
+                    params.get("internal_category")
+                )
+                limit = _parse_limited_int(
+                    params.get("limit", 50), min_value=1, max_value=200
+                )
+                payload = place_vibe_tags_endpoint(
+                    district=params.get("district"),
+                    internal_category=internal_category,
+                    primary_type=params.get("primary_type"),
+                    limit=limit,
+                    db=self.session,
+                )
             elif path.startswith("/api/v1/places/"):
                 place_id = int(path.rsplit("/", 1)[-1])
                 payload = PlaceDetail.model_validate(
@@ -118,3 +138,22 @@ class DirectApiClient:
             return DirectResponse(exc.status_code, {"detail": exc.detail})
 
         return DirectResponse(200, payload)
+
+
+def _parse_internal_category(value: object) -> InternalCategory | None:
+    if value is None:
+        return None
+    try:
+        return InternalCategory(value)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail="invalid internal_category") from exc
+
+
+def _parse_limited_int(value: object, *, min_value: int, max_value: int) -> int:
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail="invalid integer") from exc
+    if parsed < min_value or parsed > max_value:
+        raise HTTPException(status_code=422, detail="integer out of range")
+    return parsed

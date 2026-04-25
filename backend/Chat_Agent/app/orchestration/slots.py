@@ -8,7 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from app.orchestration.intents import Intent
 from app.session.models import TimeWindow
 
-_CHINESE_ORDINAL_PATTERN = re.compile(r"第\s*([一二三四五六七八九十兩两\d]+)\s*站")
+_CHINESE_ORDINAL_PATTERN = re.compile(r"第\s*([一二三四五六七八九十兩两\d]+)\s*(?:站|個|家|間)")
 _NUMERIC_STOP_PATTERN = re.compile(r"(?:stop\s*#?\s*|#)(\d+)|(\d+)(?:st|nd|rd|th)\s+stop", re.IGNORECASE)
 _ENGLISH_ORDINAL_PATTERN = re.compile(
     r"\b(first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth)\s+stop\b",

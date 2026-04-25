@@ -85,6 +85,8 @@ class LoopResult(BaseModel):
     error: str | None = None
     relaxations_applied: list[str] = Field(default_factory=list)
     original_filters: dict[str, Any] = Field(default_factory=dict)
+    requested_categories: list[str] = Field(default_factory=list)
+    missing_categories: list[str] = Field(default_factory=list)
 
     model_config = ConfigDict(extra="forbid")
 

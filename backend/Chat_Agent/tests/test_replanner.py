@@ -69,7 +69,13 @@ class StubPlaceAdapter:
     async def get_categories(self) -> object:
         return None
 
+    async def get_vibe_tags(self, **_: object) -> object:
+        return None
+
     async def get_stats(self) -> object:
+        return None
+
+    async def check_lodging_legal_status(self, **_: object) -> object:
         return None
 
 
@@ -197,7 +203,7 @@ class ReplannerTests(unittest.IsolatedAsyncioTestCase):
             }
         )
 
-        request = await self.replanner.parse_request("把第二個點換成咖啡廳", itinerary)
+        request = await self.replanner.parse_request("把 Cafe B 換成咖啡廳", itinerary)
 
         self.assertEqual(request.operation, "replace")
         self.assertEqual(request.target_index, 1)

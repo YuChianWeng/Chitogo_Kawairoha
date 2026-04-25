@@ -9,6 +9,7 @@ from app.session.models import Preferences
 
 _DISTRICT_PATTERN = re.compile(r"([\u4e00-\u9fff]{2,3}區)")
 _DISTRICT_DEPARTURE_PATTERN = re.compile(r"從\s*([\u4e00-\u9fff]{2,3}區)\s*出發")
+_AFTERNOON_PATTERN = re.compile(r"(下午(?:出發)?|afternoon)", re.IGNORECASE)
 _VALID_DISTRICTS = frozenset(
     {
         "中山區",
@@ -123,6 +124,7 @@ _MESSAGE_INTEREST_HINT_ALIASES = (
     ("拉麵", "拉麵"),
     ("壽司", "壽司"),
     ("居酒屋", "居酒屋"),
+    ("公園", "nature"),
 )
 _INTEREST_TAG_EQUIVALENTS = {
     "日式": frozenset({"日式", "日式餐廳", "日本料理", "日料", "japanese"}),
@@ -208,6 +210,45 @@ def _has_equivalent_interest_tag(tags: list[str], candidate: str) -> bool:
     return any(tag.casefold() in equivalent_casefolded for tag in tags)
 
 
+def _infer_time_window_from_message(message: str) -> dict[str, str] | None:
+    if _AFTERNOON_PATTERN.search(message):
+        return {
+            "start_time": "13:00",
+            "end_time": "18:00",
+        }
+    return None
+
+
+def _normalize_time_window(
+    value: object,
+    *,
+    message: str,
+) -> dict[str, str | None] | None:
+    inferred = _infer_time_window_from_message(message)
+
+    if isinstance(value, dict):
+        start_time = _coerce_first_string(value.get("start_time"))
+        end_time = _coerce_first_string(value.get("end_time"))
+        if inferred is not None:
+            start_time = start_time or inferred["start_time"]
+            end_time = end_time or inferred["end_time"]
+        if start_time is None and end_time is None:
+            return None
+        return {
+            "start_time": start_time,
+            "end_time": end_time,
+        }
+
+    scalar_value = _coerce_first_string(value)
+    if scalar_value is not None and _AFTERNOON_PATTERN.search(scalar_value):
+        return {
+            "start_time": "13:00",
+            "end_time": "18:00",
+        }
+
+    return inferred
+
+
 def _normalize_preference_payload(message: str, payload: dict[str, Any]) -> dict[str, Any]:
     normalized = dict(payload)
     for field_name in ("origin", "district", "language"):
@@ -225,6 +266,15 @@ def _normalize_preference_payload(message: str, payload: dict[str, Any]) -> dict
     for field_name in ("interest_tags", "avoid_tags"):
         if field_name in normalized:
             normalized[field_name] = _normalize_tag_list(normalized[field_name])
+
+    normalized_time_window = _normalize_time_window(
+        normalized.get("time_window"),
+        message=message,
+    )
+    if normalized_time_window is not None:
+        normalized["time_window"] = normalized_time_window
+    elif "time_window" in normalized:
+        normalized["time_window"] = None
 
     detected_interest_tags = _detect_interest_tags_from_message(message)
     if detected_interest_tags:

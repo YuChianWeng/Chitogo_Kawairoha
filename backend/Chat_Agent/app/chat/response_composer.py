@@ -22,6 +22,8 @@ _RELAXATION_LABELS_ZH = {
     "dropped_max_budget_level": "不限預算",
     "dropped_indoor_preference": "不限室內或室外",
     "dropped_open_now": "不限營業中",
+    "dropped_secondary_vibe_tags": "放寬部分氛圍標籤",
+    "social_sort_only": "改用社群熱度和口碑排序",
 }
 _RELAXATION_LABELS_EN = {
     "dropped_district": "broadened the search beyond the original district",
@@ -29,6 +31,8 @@ _RELAXATION_LABELS_EN = {
     "dropped_max_budget_level": "removed the budget cap",
     "dropped_indoor_preference": "removed the indoor or outdoor preference",
     "dropped_open_now": "stopped requiring places that are open right now",
+    "dropped_secondary_vibe_tags": "relaxed some of the vibe tags",
+    "social_sort_only": "fell back to social ranking only",
 }
 _PRIMARY_TYPE_LABELS_ZH = {
     "art_gallery": "美術館",
@@ -261,6 +265,21 @@ class ResponseComposer:
             reply += " I couldn't get full routing data, so the visit order is grounded but leg times are limited."
         return reply
 
+    def compose_category_mix_relaxation(
+        self,
+        *,
+        preferences: Preferences,
+        missing_categories: list[str],
+    ) -> str:
+        language = preferences.language or "en"
+        categories = self._format_category_labels(missing_categories, language=language)
+        if language == "zh-TW":
+            return f" 不過這次沒找到合適的{categories}候選，所以先用其他有結果的類型排成一版。"
+        return (
+            f" I couldn't find strong {categories} candidates this time, "
+            "so I built the plan from the categories that did have matches."
+        )
+
     def compose_replan(
         self,
         *,
@@ -403,6 +422,19 @@ class ResponseComposer:
         parts = [labels[item] for item in relaxations if item in labels]
         if not parts:
             return "稍微放寬條件" if language == "zh-TW" else "slightly broadened the search"
+        if language == "zh-TW":
+            return "、".join(parts)
+        if len(parts) == 1:
+            return parts[0]
+        if len(parts) == 2:
+            return f"{parts[0]} and {parts[1]}"
+        return f"{', '.join(parts[:-1])}, and {parts[-1]}"
+
+    def _format_category_labels(self, categories: list[str], *, language: str) -> str:
+        labels = _CATEGORY_LABELS_ZH if language == "zh-TW" else _CATEGORY_LABELS_EN
+        parts = [labels[item] for item in categories if item in labels]
+        if not parts:
+            return "類型" if language == "zh-TW" else "categories"
         if language == "zh-TW":
             return "、".join(parts)
         if len(parts) == 1:

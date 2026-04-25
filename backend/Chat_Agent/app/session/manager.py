@@ -6,6 +6,19 @@ from uuid import UUID
 from app.session.models import Itinerary, Place, Preferences, Session, Turn, utc_now
 from app.session.store import InMemorySessionStore, session_store
 
+_STABLE_PREFERENCE_FIELDS = frozenset(
+    {
+        "origin",
+        "district",
+        "time_window",
+        "companions",
+        "budget_level",
+        "transport_mode",
+        "indoor_preference",
+        "language",
+    }
+)
+
 
 class InvalidSessionIdError(ValueError):
     """Raised when the provided session identifier is not a valid UUID."""
@@ -33,8 +46,30 @@ def merge_preferences(current: Preferences, delta: Preferences) -> Preferences:
                 "end_time": value.end_time or current_time_window_data.get("end_time"),
             }
             continue
+        if value is None and field_name in _STABLE_PREFERENCE_FIELDS:
+            continue
         merged_data[field_name] = value
     return Preferences.model_validate(merged_data)
+
+
+def stable_preference_delta(delta: Preferences | None) -> Preferences | None:
+    """Return only the stable fields eligible for session persistence."""
+
+    if delta is None:
+        return None
+
+    payload: dict[str, object] = {}
+    for field_name in _STABLE_PREFERENCE_FIELDS:
+        if field_name not in delta.model_fields_set:
+            continue
+        value = getattr(delta, field_name)
+        if value is None:
+            continue
+        payload[field_name] = value
+
+    if not payload:
+        return None
+    return Preferences.model_validate(payload)
 
 
 class SessionManager:

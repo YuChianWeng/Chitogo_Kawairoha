@@ -87,6 +87,9 @@ class PreferenceExtractorTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(delta.avoid_tags, [])
         self.assertEqual(delta.district, "大安區")
         self.assertEqual(delta.origin, "大安區")
+        self.assertIsNotNone(delta.time_window)
+        self.assertEqual(delta.time_window.start_time, "13:00")
+        self.assertEqual(delta.time_window.end_time, "18:00")
 
     async def test_unknown_tag_preserved(self) -> None:
         extractor = PreferenceExtractor()
@@ -113,6 +116,24 @@ class PreferenceExtractorTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(delta.interest_tags, ["food", "日式"])
         self.assertEqual(delta.district, "大安區")
+        self.assertIsNotNone(delta.time_window)
+        self.assertEqual(delta.time_window.start_time, "13:00")
+        self.assertEqual(delta.time_window.end_time, "18:00")
+
+    async def test_message_afternoon_infers_time_window_when_llm_omits_it(self) -> None:
+        extractor = PreferenceExtractor()
+        extractor._client.generate_json = AsyncMock(
+            return_value={
+                "origin": "大安區",
+                "language": "zh-TW",
+            }
+        )
+
+        delta = await extractor.extract("幫我排一個有玩有吃的行程下午從大安區出發", Preferences())
+
+        self.assertIsNotNone(delta.time_window)
+        self.assertEqual(delta.time_window.start_time, "13:00")
+        self.assertEqual(delta.time_window.end_time, "18:00")
 
     async def test_llm_failure_returns_language_only_preferences(self) -> None:
         extractor = PreferenceExtractor()
@@ -151,3 +172,24 @@ class PreferenceDeltaCombinationTests(unittest.TestCase):
         self.assertEqual(combined.interest_tags, ["cafes", "museums"])
         self.assertEqual(combined.avoid_tags, ["shopping"])
         self.assertEqual(combined.language, "en")
+
+
+class PreferenceMergeTests(unittest.TestCase):
+    def test_merge_preferences_preserves_existing_stable_field_when_delta_is_null(self) -> None:
+        current = Preferences(district="大安區", transport_mode="transit")
+        delta = Preferences.model_validate({"district": None, "language": "zh-TW"})
+
+        merged = merge_preferences(current, delta)
+
+        self.assertEqual(merged.district, "大安區")
+        self.assertEqual(merged.transport_mode, "transit")
+        self.assertEqual(merged.language, "zh-TW")
+
+    def test_merge_preferences_applies_explicit_stable_corrections(self) -> None:
+        current = Preferences(district="大安區", transport_mode="transit")
+        delta = Preferences.model_validate({"district": "信義區", "transport_mode": "walk"})
+
+        merged = merge_preferences(current, delta)
+
+        self.assertEqual(merged.district, "信義區")
+        self.assertEqual(merged.transport_mode, "walk")

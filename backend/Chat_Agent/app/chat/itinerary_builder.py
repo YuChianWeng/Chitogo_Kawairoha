@@ -10,6 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from app.chat.schemas import RoutingStatus
 from app.core.config import Settings, get_settings
+from app.orchestration.turn_frame import CategoryMixItem
 from app.session.models import Itinerary, Leg, Preferences, Stop
 from app.tools.models import RouteResult, ToolPlace
 from app.tools.registry import ToolRegistry, tool_registry
@@ -76,13 +77,18 @@ class ItineraryBuilder:
         *,
         places: list[ToolPlace],
         preferences: Preferences,
+        category_mix: list[CategoryMixItem] | None = None,
         trace_recorder: TraceRecorder | None = None,
     ) -> ItineraryBuildResult:
         step_context = (
             trace_recorder.step("itinerary.build") if trace_recorder is not None else nullcontext()
         )
         with step_context as trace_step:
-            selected_places = self._select_places(places, preferences)
+            selected_places = self._select_places(
+                places,
+                preferences,
+                category_mix=category_mix or [],
+            )
             if not selected_places:
                 if trace_step is not None:
                     trace_step.error(summary="no_places")
@@ -101,7 +107,7 @@ class ItineraryBuilder:
                 stops=stops,
                 legs=routing_outcome.legs,
                 preferences=preferences,
-                default_start_time="10:00",
+                default_start_time=self.settings.default_start_time,
             )
             itinerary = Itinerary(
                 summary="",
@@ -117,6 +123,9 @@ class ItineraryBuilder:
                         "stop_count": len(timed_stops),
                         "leg_count": len(routing_outcome.legs),
                         "routing_status": routing_outcome.routing_status,
+                        "selected_categories": [
+                            self._category_key(place) for place in selected_places
+                        ],
                     },
                 )
             return ItineraryBuildResult(
@@ -297,6 +306,8 @@ class ItineraryBuilder:
         self,
         places: list[ToolPlace],
         preferences: Preferences,
+        *,
+        category_mix: list[CategoryMixItem],
     ) -> list[ToolPlace]:
         seen_ids: set[int | str] = set()
         unique_places: list[ToolPlace] = []
@@ -307,7 +318,62 @@ class ItineraryBuilder:
             unique_places.append(place)
 
         stop_count = min(len(unique_places), self._target_stop_count(preferences))
-        return unique_places[:stop_count]
+        if not category_mix or stop_count <= 1:
+            return unique_places[:stop_count]
+
+        grouped: dict[str, list[ToolPlace]] = {}
+        for place in unique_places:
+            grouped.setdefault(self._category_key(place), []).append(place)
+
+        selected: list[ToolPlace] = []
+        selected_ids: set[int | str] = set()
+        offsets = {key: 0 for key in grouped}
+
+        def take_one(category: str) -> ToolPlace | None:
+            items = grouped.get(category) or []
+            index = offsets.get(category, 0)
+            while index < len(items):
+                candidate = items[index]
+                index += 1
+                offsets[category] = index
+                if candidate.venue_id in selected_ids:
+                    continue
+                selected_ids.add(candidate.venue_id)
+                return candidate
+            offsets[category] = index
+            return None
+
+        for item in category_mix:
+            category = item.internal_category
+            for _ in range(item.min_count):
+                if len(selected) >= stop_count:
+                    break
+                candidate = take_one(category)
+                if candidate is None:
+                    break
+                selected.append(candidate)
+
+        while len(selected) < stop_count:
+            progressed = False
+            for item in category_mix:
+                if len(selected) >= stop_count:
+                    break
+                candidate = take_one(item.internal_category)
+                if candidate is None:
+                    continue
+                selected.append(candidate)
+                progressed = True
+            if not progressed:
+                break
+
+        for place in unique_places:
+            if len(selected) >= stop_count:
+                break
+            if place.venue_id in selected_ids:
+                continue
+            selected_ids.add(place.venue_id)
+            selected.append(place)
+        return selected[:stop_count]
 
     def _target_stop_count(self, preferences: Preferences) -> int:
         duration_min = self._time_window_duration(preferences)
@@ -341,6 +407,10 @@ class ItineraryBuilder:
             lat=place.lat,
             lng=place.lng,
         )
+
+    @staticmethod
+    def _category_key(place: ToolPlace) -> str:
+        return place.source_category or place.category or "other"
 
     @staticmethod
     def _assign_arrival_times(
