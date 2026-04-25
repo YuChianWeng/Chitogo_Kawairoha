@@ -106,8 +106,10 @@ import RatingCard from '../components/RatingCard.vue'
 import DemandModal from '../components/DemandModal.vue'
 import { getCandidates, selectVenue, checkGoHome, getSummary } from '../services/api'
 import type { CandidatesResult, SelectResult, RateResult, CandidateCard } from '../types/trip'
+import { useMapState } from '../composables/useMapState'
 
 const router = useRouter()
+const { setSpotCandidates, clearSpotCandidates } = useMapState()
 
 type TripPhase = 'SELECTING' | 'NAVIGATING' | 'RATING' | 'ENDED'
 
@@ -171,6 +173,7 @@ onMounted(async () => {
 onUnmounted(() => {
   if (goHomeInterval) clearInterval(goHomeInterval)
   if (locationInterval) clearInterval(locationInterval)
+  clearSpotCandidates()
 })
 
 watch(showGoHomeConfirm, (val) => {
@@ -216,6 +219,7 @@ async function loadCandidates() {
   candidatesError.value = null
   try {
     candidatesResult.value = await getCandidates(sessionId, currentLat.value, currentLng.value)
+    setSpotCandidates(candidatesResult.value.candidates)
   } catch (err: unknown) {
     const e = err as { response?: { data?: { detail?: string } } }
     candidatesError.value = e?.response?.data?.detail ?? '無法載入推薦，請重試。'
@@ -230,6 +234,7 @@ async function onVenueSelected(venueId: string | number) {
 
   try {
     selectResult.value = await selectVenue(sessionId, venueId, currentLat.value, currentLng.value)
+    clearSpotCandidates()
     tripPhase.value = 'NAVIGATING'
   } catch (err: unknown) {
     const e = err as { response?: { data?: { detail?: string } } }

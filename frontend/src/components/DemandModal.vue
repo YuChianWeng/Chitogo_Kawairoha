@@ -4,7 +4,7 @@
       <button class="close-btn" @click="$emit('close')">✕</button>
       <h3 class="modal-title">告訴我你想找什麼</h3>
 
-      <div v-if="!results.length">
+      <div v-if="!searched || results.length === 0">
         <textarea
           v-model="inputText"
           class="demand-input"
@@ -15,6 +15,9 @@
           {{ loading ? '搜尋中…' : '找找看' }}
         </button>
         <div v-if="errorText" class="error">{{ errorText }}</div>
+        <div v-if="searched && results.length === 0 && !loading && !errorText" class="no-results">
+          附近找不到符合的地點，請換個關鍵字試試。
+        </div>
       </div>
 
       <div v-else>
@@ -36,7 +39,7 @@
             <p class="result-why">{{ card.why_recommended }}</p>
           </div>
         </div>
-        <button class="search-btn outline" @click="results = []; inputText = ''">重新搜尋</button>
+        <button class="search-btn outline" @click="results = []; inputText = ''; searched = false">重新搜尋</button>
       </div>
     </div>
   </div>
@@ -62,6 +65,7 @@ const loading = ref(false)
 const errorText = ref('')
 const results = ref<CandidateCard[]>([])
 const fallbackReason = ref<string | null>(null)
+const searched = ref(false)
 
 async function doSearch() {
   const sessionId = localStorage.getItem('chitogo_session_id')
@@ -69,10 +73,12 @@ async function doSearch() {
 
   loading.value = true
   errorText.value = ''
+  searched.value = false
   try {
     const result = await submitDemand(sessionId, inputText.value, props.lat, props.lng)
     results.value = result.alternatives
     fallbackReason.value = result.fallback_reason
+    searched.value = true
   } catch (err: unknown) {
     const e = err as { response?: { data?: { detail?: string } } }
     errorText.value = e?.response?.data?.detail ?? '搜尋失敗，請重試。'
@@ -171,6 +177,16 @@ async function doSearch() {
   font-size: 13px;
   margin-top: 8px;
   text-align: center;
+}
+
+.no-results {
+  color: #64748b;
+  font-size: 13px;
+  margin-top: 8px;
+  text-align: center;
+  padding: 8px;
+  background: #f8fafc;
+  border-radius: 8px;
 }
 
 .fallback-note {
