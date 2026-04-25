@@ -24,23 +24,48 @@
             @input="validationResult = null"
           />
           <div v-if="validationResult" class="validation-badge" :class="validationResult.status">
-            <span v-if="validationResult.status === 'validated' || validationResult.status === 'fuzzy_match'">
-              ✓ {{ validationResult.matched_name || hotelName }}（合法旅宿）
-            </span>
-            <span v-else-if="validationResult.status === 'not_found'">
-              ⚠ 查無此旅宿
-              <div v-if="validationResult.alternatives.length" class="alternatives">
-                是否是指：
-                <button
-                  v-for="alt in validationResult.alternatives"
-                  :key="alt.name"
-                  class="alt-btn"
-                  @click="hotelName = alt.name; validationResult = null"
-                >
-                  {{ alt.name }}（{{ alt.district }}）
-                </button>
+            <template v-if="validationResult.status === 'validated' || validationResult.status === 'fuzzy_match'">
+              <div class="validation-title">
+                ✓ {{ validationResult.matched_name || hotelName }}（合法旅宿）
               </div>
-            </span>
+              <div
+                v-if="validationResult.district || validationResult.address"
+                class="validation-meta"
+              >
+                {{ [validationResult.district, validationResult.address].filter(Boolean).join('｜') }}
+              </div>
+            </template>
+            <template v-else-if="validationResult.status === 'not_found'">
+              <div class="validation-title">⚠ 查無此合法旅宿</div>
+
+              <div v-if="validationResult.alternatives.length" class="alternatives-block">
+                <div class="alternatives-label">你是不是要找：</div>
+                <div class="alternatives">
+                  <button
+                    v-for="alt in validationResult.alternatives"
+                    :key="`alt-${alt.name}`"
+                    class="alt-btn"
+                    @click="chooseHotel(alt.name)"
+                  >
+                    {{ alt.name }}<span v-if="alt.district">（{{ alt.district }}）</span>
+                  </button>
+                </div>
+              </div>
+
+              <div v-if="validationResult.recommendations.length" class="alternatives-block">
+                <div class="alternatives-label">可改訂以下合法旅宿：</div>
+                <div class="alternatives">
+                  <button
+                    v-for="hotel in validationResult.recommendations"
+                    :key="`recommend-${hotel.name}`"
+                    class="alt-btn"
+                    @click="chooseHotel(hotel.name)"
+                  >
+                    {{ hotel.name }}<span v-if="hotel.district">（{{ hotel.district }}）</span>
+                  </button>
+                </div>
+              </div>
+            </template>
           </div>
         </div>
 
@@ -69,24 +94,9 @@
         />
       </section>
 
-      <!-- Transport -->
-      <section class="section">
-        <h3 class="section-title">交通方式</h3>
-        <div class="checkbox-group">
-          <label v-for="m in ['walk', 'transit', 'drive']" :key="m" class="checkbox-label">
-            <input type="checkbox" :value="m" v-model="modes">
-            {{ { walk: '步行', transit: '大眾運輸', drive: '開車' }[m] }}
-          </label>
-        </div>
-        <div class="slider-group">
-          <label>每段最長時間：{{ maxMinutes }} 分鐘</label>
-          <input type="range" v-model.number="maxMinutes" min="5" max="120" step="5" class="slider" />
-        </div>
-      </section>
-
       <div v-if="errorText" class="error">{{ errorText }}</div>
 
-      <button class="submit-btn" :disabled="loading || modes.length === 0" @click="handleSubmit">
+      <button class="submit-btn" :disabled="loading" @click="handleSubmit">
         {{ loading ? '設定中…' : '開始探索' }}
       </button>
     </div>
@@ -109,27 +119,28 @@ const district = ref('')
 const budgetTier = ref<'budget' | 'mid' | 'luxury'>('mid')
 const returnTime = ref('')
 const returnDestination = ref('')
-const modes = ref<string[]>(['transit'])
-const maxMinutes = ref(30)
 const loading = ref(false)
 const errorText = ref('')
 
 interface ValidationResult {
   status: string
   matched_name: string | null
-  alternatives: Array<{ name: string; district: string | null }>
+  district: string | null
+  address: string | null
+  alternatives: Array<{ name: string; district: string | null; address: string | null; confidence: number }>
+  recommendations: Array<{ name: string; district: string | null; address: string | null }>
 }
 const validationResult = ref<ValidationResult | null>(null)
+
+function chooseHotel(name: string) {
+  hotelName.value = name
+  validationResult.value = null
+}
 
 async function handleSubmit() {
   const sessionId = localStorage.getItem('chitogo_session_id')
   if (!sessionId) {
     router.push('/quiz')
-    return
-  }
-
-  if (modes.value.length === 0) {
-    errorText.value = '請至少選擇一種交通方式'
     return
   }
 
@@ -143,18 +154,19 @@ async function handleSubmit() {
         : { booked: false, district: district.value || undefined, budget_tier: budgetTier.value },
       return_time: returnTime.value || undefined,
       return_destination: returnDestination.value || undefined,
-      transport: {
-        modes: modes.value as ('walk' | 'transit' | 'drive')[],
-        max_minutes_per_leg: maxMinutes.value,
-      },
     })
 
     if (result.hotel_validation) {
       validationResult.value = {
         status: result.accommodation_status,
         matched_name: result.hotel_validation.matched_name,
+        district: result.hotel_validation.district,
+        address: result.hotel_validation.address,
         alternatives: result.hotel_validation.alternatives,
+        recommendations: result.hotel_validation.recommendations,
       }
+    } else {
+      validationResult.value = null
     }
 
     if (result.setup_complete) {
@@ -277,6 +289,16 @@ async function handleSubmit() {
   font-size: 13px;
 }
 
+.validation-title {
+  font-weight: 600;
+}
+
+.validation-meta {
+  margin-top: 4px;
+  font-size: 12px;
+  opacity: 0.85;
+}
+
 .validation-badge.validated,
 .validation-badge.fuzzy_match {
   background: #dcfce7;
@@ -294,6 +316,16 @@ async function handleSubmit() {
   flex-wrap: wrap;
   gap: 6px;
   align-items: center;
+}
+
+.alternatives-block + .alternatives-block {
+  margin-top: 10px;
+}
+
+.alternatives-label {
+  margin-top: 8px;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .alt-btn {

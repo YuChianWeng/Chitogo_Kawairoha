@@ -4,6 +4,7 @@ import type {
   QuizAnswers,
   QuizResult,
   TripSetup,
+  CandidateTransportInput,
   SetupResult,
   CandidatesResult,
   SelectResult,
@@ -61,10 +62,18 @@ export async function submitSetup(sessionId: string, setup: TripSetup): Promise<
 export async function getCandidates(
   sessionId: string,
   lat: number,
-  lng: number
+  lng: number,
+  transport: CandidateTransportInput
 ): Promise<CandidatesResult> {
+  const params = new URLSearchParams()
+  params.set('session_id', sessionId)
+  params.set('lat', String(lat))
+  params.set('lng', String(lng))
+  params.set('mode', transport.mode)
+  params.set('max_minutes_per_leg', String(transport.max_minutes_per_leg))
+
   const { data } = await client.get<CandidatesResult>('/trip/candidates', {
-    params: { session_id: sessionId, lat, lng },
+    params,
   })
   return data
 }

@@ -70,18 +70,11 @@ class AccommodationInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
-class TransportInput(BaseModel):
-    modes: list[str]
-    max_minutes_per_leg: int = Field(30, ge=1, le=120)
-    model_config = ConfigDict(extra="forbid")
-
-
 class SetupRequest(BaseModel):
     session_id: str
     accommodation: AccommodationInput
     return_time: str | None = None
     return_destination: str | None = None
-    transport: TransportInput
     model_config = ConfigDict(extra="forbid")
 
 
@@ -93,6 +86,7 @@ class HotelValidationResponse(BaseModel):
     district: str | None
     address: str | None
     alternatives: list[dict[str, Any]]
+    recommendations: list[dict[str, Any]]
     last_updated: str
 
 
@@ -161,6 +155,79 @@ def _card_to_dict(card: TripCandidateCard) -> dict[str, Any]:
     }
 
 
+def _normalize_mode(mode: str | None, *, error_prefix: str) -> str:
+    if not mode:
+        raise HTTPException(
+            status_code=400,
+            detail=f"{error_prefix}:missing_transport_mode",
+        )
+    if mode not in _VALID_MODES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"{error_prefix}:invalid_transport_mode:{mode}",
+        )
+    return mode
+
+
+def _transport_from_query(request: Request, *, max_minutes_per_leg: int) -> TransportConfig:
+    mode = request.query_params.get("mode")
+    legacy_modes = request.query_params.getlist("modes")
+    if not legacy_modes:
+        legacy_modes = request.query_params.getlist("modes[]")
+    if mode is None and legacy_modes:
+        if len(legacy_modes) > 1:
+            raise HTTPException(
+                status_code=400,
+                detail="candidates_error:multiple_transport_modes_not_allowed",
+            )
+        mode = legacy_modes[0]
+
+    return TransportConfig(
+        mode=_normalize_mode(mode, error_prefix="candidates_error"),
+        max_minutes_per_leg=max_minutes_per_leg,
+    )
+
+
+def _serialize_lodging_recommendation(item: Any) -> dict[str, Any]:
+    return {
+        "name": item.name,
+        "district": item.district,
+        "address": item.address,
+    }
+
+
+async def _get_lodging_recommendations(
+    *,
+    district: str | None,
+    limit: int,
+    exclude_names: set[str],
+) -> list[dict[str, Any]]:
+    items: list[dict[str, Any]] = []
+    seen_names = {name.casefold() for name in exclude_names}
+
+    async def _append_recommendations(scope_district: str | None) -> None:
+        recommendations = await place_tool_adapter.list_legal_lodgings(
+            district=scope_district,
+            limit=limit,
+        )
+        if recommendations.status != "ok":
+            return
+
+        for item in recommendations.items:
+            normalized_name = item.name.casefold()
+            if normalized_name in seen_names:
+                continue
+            items.append(_serialize_lodging_recommendation(item))
+            seen_names.add(normalized_name)
+            if len(items) >= limit:
+                return
+
+    await _append_recommendations(district)
+    if district and len(items) < limit:
+        await _append_recommendations(None)
+    return items
+
+
 # ─── POST /quiz ───────────────────────────────────────────────────────────────
 
 @router.post("/quiz", response_model=QuizResponse)
@@ -216,6 +283,7 @@ async def post_setup(payload: SetupRequest) -> SetupResponse:
     acc = payload.accommodation
     hotel_validation: HotelValidationResponse | None = None
     accommodation_status = "not_required"
+    setup_complete = True
 
     if acc.booked:
         if not acc.hotel_name:
@@ -227,6 +295,8 @@ async def post_setup(payload: SetupRequest) -> SetupResponse:
             candidates = await place_tool_adapter.search_lodging_candidates(name=acc.hotel_name, limit=3)
         except httpx.HTTPError as exc:
             raise HTTPException(status_code=503, detail="candidates_error:data_service_unavailable") from exc
+        if legal.status != "ok":
+            raise HTTPException(status_code=503, detail="candidates_error:data_service_unavailable")
 
         alternatives: list[dict[str, Any]] = []
         if candidates.status == "ok" and candidates.items:
@@ -251,10 +321,24 @@ async def post_setup(payload: SetupRequest) -> SetupResponse:
                 district=lodging.district,
                 address=lodging.address,
                 alternatives=[],
+                recommendations=[],
                 last_updated=str(datetime.now(UTC).date()),
             )
         else:
+            preferred_district = next(
+                (item["district"] for item in alternatives if item.get("district")),
+                None,
+            )
+            recommendations = await _get_lodging_recommendations(
+                district=preferred_district,
+                limit=3,
+                exclude_names={
+                    acc.hotel_name,
+                    *(item["name"] for item in alternatives),
+                },
+            )
             accommodation_status = "not_found"
+            setup_complete = False
             hotel_validation = HotelValidationResponse(
                 valid=False,
                 matched_name=None,
@@ -263,6 +347,7 @@ async def post_setup(payload: SetupRequest) -> SetupResponse:
                 district=None,
                 address=None,
                 alternatives=alternatives,
+                recommendations=recommendations,
                 last_updated=str(datetime.now(UTC).date()),
             )
 
@@ -287,18 +372,7 @@ async def post_setup(payload: SetupRequest) -> SetupResponse:
     if payload.return_destination:
         session.return_destination = payload.return_destination
 
-    transport = payload.transport
-    if not transport.modes:
-        raise HTTPException(status_code=400, detail="setup_error:empty_transport_modes")
-    for m in transport.modes:
-        if m not in _VALID_MODES:
-            raise HTTPException(status_code=400, detail=f"setup_error:invalid_transport_mode:{m}")
-
-    session.transport_config = TransportConfig(
-        modes=list(transport.modes),
-        max_minutes_per_leg=transport.max_minutes_per_leg,
-    )
-    session.flow_state = FlowState.RECOMMENDING
+    session.flow_state = FlowState.RECOMMENDING if setup_complete else FlowState.TRANSPORT
 
     await _save_session(session)
 
@@ -306,7 +380,7 @@ async def post_setup(payload: SetupRequest) -> SetupResponse:
         session_id=session.session_id,
         accommodation_status=accommodation_status,
         hotel_validation=hotel_validation,
-        setup_complete=True,
+        setup_complete=setup_complete,
     )
 
 
@@ -314,9 +388,11 @@ async def post_setup(payload: SetupRequest) -> SetupResponse:
 
 @router.get("/candidates")
 async def get_candidates(
+    request: Request,
     session_id: str = Query(...),
     lat: float = Query(...),
     lng: float = Query(...),
+    max_minutes_per_leg: int = Query(..., ge=1, le=120),
 ) -> JSONResponse:
     if not (-90 <= lat <= 90 and -180 <= lng <= 180):
         raise HTTPException(status_code=400, detail="candidates_error:invalid_coordinates")
@@ -327,13 +403,25 @@ async def get_candidates(
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
+    transport_config = _transport_from_query(
+        request,
+        max_minutes_per_leg=max_minutes_per_leg,
+    )
+
     try:
-        cards, partial, fallback_reason = await picker.pick_candidates(session, lat, lng)
+        cards, partial, fallback_reason = await picker.pick_candidates(
+            session,
+            lat,
+            lng,
+            transport_config=transport_config,
+        )
     except ValueError as exc:
         detail = str(exc)
         if "data_service_unavailable" in detail:
             raise HTTPException(status_code=503, detail="candidates_error:data_service_unavailable") from exc
         raise HTTPException(status_code=400, detail=detail) from exc
+
+    session.last_transport_config = transport_config
 
     # Persist updated session (reachable_cache + last_candidate_ids updated in picker)
     await _save_session(session)
@@ -366,6 +454,8 @@ async def post_select(payload: SelectRequest) -> JSONResponse:
     candidate_ids = [str(cid) for cid in session.last_candidate_ids]
     if venue_id_str not in candidate_ids:
         raise HTTPException(status_code=400, detail="select_error:venue_not_in_candidates")
+    if session.last_transport_config is None:
+        raise HTTPException(status_code=400, detail="select_error:missing_transport_context")
 
     # Find the candidate from the reachable cache (rebuild minimal card from last known data)
     # We need to fetch the venue details from the Data Service
@@ -406,9 +496,7 @@ async def post_select(payload: SelectRequest) -> JSONResponse:
     session.pending_venue = card
 
     # Build navigation URLs
-    primary_mode = "transit"
-    if session.transport_config and session.transport_config.modes:
-        primary_mode = session.transport_config.modes[0]
+    primary_mode = session.last_transport_config.mode
     google_mode = {"walk": "walking", "transit": "transit", "drive": "driving"}.get(primary_mode, "transit")
     google_url = f"https://maps.google.com/?daddr={card.lat},{card.lng}&travelmode={google_mode}"
     apple_url = f"maps://maps.apple.com/?daddr={card.lat},{card.lng}"
@@ -519,10 +607,16 @@ async def post_demand(payload: DemandRequest) -> JSONResponse:
 
     if not payload.demand_text or not payload.demand_text.strip():
         raise HTTPException(status_code=400, detail="demand_error:empty_text")
+    if session.last_transport_config is None:
+        raise HTTPException(status_code=400, detail="demand_error:missing_transport_context")
 
     try:
         cards, fallback_reason = await picker.demand_mode(
-            session, payload.demand_text, payload.lat, payload.lng
+            session,
+            payload.demand_text,
+            payload.lat,
+            payload.lng,
+            transport_config=session.last_transport_config,
         )
     except ValueError as exc:
         detail = str(exc)

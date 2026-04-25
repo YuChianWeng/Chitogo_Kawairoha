@@ -28,24 +28,26 @@ export interface AccommodationInput {
   budget_tier?: 'budget' | 'mid' | 'luxury'
 }
 
+export interface CandidateTransportInput {
+  mode: TransportMode
+  max_minutes_per_leg: number
+}
+
 export interface TripSetup {
   accommodation: AccommodationInput
   return_time?: string
   return_destination?: string
-  transport: {
-    modes: TransportMode[]
-    max_minutes_per_leg: number
-  }
 }
 
 export interface HotelValidation {
   valid: boolean
   matched_name: string | null
-  match_type: 'exact' | 'fuzzy' | null
+  match_type: string | null
   confidence: number | null
   district: string | null
   address: string | null
   alternatives: Array<{ name: string; district: string | null; address: string | null; confidence: number }>
+  recommendations: Array<{ name: string; district: string | null; address: string | null }>
   last_updated: string
 }
 
