@@ -148,6 +148,11 @@ class DemandRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
+class SnoozeRequest(BaseModel):
+    session_id: str
+    model_config = ConfigDict(extra="forbid")
+
+
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 
 async def _get_session(session_id: str) -> Session:
@@ -728,6 +733,36 @@ async def get_candidates(
     # Persist updated session (reachable_cache + last_candidate_ids updated in picker)
     await _save_session(session)
 
+    # Check for go-home reminder
+    go_home_reminder = None
+    if session.return_time:
+        dest_lat, dest_lng = lat, lng
+        if session.accommodation and session.accommodation.hotel_lat and session.accommodation.hotel_lng:
+            dest_lat = session.accommodation.hotel_lat
+            dest_lng = session.accommodation.hotel_lng
+        
+        dist_km = haversine_distance(lat, lng, dest_lat, dest_lng)
+        transit_min = max(1, int(dist_km / 12.0 * 60))
+        
+        # Proactive reminder (banner/message)
+        if go_home_advisor.should_remind(session, transit_min):
+            go_home_reminder = f"距離回程的時間快到了（預計 {session.return_time}）"
+
+        # Candidate card visibility
+        if go_home_advisor.is_in_window(session):
+            # Add a Go Home card
+            go_home_card = TripCandidateCard(
+                venue_id="GO_HOME",
+                name="回家去 (飯店/車站)",
+                category="go_home",
+                address="回程目的地",
+                lat=dest_lat,
+                lng=dest_lng,
+                distance_min=transit_min,
+                why_recommended="時間差不多囉，該準備回程了。",
+            )
+            cards.insert(0, go_home_card)
+
     restaurants = [c for c in cards if c.category == "restaurant"]
     attractions = [c for c in cards if c.category == "attraction"]
 
@@ -738,6 +773,7 @@ async def get_candidates(
         "fallback_reason": fallback_reason,
         "restaurant_count": len(restaurants),
         "attraction_count": len(attractions),
+        "go_home_reminder": go_home_reminder,
     })
 
 
@@ -751,10 +787,13 @@ async def post_select(payload: SelectRequest) -> JSONResponse:
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
-    # Check venue is in last candidate set
+    # Check venue is in last candidate set or is special GO_HOME
     venue_id_str = str(payload.venue_id)
     candidate_ids = [str(cid) for cid in session.last_candidate_ids]
-    if venue_id_str not in candidate_ids:
+    
+    is_go_home = venue_id_str == "GO_HOME"
+    
+    if not is_go_home and venue_id_str not in candidate_ids:
         raise HTTPException(status_code=400, detail="select_error:venue_not_in_candidates")
     if session.last_transport_config is None:
         raise HTTPException(status_code=400, detail="select_error:missing_transport_context")
@@ -762,26 +801,43 @@ async def post_select(payload: SelectRequest) -> JSONResponse:
     # Find the candidate from the reachable cache (rebuild minimal card from last known data)
     # We need to fetch the venue details from the Data Service
     card: TripCandidateCard | None = None
-    try:
-        result = await place_tool_adapter.batch_get_places(
-            place_ids=[int(payload.venue_id)] if str(payload.venue_id).isdigit() else []
+    if is_go_home:
+        dest_lat, dest_lng = payload.current_lat, payload.current_lng
+        if session.accommodation and session.accommodation.hotel_lat and session.accommodation.hotel_lng:
+            dest_lat = session.accommodation.hotel_lat
+            dest_lng = session.accommodation.hotel_lng
+        
+        card = TripCandidateCard(
+            venue_id="GO_HOME",
+            name="回家去 (飯店/車站)",
+            category="go_home",
+            address="回程目的地",
+            lat=dest_lat,
+            lng=dest_lng,
+            distance_min=0,
+            why_recommended="辛苦了，準備回程吧！",
         )
-        if result.items:
-            v = result.items[0]
-            card = TripCandidateCard(
-                venue_id=v.venue_id,
-                name=v.name,
-                category="restaurant" if _is_food(v) else "attraction",
-                primary_type=getattr(v, "primary_type", None),
-                address=getattr(v, "formatted_address", None),
-                lat=v.lat or 0.0,
-                lng=v.lng or 0.0,
-                rating=getattr(v, "rating", None),
-                distance_min=0,
-                why_recommended="",
+    else:
+        try:
+            result = await place_tool_adapter.batch_get_places(
+                place_ids=[int(payload.venue_id)] if str(payload.venue_id).isdigit() else []
             )
-    except Exception:
-        pass
+            if result.items:
+                v = result.items[0]
+                card = TripCandidateCard(
+                    venue_id=v.venue_id,
+                    name=v.name,
+                    category="restaurant" if _is_food(v) else "attraction",
+                    primary_type=getattr(v, "primary_type", None),
+                    address=getattr(v, "formatted_address", None),
+                    lat=v.lat or 0.0,
+                    lng=v.lng or 0.0,
+                    rating=getattr(v, "rating", None),
+                    distance_min=0,
+                    why_recommended="",
+                )
+        except Exception:
+            pass
 
     if card is None:
         # Fallback: minimal card from payload
@@ -972,17 +1028,20 @@ async def get_should_go_home(
         go_home_advisor.record_reminded(session)
         await _save_session(session)
 
-        # Calculate time remaining
+        # Calculate time remaining using Taipei timezone
+        from zoneinfo import ZoneInfo
+        taipei_tz = ZoneInfo("Asia/Taipei")
+        
         hh, mm = map(int, session.return_time.split(":"))
-        today = datetime.now(UTC).date()
-        from datetime import timezone
-        return_dt = datetime(today.year, today.month, today.day, hh, mm, tzinfo=UTC)
-        time_remaining = max(0, int((return_dt - datetime.now(UTC)).total_seconds() / 60))
+        now_taipei = datetime.now(taipei_tz)
+        return_dt = now_taipei.replace(hour=hh, minute=mm, second=0, microsecond=0)
+        
+        time_remaining = max(0, int((return_dt - now_taipei).total_seconds() / 60))
 
         return JSONResponse({
             "session_id": session_id,
             "remind": True,
-            "message": f"該回家啦！距離預定返回時間還有 {time_remaining} 分鐘，現在出發剛好！",
+            "message": f"該回家啦！距離回程的時間還有 {time_remaining} 分鐘，現在出發剛好！",
             "time_remaining_min": time_remaining,
         })
 
@@ -992,6 +1051,14 @@ async def get_should_go_home(
         "message": None,
         "time_remaining_min": None,
     })
+
+
+@router.post("/snooze")
+async def post_snooze(payload: SnoozeRequest) -> JSONResponse:
+    session = await _get_session(payload.session_id)
+    go_home_advisor.snooze(session)
+    await _save_session(session)
+    return JSONResponse({"session_id": payload.session_id, "snoozed": True})
 
 
 # ─── GET /summary ─────────────────────────────────────────────────────────────

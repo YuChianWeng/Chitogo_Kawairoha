@@ -3,7 +3,7 @@
     <div v-if="showGoHomeBanner" class="go-home-banner">
       <p>{{ goHomeMessage }}</p>
       <div class="banner-actions">
-        <button class="banner-btn continue" type="button" @click="dismissBanner">繼續玩</button>
+        <button class="banner-btn continue" type="button" @click="dismissBanner">再玩一下</button>
         <button class="banner-btn gohome" type="button" @click="triggerSummary">回家去</button>
       </div>
     </div>
@@ -17,6 +17,7 @@
               <div class="hero-topline">
                 <span class="message-label">Chitogo 景點小幫手</span>
                 <span class="gene-badge">{{ userGene || '旅人模式' }}</span>
+                <span class="time-badge">現在時間 {{ currentTime }}</span>
               </div>
               <h1>這一輪想怎麼玩？</h1>
               <p>
@@ -193,12 +194,14 @@
             </div>
           </div>
         </template>
+
+        <div v-if="tripPhase !== 'ENDED'" class="global-actions">
+          <button class="go-home-inline" type="button" @click="showGoHomeConfirm = true">
+            我想回家
+          </button>
+        </div>
       </section>
     </div>
-
-    <button v-if="tripPhase !== 'ENDED'" class="go-home" type="button" @click="showGoHomeConfirm = true">
-      我想回家
-    </button>
 
     <dialog ref="goHomeDialog" class="confirm-dialog">
       <p>確定要結束旅程嗎？</p>
@@ -216,6 +219,7 @@
       :lng="currentLng"
       @close="showDemandModal = false"
       @select="onDemandSelect"
+      @refresh="onDemandRefresh"
     />
   </div>
 </template>
@@ -297,6 +301,9 @@ const lastRequestedTransport = ref<CandidateTransportInput | null>(null)
 const selectedVenueName = ref('')
 const lastRoundFeedback = ref<LastRoundFeedback | null>(null)
 
+const currentTime = ref(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
+let timeInterval: ReturnType<typeof setInterval> | null = null
+
 const showGoHomeBanner = ref(false)
 const goHomeMessage = ref('')
 let suppressUntil = 0
@@ -328,15 +335,20 @@ const recommendationLead = computed(() => {
     return `我會依 ${transportSummary.value} 幫你找幾個適合這一輪的地方。`
   }
 
+  let lead = ''
+  if (candidatesResult.value.go_home_reminder) {
+    lead = candidatesResult.value.go_home_reminder + '。'
+  }
+
   if (candidatesResult.value.restaurant_count > 0 && candidatesResult.value.attraction_count > 0) {
-    return '我推薦以下幾個景點和美食，你先挑一張最有感覺的卡片。'
+    lead += '我推薦以下幾個景點和美食，你先挑一張最有感覺的卡片。'
+  } else if (candidatesResult.value.restaurant_count > 0) {
+    lead += '我推薦以下幾個適合這一輪的美食選項，你先挑一張最有感覺的卡片。'
+  } else {
+    lead += '我推薦以下幾個適合這一輪的景點，你先挑一張最有感覺的卡片。'
   }
 
-  if (candidatesResult.value.restaurant_count > 0) {
-    return '我推薦以下幾個適合這一輪的美食選項，你先挑一張最有感覺的卡片。'
-  }
-
-  return '我推薦以下幾個適合這一輪的景點，你先挑一張最有感覺的卡片。'
+  return lead
 })
 
 const lastRoundFeedbackMessage = computed(() => {
@@ -350,11 +362,15 @@ const lastRoundFeedbackMessage = computed(() => {
 onMounted(() => {
   requestLocation()
   startGoHomePolling()
+  timeInterval = setInterval(() => {
+    currentTime.value = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  }, 60000)
 })
 
 onUnmounted(() => {
   if (goHomeInterval) clearInterval(goHomeInterval)
   if (locationInterval) clearInterval(locationInterval)
+  if (timeInterval) clearInterval(timeInterval)
   clearSpotCandidates()
 })
 
@@ -489,6 +505,10 @@ async function onVenueSelected(venueId: string | number) {
 }
 
 function onArrived() {
+  if (selectResult.value?.venue.venue_id === 'GO_HOME') {
+    void triggerSummary()
+    return
+  }
   tripPhase.value = 'RATING'
 }
 
@@ -510,6 +530,11 @@ async function onDemandSelect(card: CandidateCard) {
   showDemandModal.value = false
   selectedVenueName.value = card.name
   await onVenueSelected(card.venue_id)
+}
+
+async function onDemandRefresh() {
+  showDemandModal.value = false
+  await loadCandidates(lastRequestedTransport.value ?? undefined)
 }
 
 function closeGoHomeDialog() {
@@ -550,7 +575,15 @@ function startGoHomePolling() {
   }, 60000)
 }
 
-function dismissBanner() {
+async function dismissBanner() {
+  const sessionId = localStorage.getItem('chitogo_session_id')
+  if (sessionId) {
+    try {
+      await snoozeGoHome(sessionId)
+    } catch {
+      // Ignore snooze errors
+    }
+  }
   showGoHomeBanner.value = false
   suppressUntil = Date.now() + 600_000
 }
@@ -737,6 +770,15 @@ function dismissBanner() {
   border-radius: 999px;
   font-size: 13px;
   font-weight: 700;
+}
+
+.time-badge {
+  background: rgba(15, 23, 42, 0.08);
+  color: #475569;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .warning-bubble {
@@ -937,12 +979,14 @@ function dismissBanner() {
   transform: translateY(-1px);
 }
 
-.go-home {
-  position: fixed;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 14px 32px;
+.global-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+.go-home-inline {
+  padding: 12px 32px;
   background: rgba(255, 255, 255, 0.94);
   color: #dc2626;
   border: 2px solid #fecaca;
@@ -951,15 +995,15 @@ function dismissBanner() {
   font-family: inherit;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.12);
-  z-index: 40;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
   transition: all 0.2s;
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(8px);
 }
 
-.go-home:hover {
+.go-home-inline:hover {
   border-color: #ef4444;
   background: #fff5f5;
+  transform: translateY(-1px);
 }
 
 .confirm-dialog {
@@ -1051,9 +1095,13 @@ function dismissBanner() {
     align-items: stretch;
   }
 
-  .go-home {
-    width: calc(100% - 28px);
-    bottom: 16px;
+  .global-actions {
+    margin-top: 16px;
+  }
+
+  .go-home-inline {
+    width: 100%;
+    padding: 14px 20px;
   }
 }
 </style>

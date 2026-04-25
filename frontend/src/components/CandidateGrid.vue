@@ -10,7 +10,7 @@
       >
         <div class="card-header">
           <span class="category-badge" :class="card.category">
-            {{ card.category === 'restaurant' ? '美食' : '景點' }}
+            {{ card.category === 'restaurant' ? '美食' : (card.category === 'go_home' ? '回程' : '景點') }}
           </span>
           <span class="distance">{{ card.distance_min }} 分鐘</span>
         </div>
@@ -97,6 +97,11 @@ defineEmits<{
 .category-badge.attraction {
   background: #e0f2fe;
   color: #0369a1;
+}
+
+.category-badge.go_home {
+  background: #fee2e2;
+  color: #dc2626;
 }
 
 .distance {

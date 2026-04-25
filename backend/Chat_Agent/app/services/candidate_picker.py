@@ -61,6 +61,10 @@ async def pick_candidates(
     if not all_venues:
         raise ValueError("candidates_error:data_service_unavailable:no_venues")
 
+    # Exclude already-visited venues
+    visited_ids = {str(vs.venue_id) for vs in session.visited_stops}
+    all_venues = [v for v in all_venues if str(getattr(v, "venue_id", "")) not in visited_ids]
+
     # Filter by reachability
     restaurants_raw = [v for v in all_venues if _is_restaurant(v)]
     attractions_raw = [v for v in all_venues if not _is_restaurant(v)]
@@ -156,11 +160,55 @@ async def demand_mode(
     max_minutes = transport_config.max_minutes_per_leg
     primary_mode = transport_config.mode
 
+    # Use LLM to map free-form demand text to structured search parameters
+    llm_category, llm_primary_type = await _llm_parse_demand(demand_text)
+    logger.info(
+        "demand_mode LLM parse: text=%r → category=%r, primary_type=%r",
+        demand_text, llm_category, llm_primary_type,
+    )
+
     try:
-        result = await place_tool_adapter.search_places(keyword=demand_text, limit=20)
-        venues = list(result.items)
+        if llm_category:
+            # Structured search: use LLM-inferred category (+ optional primary_type)
+            r = await place_tool_adapter.search_places(
+                internal_category=llm_category,
+                primary_type=llm_primary_type,
+                limit=50,
+            )
+            venues = list(r.items)
+            # If primary_type filter was too narrow, retry with category only
+            if not venues and llm_primary_type:
+                r = await place_tool_adapter.search_places(
+                    internal_category=llm_category, limit=50
+                )
+                venues = list(r.items)
+        else:
+            # LLM couldn't infer — try keyword search then broad fallback
+            r = await place_tool_adapter.search_places(keyword=demand_text, limit=50)
+            venues = list(r.items)
+            if not venues:
+                rest_r = await place_tool_adapter.search_places(internal_category="food", limit=50)
+                attr_r = await place_tool_adapter.search_places(internal_category="attraction", limit=50)
+                venues = list(rest_r.items) + list(attr_r.items)
     except Exception as exc:
         raise ValueError(f"candidates_error:data_service_unavailable:{exc}") from exc
+
+    visited_ids = {str(vs.venue_id) for vs in session.visited_stops}
+    venues = [v for v in venues if str(getattr(v, "venue_id", "")) not in visited_ids]
+
+    # If visited-filter wiped everything, fall back with same category preference
+    if not venues:
+        try:
+            category_fallback = llm_category or "food"
+            r = await place_tool_adapter.search_places(internal_category=category_fallback, limit=50)
+            venues = [v for v in r.items if str(getattr(v, "venue_id", "")) not in visited_ids]
+            if not venues:
+                rest_r = await place_tool_adapter.search_places(internal_category="food", limit=50)
+                attr_r = await place_tool_adapter.search_places(internal_category="attraction", limit=50)
+                venues = [v for v in list(rest_r.items) + list(attr_r.items)
+                          if str(getattr(v, "venue_id", "")) not in visited_ids]
+        except Exception as exc:
+            raise ValueError(f"candidates_error:data_service_unavailable:{exc}") from exc
 
     semaphore = asyncio.Semaphore(_ROUTE_SEMAPHORE_LIMIT)
     pre = haversine_pre_filter(venues, origin_lat, origin_lng, max_minutes * 2, primary_mode)
@@ -202,6 +250,79 @@ async def demand_mode(
     session.last_candidate_ids = [c.venue_id for c in cards]
 
     return cards, fallback_reason
+
+
+_VALID_CATEGORIES = ("food", "attraction", "shopping", "nightlife", "lodging", "other")
+
+_FOOD_PRIMARY_TYPES = (
+    "american_restaurant,asian_restaurant,bakery,bar,barbecue_restaurant,bistro,"
+    "breakfast_restaurant,brunch_restaurant,buffet_restaurant,cafe,cake_shop,"
+    "cantonese_restaurant,chicken_restaurant,chinese_noodle_restaurant,chinese_restaurant,"
+    "cocktail_bar,coffee_shop,dessert_restaurant,dessert_shop,dim_sum_restaurant,"
+    "dumpling_restaurant,european_restaurant,fast_food_restaurant,fine_dining_restaurant,"
+    "french_restaurant,fusion_restaurant,german_restaurant,hamburger_restaurant,"
+    "hot_pot_restaurant,ice_cream_shop,indian_restaurant,italian_restaurant,"
+    "japanese_curry_restaurant,japanese_izakaya_restaurant,japanese_restaurant,"
+    "kebab_shop,korean_barbecue_restaurant,korean_restaurant,mediterranean_restaurant,"
+    "mexican_restaurant,noodle_shop,pizza_restaurant,pub,ramen_restaurant,restaurant,"
+    "seafood_restaurant,snack_bar,sushi_restaurant,taiwanese_restaurant,tea_house,"
+    "thai_restaurant,tonkatsu_restaurant,vegan_restaurant,vegetarian_restaurant,"
+    "vietnamese_restaurant,western_restaurant,wine_bar,yakiniku_restaurant,yakitori_restaurant"
+)
+_ATTRACTION_PRIMARY_TYPES = (
+    "amphitheatre,amusement_center,art_gallery,art_museum,art_studio,botanical_garden,"
+    "bridge,buddhist_temple,city_park,community_center,concert_hall,cultural_center,"
+    "cultural_landmark,dog_park,event_venue,farmers_market,garden,hiking_area,"
+    "historical_landmark,history_museum,library,live_music_venue,movie_theater,museum,"
+    "nature_preserve,night_club,observation_deck,park,performing_arts_theater,"
+    "place_of_worship,playground,plaza,public_bath,scenic_spot,sculpture,shinto_shrine,"
+    "tourist_attraction,zoo"
+)
+
+_LLM_PARSE_PROMPT = """\
+你是台北旅遊助手，負責把用戶需求轉成結構化搜尋參數。
+
+用戶說：「{demand_text}」
+
+請根據需求選出最合適的 internal_category 和 primary_type。
+
+internal_category 只能選以下其中一個：
+food, attraction, shopping, nightlife, lodging, other
+
+food 的 primary_type 可以選以下其中一個（或 null）：
+{food_types}
+
+attraction 的 primary_type 可以選以下其中一個（或 null）：
+{attraction_types}
+
+其他 category 的 primary_type 填 null。
+
+回傳嚴格 JSON，不加任何說明文字：
+{{"internal_category": "...", "primary_type": "..." 或 null}}
+"""
+
+
+async def _llm_parse_demand(demand_text: str) -> tuple[str | None, str | None]:
+    """Return (internal_category, primary_type) inferred by LLM from demand text."""
+    prompt = _LLM_PARSE_PROMPT.format(
+        demand_text=demand_text,
+        food_types=_FOOD_PRIMARY_TYPES,
+        attraction_types=_ATTRACTION_PRIMARY_TYPES,
+    )
+    try:
+        result = await llm_client.generate_json(prompt)
+        if not isinstance(result, dict):
+            return None, None
+        cat = result.get("internal_category")
+        pt = result.get("primary_type")
+        if cat not in _VALID_CATEGORIES:
+            cat = None
+        if not isinstance(pt, str) or not pt:
+            pt = None
+        return cat, pt
+    except Exception as exc:
+        logger.warning("_llm_parse_demand failed: %s", exc)
+        return None, None
 
 
 def _is_restaurant(venue: Any) -> bool:

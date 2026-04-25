@@ -281,6 +281,7 @@ class Session(BaseModel):
     visited_stops: list[VisitedStop] = Field(default_factory=list)
     gene_affinity_weights: dict[str, float] = Field(default_factory=dict)
     go_home_reminded_at: datetime | None = None
+    go_home_snooze_mins: int = 0
     pending_venue: TripCandidateCard | None = None
     reachable_cache: ReachableCache | None = None
     last_candidate_ids: list[str | int] = Field(default_factory=list)
