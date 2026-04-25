@@ -49,6 +49,8 @@ class Settings(BaseSettings):
     default_start_time: str = Field(default="10:00", min_length=5, max_length=5)
     trace_store_max_items: int = Field(default=200, ge=1, le=1000)
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+    cwa_api_key: str | None = None
+    cwa_weather_timeout_sec: int = Field(default=3, ge=1)
 
     model_config = SettingsConfigDict(
         env_file=".env",
