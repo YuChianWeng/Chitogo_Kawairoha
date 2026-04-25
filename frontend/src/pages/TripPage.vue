@@ -158,6 +158,7 @@
 
                 <CandidateGrid
                   :candidates="candidatesResult.candidates"
+                  :rain-filtered="candidatesResult.rain_filtered ?? []"
                   @select="onVenueSelected"
                 />
               </div>

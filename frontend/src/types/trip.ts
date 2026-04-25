@@ -90,11 +90,13 @@ export interface CandidateCard {
   rating: number | null
   distance_min: number
   why_recommended: string
+  rain_note?: string | null
 }
 
 export interface CandidatesResult {
   session_id: string
   candidates: CandidateCard[]
+  rain_filtered?: CandidateCard[]
   partial: boolean
   fallback_reason: string | null
   restaurant_count: number
@@ -124,6 +126,7 @@ export interface RateResult {
 export interface DemandResult {
   session_id: string
   alternatives: CandidateCard[]
+  rain_filtered?: CandidateCard[]
   fallback_reason: string | null
 }
 
