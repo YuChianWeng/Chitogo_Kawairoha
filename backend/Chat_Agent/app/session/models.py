@@ -197,6 +197,7 @@ class FlowState(str, Enum):
 
 
 class AccommodationConfig(BaseModel):
+    mode: Literal["booked", "need_hotel", "no_stay"]
     booked: bool
     hotel_name: str | None = None
     hotel_lat: float | None = None
@@ -210,7 +211,7 @@ class AccommodationConfig(BaseModel):
 
 
 class TransportConfig(BaseModel):
-    modes: list[str] = Field(default_factory=list)
+    mode: Literal["walk", "transit", "drive"] = "transit"
     max_minutes_per_leg: int = Field(30, ge=1, le=120)
 
     model_config = ConfigDict(extra="forbid")
@@ -276,7 +277,7 @@ class Session(BaseModel):
     accommodation: AccommodationConfig | None = None
     return_time: str | None = None
     return_destination: str | None = None
-    transport_config: TransportConfig | None = None
+    last_transport_config: TransportConfig | None = None
     visited_stops: list[VisitedStop] = Field(default_factory=list)
     gene_affinity_weights: dict[str, float] = Field(default_factory=dict)
     go_home_reminded_at: datetime | None = None

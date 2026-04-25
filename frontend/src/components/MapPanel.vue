@@ -2,7 +2,7 @@
   <div class="map-panel">
     <div ref="mapEl" class="map-container"></div>
     <div class="location-badge">目前位置：台北市信義區</div>
-    <div v-if="!hasStops && !loading" class="map-hint">行程規劃完成後，景點將顯示於地圖上</div>
+    <div v-if="!hasStops && !hasSpotCandidates && !loading" class="map-hint">行程規劃完成後，景點將顯示於地圖上</div>
   </div>
 </template>
 
@@ -11,11 +11,13 @@ import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import type { Itinerary, ChatCandidate } from '../types/itinerary'
+import type { CandidateCard } from '../types/trip'
 
 const props = defineProps<{
   itinerary: Itinerary | null
   candidates: ChatCandidate[]
   loading?: boolean
+  spotCandidates?: CandidateCard[]
 }>()
 
 const mapEl = ref<HTMLElement | null>(null)
@@ -27,6 +29,10 @@ const TAIPEI: L.LatLngExpression = [25.0330, 121.5654]
 
 const hasStops = computed(
   () => (props.itinerary?.stops ?? []).some(s => s.lat && s.lng)
+)
+
+const hasSpotCandidates = computed(
+  () => (props.spotCandidates ?? []).length > 0
 )
 
 onMounted(() => {
@@ -45,6 +51,7 @@ onBeforeUnmount(() => {
 })
 
 watch(() => props.itinerary, renderMarkers, { deep: true })
+watch(() => props.spotCandidates, renderMarkers, { deep: true })
 
 function renderMarkers() {
   if (!map) return
@@ -54,6 +61,41 @@ function renderMarkers() {
   routeLine?.remove()
   routeLine = null
 
+  // Spot candidates (6-pick or 3-pick selection screen)
+  const spots = props.spotCandidates ?? []
+  if (spots.length > 0) {
+    const latlngs: L.LatLngExpression[] = []
+
+    for (const [idx, card] of spots.entries()) {
+      if (!card.lat || !card.lng) continue
+      const ll: L.LatLngExpression = [card.lat, card.lng]
+      latlngs.push(ll)
+
+      const icon = L.divIcon({
+        className: '',
+        html: `<div class="candidate-pin">${idx + 1}</div>`,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+      })
+
+      const popup = [
+        `<strong>${card.name}</strong>`,
+        card.address ? card.address : '',
+        card.rating ? `★ ${card.rating.toFixed(1)}` : '',
+        card.distance_min ? `距離：約 ${card.distance_min} 分鐘` : '',
+        card.why_recommended ? `<em>${card.why_recommended}</em>` : '',
+      ].filter(Boolean).join('<br>')
+
+      markers.push(L.marker(ll, { icon }).bindPopup(popup).addTo(map!))
+    }
+
+    if (latlngs.length > 0) {
+      map.fitBounds(L.latLngBounds(latlngs as L.LatLng[]), { padding: [56, 56], maxZoom: 15 })
+    }
+    return
+  }
+
+  // Itinerary stops (numbered route)
   const stops = (props.itinerary?.stops ?? []).filter(s => s.lat && s.lng)
   if (stops.length === 0) return
 
@@ -137,6 +179,21 @@ function renderMarkers() {
   width: 28px;
   height: 28px;
   background: #4d68bf;
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+.candidate-pin {
+  width: 28px;
+  height: 28px;
+  background: #f97316;
   color: #fff;
   border-radius: 50%;
   display: flex;

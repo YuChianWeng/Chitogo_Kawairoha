@@ -12,7 +12,7 @@ from app.services.reachability import (
     haversine_pre_filter,
     route_time_estimate,
 )
-from app.session.models import ReachableCache, Session, TripCandidateCard
+from app.session.models import ReachableCache, Session, TransportConfig, TripCandidateCard
 from app.tools.place_adapter import place_tool_adapter
 
 logger = logging.getLogger(__name__)
@@ -37,12 +37,12 @@ async def pick_candidates(
     session: Session,
     origin_lat: float,
     origin_lng: float,
+    *,
+    transport_config: TransportConfig,
 ) -> tuple[list[TripCandidateCard], bool, str | None]:
     """Return (cards, partial, fallback_reason) — exactly 6 cards (3 rest + 3 attr) if possible."""
-    transport_config = session.transport_config
-    max_minutes = transport_config.max_minutes_per_leg if transport_config else 30
-    modes = transport_config.modes if transport_config else ["transit"]
-    primary_mode = modes[0] if modes else "transit"
+    max_minutes = transport_config.max_minutes_per_leg
+    primary_mode = transport_config.mode
 
     # Fetch venues from Data Service
     try:
@@ -149,12 +149,12 @@ async def demand_mode(
     demand_text: str,
     origin_lat: float,
     origin_lng: float,
+    *,
+    transport_config: TransportConfig,
 ) -> tuple[list[TripCandidateCard], str | None]:
     """Return up to 3 alternative venues matching the demand text."""
-    transport_config = session.transport_config
-    max_minutes = transport_config.max_minutes_per_leg if transport_config else 30
-    modes = transport_config.modes if transport_config else ["transit"]
-    primary_mode = modes[0] if modes else "transit"
+    max_minutes = transport_config.max_minutes_per_leg
+    primary_mode = transport_config.mode
 
     try:
         result = await place_tool_adapter.search_places(keyword=demand_text, limit=20)
@@ -192,6 +192,14 @@ async def demand_mode(
             why_recommended=why_reasons[idx] if idx < len(why_reasons) else "",
         )
         cards.append(card)
+
+    session.reachable_cache = ReachableCache(
+        origin_lat=origin_lat,
+        origin_lng=origin_lng,
+        venue_ids=[c.venue_id for c in cards],
+        expires_at=datetime.now(UTC) + timedelta(minutes=_CACHE_TTL_MINUTES),
+    )
+    session.last_candidate_ids = [c.venue_id for c in cards]
 
     return cards, fallback_reason
 

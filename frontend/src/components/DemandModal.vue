@@ -1,23 +1,28 @@
 <template>
   <div class="modal-overlay" @click.self="$emit('close')">
     <div class="modal">
-      <button class="close-btn" @click="$emit('close')">✕</button>
-      <h3 class="modal-title">告訴我你想找什麼</h3>
+      <button class="close-btn" type="button" @click="$emit('close')">✕</button>
+      <p class="modal-kicker">換個條件再推薦</p>
+      <h3 class="modal-title">直接用一句話告訴我你想找什麼</h3>
 
-      <div v-if="!results.length">
+      <div v-if="!searched || results.length === 0">
         <textarea
           v-model="inputText"
           class="demand-input"
-          placeholder="我想找有點文藝的地方…"
+          placeholder="例如：我想找安靜一點、適合散步拍照的地方"
           rows="3"
         ></textarea>
-        <button class="search-btn" :disabled="loading || !inputText.trim()" @click="doSearch">
-          {{ loading ? '搜尋中…' : '找找看' }}
+        <button class="search-btn" type="button" :disabled="loading || !inputText.trim()" @click="doSearch">
+          {{ loading ? '整理中…' : '幫我重新推薦' }}
         </button>
         <div v-if="errorText" class="error">{{ errorText }}</div>
+        <div v-if="searched && results.length === 0 && !loading && !errorText" class="no-results">
+          我附近找不到特別接近的地點，換個描述試試看。
+        </div>
       </div>
 
       <div v-else>
+        <p class="result-intro">我幫你整理了幾個比較接近你剛剛描述的地方。</p>
         <p v-if="fallbackReason" class="fallback-note">{{ fallbackReason }}</p>
         <div class="results">
           <div
@@ -36,7 +41,7 @@
             <p class="result-why">{{ card.why_recommended }}</p>
           </div>
         </div>
-        <button class="search-btn outline" @click="results = []; inputText = ''">重新搜尋</button>
+        <button class="search-btn outline" type="button" @click="results = []; inputText = ''; searched = false">重新輸入條件</button>
       </div>
     </div>
   </div>
@@ -62,6 +67,7 @@ const loading = ref(false)
 const errorText = ref('')
 const results = ref<CandidateCard[]>([])
 const fallbackReason = ref<string | null>(null)
+const searched = ref(false)
 
 async function doSearch() {
   const sessionId = localStorage.getItem('chitogo_session_id')
@@ -69,10 +75,12 @@ async function doSearch() {
 
   loading.value = true
   errorText.value = ''
+  searched.value = false
   try {
     const result = await submitDemand(sessionId, inputText.value, props.lat, props.lng)
     results.value = result.alternatives
     fallbackReason.value = result.fallback_reason
+    searched.value = true
   } catch (err: unknown) {
     const e = err as { response?: { data?: { detail?: string } } }
     errorText.value = e?.response?.data?.detail ?? '搜尋失敗，請重試。'
@@ -118,10 +126,20 @@ async function doSearch() {
 }
 
 .modal-title {
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 22px;
+  line-height: 1.35;
+  font-weight: 700;
   color: #1e293b;
   margin-bottom: 16px;
+}
+
+.modal-kicker {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: #2563eb;
+  margin-bottom: 10px;
 }
 
 .demand-input {
@@ -171,6 +189,23 @@ async function doSearch() {
   font-size: 13px;
   margin-top: 8px;
   text-align: center;
+}
+
+.result-intro {
+  font-size: 14px;
+  color: #475569;
+  line-height: 1.6;
+  margin-bottom: 12px;
+}
+
+.no-results {
+  color: #64748b;
+  font-size: 13px;
+  margin-top: 8px;
+  text-align: center;
+  padding: 8px;
+  background: #f8fafc;
+  border-radius: 8px;
 }
 
 .fallback-note {

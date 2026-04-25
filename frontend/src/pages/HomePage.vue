@@ -70,7 +70,7 @@
       </div>
 
       <!-- Map -->
-      <MapPanel :itinerary="null" :candidates="[]" :loading="false" />
+      <MapPanel :itinerary="null" :candidates="[]" :spot-candidates="spotCandidates" :loading="false" />
     </div>
 
     <!-- Placeholder tabs -->
@@ -87,6 +87,7 @@
 import { ref, computed, onBeforeUnmount } from 'vue'
 import { RouterView } from 'vue-router'
 import MapPanel from '../components/MapPanel.vue'
+import { useMapState } from '../composables/useMapState'
 
 type TabKey = 'home' | 'attractions' | 'agent' | 'profile' | 'settings'
 
@@ -104,6 +105,9 @@ const CHAT_DEFAULT = 520
 
 // ── Tab state ──
 const activeTab = ref<TabKey>('agent')
+
+// ── Shared map state (written by child pages via composable) ──
+const { spotCandidates } = useMapState()
 
 // ── Resizable panel state ──
 const mainContentEl = ref<HTMLElement | null>(null)

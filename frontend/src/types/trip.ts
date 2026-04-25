@@ -1,6 +1,13 @@
 export type TravelGene = '文清' | '親子' | '不常來' | '夜貓子' | '一日' | '野外'
 export type TransportMode = 'walk' | 'transit' | 'drive'
 export type FlowState = 'QUIZ' | 'TRANSPORT' | 'RECOMMENDING' | 'RATING' | 'ENDED'
+export type AccommodationMode = 'booked' | 'need_hotel' | 'no_stay'
+export type RecommendationStatus =
+  | 'matched_preferences'
+  | 'relaxed_budget'
+  | 'expanded_citywide'
+  | 'expanded_citywide_and_budget'
+  | 'no_results'
 
 export interface QuizAnswers {
   Q1: 'A' | 'B' | 'C'
@@ -22,37 +29,53 @@ export interface QuizResult {
 }
 
 export interface AccommodationInput {
-  booked: boolean
+  mode: AccommodationMode
   hotel_name?: string
   district?: string
   budget_tier?: 'budget' | 'mid' | 'luxury'
 }
 
+export interface CandidateTransportInput {
+  mode: TransportMode
+  max_minutes_per_leg: number
+}
+
 export interface TripSetup {
-  accommodation: AccommodationInput
+  accommodation?: AccommodationInput
   return_time?: string
   return_destination?: string
-  transport: {
-    modes: TransportMode[]
-    max_minutes_per_leg: number
-  }
+}
+
+export interface HotelRecommendationCard {
+  license_no: string | null
+  place_id: number | null
+  name: string
+  district: string | null
+  address: string | null
+  rating: number | null
+  budget_level: string | null
+  google_maps_uri: string | null
+  confidence: number | null
 }
 
 export interface HotelValidation {
   valid: boolean
   matched_name: string | null
-  match_type: 'exact' | 'fuzzy' | null
+  match_type: string | null
   confidence: number | null
   district: string | null
   address: string | null
-  alternatives: Array<{ name: string; district: string | null; address: string | null; confidence: number }>
+  alternatives: HotelRecommendationCard[]
   last_updated: string
 }
 
 export interface SetupResult {
   session_id: string
-  accommodation_status: 'validated' | 'fuzzy_match' | 'not_found' | 'not_required'
+  accommodation_status: 'validated' | 'fuzzy_match' | 'not_found' | 'not_required' | 'recommending'
   hotel_validation: HotelValidation | null
+  hotel_recommendations: HotelRecommendationCard[]
+  recommendation_status: RecommendationStatus | null
+  next_step: 'accommodation' | 'setup' | 'trip'
   setup_complete: boolean
 }
 

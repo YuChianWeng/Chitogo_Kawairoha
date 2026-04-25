@@ -1,23 +1,27 @@
 <template>
   <div class="nav-panel">
+    <div class="panel-header">
+      <p class="panel-kicker">前往中</p>
+      <p class="travel-time">預計 {{ navigation.estimated_travel_min }} 分鐘到達</p>
+    </div>
+
     <div class="venue-info">
       <h2 class="venue-name">{{ venue.name }}</h2>
       <p class="venue-address">{{ venue.address || '台北市' }}</p>
-      <p class="travel-time">預計 {{ navigation.estimated_travel_min }} 分鐘到達</p>
     </div>
 
     <p class="encouragement">{{ encouragement }}</p>
 
     <div class="map-buttons">
-      <a :href="navigation.google_maps_url" target="_blank" class="map-btn google">
+      <a :href="navigation.google_maps_url" target="_blank" rel="noreferrer" class="map-btn google">
         開啟 Google Maps
       </a>
-      <a :href="navigation.apple_maps_url" class="map-btn apple">
+      <a :href="navigation.apple_maps_url" target="_blank" rel="noreferrer" class="map-btn apple">
         開啟 Apple Maps
       </a>
     </div>
 
-    <button class="arrived-btn" @click="$emit('arrived')">我到了！</button>
+    <button class="arrived-btn" type="button" @click="$emit('arrived')">我到了，繼續</button>
   </div>
 </template>
 
@@ -37,12 +41,29 @@ defineEmits<{
 
 <style scoped>
 .nav-panel {
-  background: white;
-  border-radius: 16px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  border: 1px solid #dbeafe;
+  border-radius: 20px;
   padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.panel-kicker {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #2563eb;
+  font-weight: 700;
 }
 
 .venue-name {
@@ -55,20 +76,19 @@ defineEmits<{
 .venue-address {
   font-size: 14px;
   color: #64748b;
-  margin-bottom: 4px;
 }
 
 .travel-time {
-  font-size: 14px;
-  color: #4d68bf;
-  font-weight: 500;
+  font-size: 13px;
+  color: #1d4ed8;
+  font-weight: 700;
 }
 
 .encouragement {
-  background: #f0f4ff;
-  border-left: 3px solid #4d68bf;
+  background: #eff6ff;
+  border-left: 3px solid #3b82f6;
   padding: 12px 16px;
-  border-radius: 8px;
+  border-radius: 12px;
   font-size: 14px;
   color: #334155;
   line-height: 1.6;
@@ -101,13 +121,13 @@ defineEmits<{
 }
 
 .map-btn.apple {
-  background: #1d1d1f;
+  background: #0f172a;
   color: white;
 }
 
 .arrived-btn {
   padding: 14px;
-  background: #10b981;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: white;
   border: none;
   border-radius: 12px;
@@ -119,6 +139,6 @@ defineEmits<{
 }
 
 .arrived-btn:hover {
-  background: #059669;
+  filter: brightness(0.96);
 }
 </style>

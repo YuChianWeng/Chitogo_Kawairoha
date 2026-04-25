@@ -142,7 +142,29 @@ class LodgingLegalCheckResult(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
+class LegalLodgingSummary(BaseModel):
+    license_no: str
+    name: str
+    lodging_category: str
+    district: str | None = None
+    address: str | None = None
+    phone: str | None = None
+    place_id: int | None = None
+
+    model_config = ConfigDict(extra="ignore")
+
+
+class LegalLodgingListResult(BaseModel):
+    status: Literal["ok", "empty", "error"]
+    items: list[LegalLodgingSummary] = Field(default_factory=list)
+    error: str | None = None
+
+    model_config = ConfigDict(extra="forbid")
+
+
 class LodgingCandidateItem(BaseModel):
+    license_no: str | None = None
+    place_id: int | None = None
     name: str
     district: str | None = None
     address: str | None = None
