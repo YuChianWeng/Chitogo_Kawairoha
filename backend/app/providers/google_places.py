@@ -10,6 +10,7 @@ import httpx
 from app.config import get_settings
 from app.models.db import Venue
 from app.providers.base import (
+    BLOCKED_PLACE_TYPES,
     GOOGLE_TYPE_TO_CATEGORY,
     INTEREST_TO_GOOGLE_TYPE,
     district_centre,
@@ -24,11 +25,13 @@ _NEARBY_URL = "https://places.googleapis.com/v1/places:searchNearby"
 _DETAIL_FIELDS = (
     "places.id,places.displayName,places.formattedAddress,"
     "places.location,places.types,places.priceLevel,"
-    "places.rating,places.userRatingCount,"
+    "places.rating,places.userRatingCount,places.businessStatus,"
     "places.currentOpeningHours,places.regularOpeningHours"
 )
 _TIMEOUT = 8.0  # seconds
 _MAX_RESULTS = 20
+_MIN_RATING_COUNT = 20
+_MIN_RATING = 3.8
 
 
 def _interests_to_included_types(interests: list[str]) -> list[str]:
@@ -106,6 +109,21 @@ def _parse_place(place: dict[str, Any]) -> Venue | None:
         price_level_str = place.get("priceLevel", "PRICE_LEVEL_UNSPECIFIED")
         rating = place.get("rating")
         user_count = place.get("userRatingCount")
+
+        # Layer 3 — type blocklist: non-tourist venue types
+        if any(t in BLOCKED_PLACE_TYPES for t in google_types):
+            return None
+
+        # Layer 2 — business status: skip closed places
+        business_status = place.get("businessStatus")
+        if business_status is not None and business_status != "OPERATIONAL":
+            return None
+
+        # Layer 1 — quality gate: skip low-review or low-rated places
+        if user_count is not None and user_count < _MIN_RATING_COUNT:
+            return None
+        if rating is not None and rating < _MIN_RATING:
+            return None
 
         # Parse price level enum string
         price_map = {
