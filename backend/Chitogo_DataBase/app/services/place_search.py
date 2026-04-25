@@ -88,7 +88,14 @@ def apply_place_search_filters(query: Query, params: PlaceSearchParams) -> Query
             )
         )
     if params.keyword is not None:
-        query = query.filter(Place.display_name.ilike(f"%{params.keyword}%"))
+        kw = params.keyword
+        query = query.filter(
+            or_(
+                Place.display_name.ilike(f"%{kw}%"),
+                Place.primary_type.ilike(f"%{kw}%"),
+                Place.internal_category.ilike(f"%{kw}%"),
+            )
+        )
     if params.min_rating is not None:
         query = query.filter(Place.rating.is_not(None))
         query = query.filter(Place.rating >= params.min_rating)

@@ -216,6 +216,7 @@
       :lng="currentLng"
       @close="showDemandModal = false"
       @select="onDemandSelect"
+      @refresh="onDemandRefresh"
     />
   </div>
 </template>
@@ -510,6 +511,11 @@ async function onDemandSelect(card: CandidateCard) {
   showDemandModal.value = false
   selectedVenueName.value = card.name
   await onVenueSelected(card.venue_id)
+}
+
+async function onDemandRefresh() {
+  showDemandModal.value = false
+  await loadCandidates(lastRequestedTransport.value ?? undefined)
 }
 
 function closeGoHomeDialog() {
