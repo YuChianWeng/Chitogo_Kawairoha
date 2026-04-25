@@ -102,6 +102,8 @@ export interface CandidatesResult {
   restaurant_count: number
   attraction_count: number
   go_home_reminder?: string | null
+  homing_active?: boolean
+  urgency_level?: string
 }
 
 export interface SelectResult {

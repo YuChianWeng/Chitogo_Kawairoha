@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 from uuid import uuid4
 
 from app.services import candidate_picker
+from app.services.weather import WeatherContext
 from app.session.models import FlowState, Session, TransportConfig
 from app.tools.models import PlaceListResult, ToolPlace
 
@@ -82,8 +83,11 @@ class CandidatePickerTripTests(unittest.IsolatedAsyncioTestCase):
         ), patch(
             "app.services.candidate_picker._batch_why_recommended",
             new=AsyncMock(side_effect=_fake_why_recommended),
+        ), patch(
+            "app.services.candidate_picker.get_weather_context",
+            new=AsyncMock(return_value=WeatherContext(is_raining_likely=False, rain_probability=None)),
         ):
-            cards, partial, fallback_reason = await candidate_picker.pick_candidates(
+            cards, _rain, partial, fallback_reason = await candidate_picker.pick_candidates(
                 session,
                 25.04,
                 121.5,
@@ -132,8 +136,11 @@ class CandidatePickerTripTests(unittest.IsolatedAsyncioTestCase):
         ), patch(
             "app.services.candidate_picker._batch_why_recommended",
             new=AsyncMock(side_effect=_fake_why_recommended),
+        ), patch(
+            "app.services.candidate_picker.get_weather_context",
+            new=AsyncMock(return_value=WeatherContext(is_raining_likely=False, rain_probability=None)),
         ):
-            cards, partial, fallback_reason = await candidate_picker.pick_candidates(
+            cards, _rain, partial, fallback_reason = await candidate_picker.pick_candidates(
                 session,
                 25.04,
                 121.5,
@@ -190,8 +197,11 @@ class CandidatePickerDemandTests(unittest.IsolatedAsyncioTestCase):
         ), patch(
             "app.services.candidate_picker._batch_why_recommended",
             new=AsyncMock(side_effect=_fake_why_recommended),
+        ), patch(
+            "app.services.candidate_picker.get_weather_context",
+            new=AsyncMock(return_value=WeatherContext(is_raining_likely=False, rain_probability=None)),
         ):
-            cards, fallback_reason = await candidate_picker.demand_mode(
+            cards, _rain, fallback_reason = await candidate_picker.demand_mode(
                 session,
                 "找咖啡",
                 25.04,
@@ -213,3 +223,51 @@ class CandidatePickerDemandTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(kwargs_list[1]["open_now"], True)
         self.assertIsNone(kwargs_list[2].get("primary_type"))
         self.assertIsNone(kwargs_list[2].get("open_now"))
+
+    async def test_demand_mode_updates_candidate_ids_for_follow_up_selection(self) -> None:
+        session = Session(session_id=str(uuid4()), flow_state=FlowState.RECOMMENDING)
+        venue = ToolPlace(
+            venue_id=303,
+            name="Demand Cafe",
+            district="大安區",
+            category="food",
+            primary_type="cafe",
+            rating=4.8,
+            lat=25.04,
+            lng=121.52,
+        )
+
+        with patch(
+            "app.services.candidate_picker._llm_parse_demand",
+            new=AsyncMock(return_value=("food", "cafe")),
+        ), patch(
+            "app.services.candidate_picker.place_tool_adapter.search_places",
+            new=AsyncMock(return_value=PlaceListResult(status="ok", items=[venue], total=1, limit=20, offset=0)),
+        ), patch(
+            "app.services.candidate_picker.haversine_pre_filter",
+            return_value=[venue],
+        ), patch(
+            "app.services.candidate_picker.route_time_estimate",
+            new=AsyncMock(return_value=8),
+        ), patch(
+            "app.services.candidate_picker._batch_why_recommended",
+            new=AsyncMock(return_value=["近又順路"]),
+        ), patch(
+            "app.services.candidate_picker.get_weather_context",
+            new=AsyncMock(return_value=WeatherContext(is_raining_likely=False, rain_probability=None)),
+        ):
+            cards, _rain, fallback_reason = await candidate_picker.demand_mode(
+                session,
+                "找咖啡",
+                25.04,
+                121.5,
+                transport_config=TransportConfig(mode="walk", max_minutes_per_leg=15),
+            )
+
+        self.assertIsNotNone(fallback_reason)
+        self.assertIn("partial_results", fallback_reason)
+        self.assertIn("dropped_open_now", fallback_reason)
+        self.assertEqual([card.venue_id for card in cards], [303])
+        self.assertEqual(session.last_candidate_ids, [303])
+        self.assertIsNotNone(session.reachable_cache)
+        self.assertEqual(session.reachable_cache.venue_ids, [303])

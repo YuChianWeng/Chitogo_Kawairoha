@@ -9,7 +9,11 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from app.llm.client import llm_client
-from app.services.reachability import haversine_pre_filter, route_time_estimate
+from app.services.reachability import (
+    haversine_distance,
+    haversine_pre_filter,
+    route_time_estimate,
+)
 from app.services.weather import WeatherContext, get_weather_context
 from app.session.models import ReachableCache, Session, TransportConfig, TripCandidateCard
 from app.tools.place_adapter import place_tool_adapter
@@ -90,12 +94,30 @@ def _venue_quality_score(
     return bayesian + popularity_bonus + social_bonus
 
 
+def _homing_score(
+    venue_lat: float,
+    venue_lng: float,
+    dest_lat: float,
+    dest_lng: float,
+    origin_lat: float,
+    origin_lng: float,
+) -> float:
+    dist_origin_to_dest = haversine_distance(origin_lat, origin_lng, dest_lat, dest_lng)
+    if dist_origin_to_dest <= 1e-6:
+        return 0.0
+    dist_venue_to_dest = haversine_distance(venue_lat, venue_lng, dest_lat, dest_lng)
+    return max(0.0, (dist_origin_to_dest - dist_venue_to_dest) / dist_origin_to_dest)
+
+
 async def pick_candidates(
     session: Session,
     origin_lat: float,
     origin_lng: float,
     *,
     transport_config: TransportConfig,
+    urgency: float = 0.0,
+    dest_lat: float | None = None,
+    dest_lng: float | None = None,
 ) -> tuple[list[TripCandidateCard], list[TripCandidateCard], bool, str | None]:
     """Return up to 6 cards plus any rain-filtered cards.
 
@@ -152,6 +174,9 @@ async def pick_candidates(
     final_rest_ranked: list[_RankedVenue] = []
     final_attr_ranked: list[_RankedVenue] = []
 
+    u = min(1.0, max(0.0, float(urgency)))
+    dlat, dlng = dest_lat, dest_lng
+
     for stage in _trip_stages(base_max_minutes):
         rest_prepared, attr_prepared = await get_prepared_pools(stage.open_now)
         final_rest_ranked = _rank_trip_venues(
@@ -159,12 +184,22 @@ async def pick_candidates(
             session,
             max_minutes=stage.max_minutes,
             use_affinity=stage.use_affinity,
+            urgency=u,
+            dest_lat=dlat,
+            dest_lng=dlng,
+            origin_lat=origin_lat,
+            origin_lng=origin_lng,
         )
         final_attr_ranked = _rank_trip_venues(
             attr_prepared,
             session,
             max_minutes=stage.max_minutes,
             use_affinity=stage.use_affinity,
+            urgency=u,
+            dest_lat=dlat,
+            dest_lng=dlng,
+            origin_lat=origin_lat,
+            origin_lng=origin_lng,
         )
         chosen_stage = stage
         if (
@@ -553,19 +588,44 @@ def _rank_trip_venues(
     *,
     max_minutes: int,
     use_affinity: bool,
+    urgency: float = 0.0,
+    dest_lat: float | None = None,
+    dest_lng: float | None = None,
+    origin_lat: float = 0.0,
+    origin_lng: float = 0.0,
 ) -> list[_RankedVenue]:
     ranked: list[_RankedVenue] = []
+    use_homing = (
+        urgency > 0.0
+        and dest_lat is not None
+        and dest_lng is not None
+    )
     for item in prepared:
         if item.travel_min > max_minutes:
             continue
         affinity = 1.0
         if use_affinity:
             affinity = session.gene_affinity_weights.get(item.affinity_key, 1.0)
+        base = affinity * item.quality_score
+        homing = 0.0
+        if use_homing:
+            vlat = getattr(item.venue, "lat", None)
+            vlng = getattr(item.venue, "lng", None)
+            if vlat is not None and vlng is not None:
+                homing = _homing_score(
+                    float(vlat),
+                    float(vlng),
+                    float(dest_lat),
+                    float(dest_lng),
+                    origin_lat,
+                    origin_lng,
+                )
+        rank_score = base * (1.0 - urgency) + homing * urgency
         ranked.append(
             _RankedVenue(
                 venue=item.venue,
                 travel_min=item.travel_min,
-                rank_score=affinity * item.quality_score,
+                rank_score=rank_score,
             )
         )
 

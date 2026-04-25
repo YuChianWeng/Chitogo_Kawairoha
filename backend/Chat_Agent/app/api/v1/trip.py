@@ -189,6 +189,75 @@ def _card_to_dict(card: TripCandidateCard) -> dict[str, Any]:
     }
 
 
+async def _geocode_return_destination(address: str) -> tuple[float | None, float | None]:
+    q = address.strip()
+    if not q:
+        return None, None
+    from app.core.config import get_settings
+    settings = get_settings()
+    full = q if "台北" in q or "Taipei" in q else f"{q}, 台北市, 台灣"
+    url = "https://maps.googleapis.com/maps/api/geocode/json"
+    params = {"address": full, "key": settings.google_maps_api_key, "region": "tw"}
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(
+                url,
+                params=params,
+                timeout=float(settings.route_service_timeout_sec),
+            )
+    except httpx.HTTPError:
+        return None, None
+    if resp.status_code != 200:
+        return None, None
+    data = resp.json()
+    if data.get("status") != "OK" or not data.get("results"):
+        return None, None
+    loc = data["results"][0]["geometry"]["location"]
+    la, ln = loc.get("lat"), loc.get("lng")
+    if la is None or ln is None:
+        return None, None
+    return float(la), float(ln)
+
+
+async def _apply_return_dest_coords(session: Session) -> None:
+    session.return_dest_lat = None
+    session.return_dest_lng = None
+    if (
+        session.accommodation
+        and session.accommodation.hotel_lat is not None
+        and session.accommodation.hotel_lng is not None
+    ):
+        session.return_dest_lat = float(session.accommodation.hotel_lat)
+        session.return_dest_lng = float(session.accommodation.hotel_lng)
+        return
+    if session.return_destination and session.return_destination.strip():
+        la, ln = await _geocode_return_destination(session.return_destination)
+        if la is not None and ln is not None:
+            session.return_dest_lat = la
+            session.return_dest_lng = ln
+
+
+def _resolved_return_dest(
+    session: Session,
+    fallback_lat: float,
+    fallback_lng: float,
+) -> tuple[float, float]:
+    if session.return_dest_lat is not None and session.return_dest_lng is not None:
+        return session.return_dest_lat, session.return_dest_lng
+    if session.accommodation and session.accommodation.hotel_lat and session.accommodation.hotel_lng:
+        return float(session.accommodation.hotel_lat), float(session.accommodation.hotel_lng)
+    return fallback_lat, fallback_lng
+
+
+def _homing_dest_coords(session: Session) -> tuple[float | None, float | None]:
+    """Coordinates for return destination; None if unknown (homing off for ranking)."""
+    if session.return_dest_lat is not None and session.return_dest_lng is not None:
+        return session.return_dest_lat, session.return_dest_lng
+    if session.accommodation and session.accommodation.hotel_lat and session.accommodation.hotel_lng:
+        return float(session.accommodation.hotel_lat), float(session.accommodation.hotel_lng)
+    return None, None
+
+
 def _normalize_mode(mode: str | None, *, error_prefix: str) -> str:
     if not mode:
         raise HTTPException(
@@ -679,6 +748,7 @@ async def post_setup(payload: SetupRequest) -> SetupResponse:
         next_step = "trip"
         setup_complete = True
 
+    await _apply_return_dest_coords(session)
     await _save_session(session)
 
     return SetupResponse(
@@ -717,12 +787,21 @@ async def get_candidates(
         max_minutes_per_leg=max_minutes_per_leg,
     )
 
+    now_override = go_home_advisor.parse_sim_time(sim_time)
+    urgency = go_home_advisor.time_urgency(session, now_override)
+    h_lat, h_lng = _homing_dest_coords(session)
+    homing_active = h_lat is not None and h_lng is not None and urgency > 0.0
+    urgency_level = go_home_advisor.urgency_level(urgency)
+
     try:
         cards, rain_cards, partial, fallback_reason = await picker.pick_candidates(
             session,
             lat,
             lng,
             transport_config=transport_config,
+            urgency=urgency,
+            dest_lat=h_lat,
+            dest_lng=h_lng,
         )
     except ValueError as exc:
         detail = str(exc)
@@ -736,13 +815,9 @@ async def get_candidates(
     await _save_session(session)
 
     # Check for go-home reminder
-    now_override = go_home_advisor.parse_sim_time(sim_time)
     go_home_reminder = None
     if session.return_time:
-        dest_lat, dest_lng = lat, lng
-        if session.accommodation and session.accommodation.hotel_lat and session.accommodation.hotel_lng:
-            dest_lat = session.accommodation.hotel_lat
-            dest_lng = session.accommodation.hotel_lng
+        dest_lat, dest_lng = _resolved_return_dest(session, lat, lng)
 
         dist_km = haversine_distance(lat, lng, dest_lat, dest_lng)
         transit_min = max(1, int(dist_km / 12.0 * 60))
@@ -778,6 +853,8 @@ async def get_candidates(
         "restaurant_count": len(restaurants),
         "attraction_count": len(attractions),
         "go_home_reminder": go_home_reminder,
+        "homing_active": homing_active,
+        "urgency_level": urgency_level,
     })
 
 

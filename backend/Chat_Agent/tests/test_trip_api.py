@@ -47,6 +47,7 @@ from app.api.v1.trip import (
     post_setup,
 )
 from app.services import candidate_picker
+from app.services.weather import WeatherContext
 from app.session.models import AccommodationConfig, FlowState, Session, TransportConfig, TripCandidateCard
 from app.session.store import session_store
 from app.tools.models import (
@@ -388,10 +389,13 @@ class TripApiTests(unittest.IsolatedAsyncioTestCase):
             origin_lng: float,
             *,
             transport_config: TransportConfig,
-        ) -> tuple[list[TripCandidateCard], bool, str | None]:
+            urgency: float = 0.0,
+            dest_lat: float | None = None,
+            dest_lng: float | None = None,
+        ) -> tuple[list[TripCandidateCard], list[TripCandidateCard], bool, str | None]:
             seen_transports.append((transport_config.mode, transport_config.max_minutes_per_leg))
             session.last_candidate_ids = [card.venue_id for card in cards]
-            return cards, False, None
+            return cards, [], False, None
 
         with patch("app.api.v1.trip.picker.pick_candidates", side_effect=fake_pick_candidates):
             first_request = build_request(
@@ -458,7 +462,7 @@ class TripApiTests(unittest.IsolatedAsyncioTestCase):
             origin_lng: float,
             *,
             transport_config: TransportConfig,
-        ) -> tuple[list[TripCandidateCard], str | None]:
+        ) -> tuple[list[TripCandidateCard], list[TripCandidateCard], str | None]:
             observed.append(transport_config)
             return (
                 [
@@ -472,6 +476,7 @@ class TripApiTests(unittest.IsolatedAsyncioTestCase):
                         why_recommended="符合需求",
                     )
                 ],
+                [],
                 None,
             )
 
@@ -505,6 +510,9 @@ class CandidatePickerDemandTests(unittest.IsolatedAsyncioTestCase):
         )
 
         with patch(
+            "app.services.candidate_picker._llm_parse_demand",
+            new=AsyncMock(return_value=("food", "cafe")),
+        ), patch(
             "app.services.candidate_picker.place_tool_adapter.search_places",
             new=AsyncMock(return_value=PlaceListResult(status="ok", items=[venue], total=1, limit=20, offset=0)),
         ), patch(
@@ -516,8 +524,11 @@ class CandidatePickerDemandTests(unittest.IsolatedAsyncioTestCase):
         ), patch(
             "app.services.candidate_picker._batch_why_recommended",
             new=AsyncMock(return_value=["近又順路"]),
+        ), patch(
+            "app.services.candidate_picker.get_weather_context",
+            new=AsyncMock(return_value=WeatherContext(is_raining_likely=False, rain_probability=None)),
         ):
-            cards, fallback_reason = await candidate_picker.demand_mode(
+            cards, _rain, fallback_reason = await candidate_picker.demand_mode(
                 session,
                 "找咖啡",
                 25.04,

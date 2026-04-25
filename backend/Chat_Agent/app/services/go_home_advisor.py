@@ -48,6 +48,42 @@ def calculate_trigger_time(
     return return_dt - timedelta(minutes=30 - snooze_mins)
 
 
+def time_urgency(session: Session, now_override: datetime | None = None) -> float:
+    """0..1 urgency toward return time for destination-homing; 0 if no return_time or >90m left."""
+    if not session.return_time:
+        return 0.0
+    now = _now_taipei(now_override)
+    try:
+        hh, mm = map(int, session.return_time.split(":"))
+    except (ValueError, TypeError, AttributeError):
+        return 0.0
+    ret = now.replace(hour=hh, minute=mm, second=0, microsecond=0)
+    m = (ret - now).total_seconds() / 60.0
+    if m < 0:
+        m = 0.0
+    if m >= 90:
+        return 0.0
+    if m > 60:
+        return 0.2
+    if m > 30:
+        return 0.5
+    if m > 15:
+        return 0.8
+    return 1.0
+
+
+def urgency_level(urgency: float) -> str:
+    if urgency <= 0:
+        return "none"
+    if urgency <= 0.2:
+        return "low"
+    if urgency <= 0.5:
+        return "medium"
+    if urgency <= 0.8:
+        return "high"
+    return "critical"
+
+
 def is_in_window(session: Session, now_override: datetime | None = None) -> bool:
     """Return True if current time is within (30 - snooze) mins of return_time.
     Used for both the recommendation card and proactive reminders.

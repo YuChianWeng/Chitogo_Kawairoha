@@ -278,6 +278,8 @@ class Session(BaseModel):
     accommodation: AccommodationConfig | None = None
     return_time: str | None = None
     return_destination: str | None = None
+    return_dest_lat: float | None = None
+    return_dest_lng: float | None = None
     last_transport_config: TransportConfig | None = None
     visited_stops: list[VisitedStop] = Field(default_factory=list)
     gene_affinity_weights: dict[str, float] = Field(default_factory=dict)
