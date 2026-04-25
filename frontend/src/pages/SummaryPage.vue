@@ -325,4 +325,40 @@ async function shareJourney() {
 .share-btn:hover {
   background: #3d55a0;
 }
+
+@media (max-width: 767px) {
+  .summary-container {
+    padding: 16px 12px 80px;
+    min-height: unset;
+  }
+
+  .mascot-section {
+    padding: 14px;
+  }
+
+  .mascot-img {
+    width: 60px;
+    height: 60px;
+  }
+
+  .gene-name {
+    font-size: 18px;
+  }
+
+  .stat-value {
+    font-size: 18px;
+  }
+
+  .stop-item {
+    padding: 12px;
+  }
+
+  .share-btn {
+    min-height: 48px;
+  }
+
+  .retry-btn {
+    min-height: 44px;
+  }
+}
 </style>

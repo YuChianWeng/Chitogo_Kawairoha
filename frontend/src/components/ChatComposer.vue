@@ -172,4 +172,24 @@ function onMicError(msg: string) {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+@media (max-width: 767px) {
+  .composer-bar {
+    padding: 10px 12px;
+    /* No extra safe-area padding needed here — the root layout already
+       reserves padding-bottom for the bottom nav + safe area. */
+    padding-bottom: 10px;
+    gap: 8px;
+  }
+
+  .composer-textarea {
+    font-size: 16px; /* prevents iOS auto-zoom */
+  }
+
+  .send-btn {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+  }
+}
 </style>

@@ -194,4 +194,25 @@ async function handleSubmit() {
 .submit-btn:not(:disabled):hover {
   background: #3d55a0;
 }
+
+@media (max-width: 767px) {
+  .setup-container {
+    padding: 16px 12px 80px;
+    align-items: stretch;
+  }
+
+  .setup-card {
+    padding: 24px 16px;
+    border-radius: 16px;
+  }
+
+  .text-input {
+    font-size: 16px; /* prevents iOS auto-zoom */
+    min-height: 44px;
+  }
+
+  .submit-btn {
+    min-height: 48px;
+  }
+}
 </style>

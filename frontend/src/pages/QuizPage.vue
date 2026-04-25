@@ -445,4 +445,36 @@ function resetQuiz() {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-10px); }
 }
+
+@media (max-width: 767px) {
+  .quiz-container {
+    align-items: flex-start;
+    padding: 16px 12px 80px;
+  }
+
+  .quiz-card, .result-card {
+    padding: 24px 16px;
+    border-radius: 16px;
+  }
+
+  .question-text {
+    font-size: 17px;
+  }
+
+  .option-btn {
+    padding: 12px 16px;
+    font-size: 14px;
+    min-height: 48px;
+    text-align: left;
+  }
+
+  .next-btn,
+  .start-btn {
+    min-height: 48px;
+  }
+
+  .mascot-container {
+    max-width: 240px;
+  }
+}
 </style>

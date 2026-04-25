@@ -240,7 +240,7 @@
                   :class="{ 'chat-candidate-card--loading': chatSelectingId === c.place_id }"
                   type="button"
                   :disabled="chatSelectingId !== null"
-                  @click="onChatVenueSelected(c)"
+                  @click.stop="onChatVenueSelected(c)"
                 >
                   <div class="chat-card-header">
                     <span class="chat-card-name">{{ c.name }}</span>
@@ -434,14 +434,21 @@ const recommendationLead = computed(() => {
     return `我會依 ${transportSummary.value} 幫你找幾個適合這一輪的地方。`
   }
 
+  const cr = candidatesResult.value
   let lead = ''
-  if (candidatesResult.value.go_home_reminder) {
-    lead = candidatesResult.value.go_home_reminder + '。'
+  if (cr.go_home_reminder) {
+    lead = cr.go_home_reminder + '。'
+  }
+  if ((cr.rain_filtered?.length ?? 0) > 0) {
+    lead += '氣象預報可能降雨，戶外點幫你另列在下方「雨天備選」。'
+  }
+  if (cr.homing_active) {
+    lead += '離回程時間近了，我幫你挑了順路的選項。'
   }
 
-  if (candidatesResult.value.restaurant_count > 0 && candidatesResult.value.attraction_count > 0) {
+  if (cr.restaurant_count > 0 && cr.attraction_count > 0) {
     lead += '我推薦以下幾個景點和美食，你先挑一張最有感覺的卡片。'
-  } else if (candidatesResult.value.restaurant_count > 0) {
+  } else if (cr.restaurant_count > 0) {
     lead += '我推薦以下幾個適合這一輪的美食選項，你先挑一張最有感覺的卡片。'
   } else {
     lead += '我推薦以下幾個適合這一輪的景點，你先挑一張最有感覺的卡片。'
@@ -773,25 +780,35 @@ async function triggerSummary() {
   }
 }
 
+async function runGoHomeCheck() {
+  if (tripPhase.value === 'ENDED') return
+  const sessionId = localStorage.getItem('chitogo_session_id')
+  if (!sessionId) return
+  try {
+    const status = await checkGoHome(sessionId, effectiveLat.value, effectiveLng.value, simTimeHHMM.value ?? undefined)
+    if (status.remind) {
+      goHomeMessage.value = status.message || '該回家啦！'
+      showGoHomeBanner.value = true
+    }
+  } catch {
+    // Ignore polling errors during the trip loop.
+  }
+}
+
 function startGoHomePolling() {
   goHomeInterval = setInterval(async () => {
-    if (tripPhase.value === 'ENDED') return
     if (Date.now() < suppressUntil) return
-
-    const sessionId = localStorage.getItem('chitogo_session_id')
-    if (!sessionId) return
-
-    try {
-      const status = await checkGoHome(sessionId, effectiveLat.value, effectiveLng.value, simTimeHHMM.value ?? undefined)
-      if (status.remind) {
-        goHomeMessage.value = status.message || '該回家啦！'
-        showGoHomeBanner.value = true
-      }
-    } catch {
-      // Ignore polling errors during the trip loop.
-    }
+    await runGoHomeCheck()
   }, 60000)
 }
+
+watch(simTimeHHMM, async () => {
+  suppressUntil = 0
+  if (tripPhase.value === 'SELECTING' && lastRequestedTransport.value) {
+    await loadCandidates(lastRequestedTransport.value)
+  }
+  await runGoHomeCheck()
+})
 
 async function dismissBanner() {
   const sessionId = localStorage.getItem('chitogo_session_id')
@@ -1447,6 +1464,8 @@ async function dismissBanner() {
 }
 
 .chat-candidates-surface {
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -1538,5 +1557,127 @@ async function dismissBanner() {
   font-weight: 600;
   color: var(--accent, #5b8dee);
   margin-top: 2px;
+}
+
+/* ═══════════════════════════════════════════
+   MOBILE  ≤ 767 px
+═══════════════════════════════════════════ */
+@media (max-width: 767px) {
+  .trip-container {
+    min-height: unset;
+  }
+
+  /* Main content area: less horizontal padding, more bottom padding for bottom nav */
+  .trip-content {
+    padding: 16px 12px 100px;
+  }
+
+  /* Go-home banner: stack vertically on very narrow screens */
+  .go-home-banner {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px 14px;
+  }
+
+  .go-home-banner p {
+    width: 100%;
+    flex: unset;
+    font-size: 13px;
+  }
+
+  .banner-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .banner-btn {
+    padding: 8px 16px;
+    min-height: 36px;
+    font-size: 13px;
+  }
+
+  /* Transport grid: 2 columns on mobile */
+  .transport-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .transport-option {
+    padding: 12px 8px;
+    font-size: 13px;
+    min-height: 48px;
+  }
+
+  /* Messages */
+  .message-row {
+    gap: 8px;
+  }
+
+  .message-stack {
+    max-width: 100%;
+  }
+
+  .message-bubble {
+    font-size: 14px;
+    padding: 12px 14px;
+  }
+
+  .hero-bubble {
+    padding: 14px 16px;
+  }
+
+  .message-bubble.user {
+    max-width: min(88%, 460px);
+  }
+
+  .assistant-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+
+  .assistant-avatar--hero {
+    width: 36px;
+    height: 36px;
+  }
+
+  /* Hero heading */
+  .trip-content h1 {
+    font-size: 20px;
+  }
+
+  /* Buttons */
+  .primary-btn {
+    padding: 14px 18px;
+    font-size: 15px;
+    min-height: 48px;
+  }
+
+  .secondary-btn {
+    padding: 10px 14px;
+    min-height: 44px;
+    font-size: 13px;
+  }
+
+  .retry-btn {
+    padding: 10px 16px;
+    min-height: 44px;
+  }
+
+  /* District select */
+  .district-select {
+    font-size: 16px;
+    min-height: 44px;
+  }
+
+  /* Rating surface */
+  .rating-surface {
+    padding: 14px;
+  }
+
+  /* Confirm dialog: tighter padding */
+  .confirm-dialog {
+    padding: 20px 16px;
+  }
 }
 </style>
