@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 from datetime import UTC, datetime
+from enum import Enum
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -187,6 +188,74 @@ class TraceEntry(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
+class FlowState(str, Enum):
+    QUIZ = "QUIZ"
+    TRANSPORT = "TRANSPORT"
+    RECOMMENDING = "RECOMMENDING"
+    RATING = "RATING"
+    ENDED = "ENDED"
+
+
+class AccommodationConfig(BaseModel):
+    booked: bool
+    hotel_name: str | None = None
+    hotel_lat: float | None = None
+    hotel_lng: float | None = None
+    hotel_valid: bool | None = None
+    matched_name: str | None = None
+    district: str | None = None
+    budget_tier: str | None = None
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class TransportConfig(BaseModel):
+    modes: list[str] = Field(default_factory=list)
+    max_minutes_per_leg: int = Field(30, ge=1, le=120)
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class VisitedStop(BaseModel):
+    venue_id: str | int
+    venue_name: str
+    category: str
+    primary_type: str | None = None
+    address: str | None = None
+    lat: float
+    lng: float
+    arrived_at: datetime
+    star_rating: int = Field(..., ge=1, le=5)
+    tags: list[str] = Field(default_factory=list)
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class TripCandidateCard(BaseModel):
+    venue_id: str | int
+    name: str
+    category: str
+    primary_type: str | None = None
+    address: str | None = None
+    lat: float
+    lng: float
+    rating: float | None = None
+    distance_min: int = 0
+    why_recommended: str = ""
+    partial: bool = False
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class ReachableCache(BaseModel):
+    origin_lat: float
+    origin_lng: float
+    venue_ids: list[str | int] = Field(default_factory=list)
+    expires_at: datetime
+
+    model_config = ConfigDict(extra="forbid")
+
+
 class Session(BaseModel):
     """In-memory session state for a single client-managed session id."""
 
@@ -199,5 +268,20 @@ class Session(BaseModel):
     latest_itinerary: Itinerary | None = None
     cached_candidates: list[Place] = Field(default_factory=list)
     traces: list[TraceEntry] = Field(default_factory=list)
+    # PRD wizard fields
+    flow_state: FlowState = FlowState.QUIZ
+    quiz_answers: dict[str, str] = Field(default_factory=dict)
+    travel_gene: str | None = None
+    mascot: str | None = None
+    accommodation: AccommodationConfig | None = None
+    return_time: str | None = None
+    return_destination: str | None = None
+    transport_config: TransportConfig | None = None
+    visited_stops: list[VisitedStop] = Field(default_factory=list)
+    gene_affinity_weights: dict[str, float] = Field(default_factory=dict)
+    go_home_reminded_at: datetime | None = None
+    pending_venue: TripCandidateCard | None = None
+    reachable_cache: ReachableCache | None = None
+    last_candidate_ids: list[str | int] = Field(default_factory=list)
 
     model_config = ConfigDict(extra="forbid")

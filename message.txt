@@ -1,0 +1,207 @@
+ChitoGO — Implementation Plan (PRD v0.3)
+Requirements Restatement
+The PRD describes a guided wizard loop, not a free-form chatbot. The core user journey is:
+
+Onboard → 9-question quiz → travel gene + mascot → accommodation + return time
+Configure → transport mode + acceptable travel time per leg
+Loop → get 6 candidates (3 restaurants + 3 attractions) → pick 1 → navigate → experience → 5-star rating → back to step 3
+Exit → "我想回家" at any time, or system "該回家了" reminder → full journey summary
+Critical delta from current state: The existing Chat Agent is a general itinerary planner (multi-stop, free-text input → Itinerary object). The PRD wants a state-machine-driven, single-next-stop recommender loop with structured UI at every step. The existing frontend is also a chat UI — not a wizard.
+
+Gap Analysis
+PRD Requirement	Current State	Gap
+9-question preference quiz + travel gene
+Not built
+Full build needed
+Accommodation validation + hotel recommendation
+Not built
+New backend endpoint + hotel dataset
+Return time setting → "該回家了" calculation
+Not built
+New backend logic
+Transport mode selection UI (Step 2)
+Not built
+New frontend component
+Reachability filter (location × transport × time)
+place_nearby exists
+Needs structured "reachable set" wrapper
+6-candidate recommendation (3 restaurants + 3 attractions)
+recommend_places exists
+Needs typed split + reachability gate
+Alternative "demand mode" 3-choice
+Partially via replan
+Needs dedicated endpoint
+Navigation deep-links to Maps apps
+Not built
+Frontend-only
+LLM-guided "go experience, then rate" prompt
+Not built
+Small backend prompt
+5-star rating → next recommendation feedback
+Not built
+New session field + scoring logic
+"我想回家" button (always visible)
+Not built
+Frontend UI
+"該回家了" system reminder (time-based)
+Not built
+Timer logic + push/polling
+Full journey summary on exit
+Partial (itinerary object)
+New summary endpoint
+Implementation Phases
+Phase 1 — PRD Session State Machine (Backend)
+Scope: backend/Chat_Agent/ — new session schema, state transitions, PRD API surface
+
+Steps:
+
+Extend SessionModel with PRD fields: quiz_answers, travel_gene, mascot, accommodation, return_time, transport_config, visited_stops (list of {venue_id, arrived_at, rating}), flow_state (enum: QUIZ → TRANSPORT → RECOMMENDING → ENDED)
+Define FlowState enum and SessionFSM transition validator
+Add new API router app/api/v1/trip.py with skeleton endpoints (all return 501 initially):
+POST /trip/quiz — submit quiz, return travel gene + mascot
+POST /trip/setup — submit accommodation + return time + transport config
+GET /trip/candidates — get 6 candidates for current location
+POST /trip/select — user picks a venue; system records + returns nav data
+POST /trip/rate — submit 5-star rating for last visited stop
+POST /trip/demand — submit demand text; return 3 alternative candidates
+GET /trip/summary — full journey summary
+GET /trip/should_go_home — check if "該回家了" should fire
+Write Pydantic schemas for all requests/responses
+Tests: state machine transitions, FSM guard rails (can't call candidates before setup)
+Risk: Session model extension must remain backward-compatible with existing chat endpoints.
+
+Phase 2 — Travel Gene Classifier (Backend)
+Scope: backend/Chat_Agent/app/orchestration/gene_classifier.py (new)
+
+Steps:
+
+Define scoring matrix: map Q1–Q9 answer codes to six gene dimensions (文清, 親子, 不常來, 夜貓子, 一日, 野外)
+Implement TravelGeneClassifier.classify(answers: dict) -> GeneResult — deterministic scoring first, LLM tiebreaker if two genes within 1 point
+Map gene → mascot string (6 entries per PRD Section 6)
+Wire into POST /trip/quiz endpoint
+Decide Q1 format (A/B/C vs A/B) — PRD notes this as open; recommend defaulting to A/B/C and treating as a tri-split pending product signoff
+Tests: all 6 gene paths, tiebreaker path
+Risk (MEDIUM): Classification logic ("scoring rules") is listed as Open Issue #9 in PRD. We can build a reasonable heuristic now and swap the engine later without changing the API contract.
+
+Phase 3 — Reachability Engine (Backend)
+Scope: backend/Chat_Agent/app/services/reachability.py (new)
+
+Steps:
+
+Accept (origin_lat, origin_lng, transport_modes: list[str], max_minutes: int) → return filtered list[VenueId]
+Use RouteToolAdapter.route_estimate for each candidate; batch with asyncio.gather (with concurrency limit)
+Cache per-session with TTL = 5 minutes (session.reachable_cache)
+Expose as internal service, called by GET /trip/candidates
+Handle "not enough results" with graduated fallback: extend time +10 min → broaden transport mode → emit fallback_reason in response
+Tests: mock route adapter, fallback triggers, concurrency safety
+Risk (HIGH): Performance — calling route estimate for every candidate in the Data Service could be slow (100s of venues × 1 API call each). Mitigation: use haversine pre-filter (× 1.5 safety margin on walking/cycling radius) to reduce candidates before hitting Google Maps.
+
+Phase 4 — 6-Candidate Recommendation (Backend)
+Scope: app/services/candidate_picker.py (new)
+
+Steps:
+
+From reachable venue set, pick exactly 3 restaurants + 3 attractions
+Scoring: base score from Data Service rating, adjusted by travel gene affinity weights, penalize recently visited categories
+Handle insufficient restaurants or attractions → fill from opposite type + set partial: true flag
+Return CandidateSet with 6 venues, each with: venue_id, name, category, type (restaurant/attraction), distance_min, address, lat, lng, rating, why_recommended (LLM-generated 1 sentence)
+Wire into GET /trip/candidates
+Tests: gene affinity reweighting, partial fill logic, category dedup
+Phase 5 — Hotel Validation (Backend)
+Scope: app/services/hotel_validator.py (new)
+
+Steps:
+
+Data source decision — Open Issue #1 in PRD. Recommend using the ODS file already in the repo (旅宿列表匯出_20260425103741.ods) as authoritative source
+Parse ODS into PostgreSQL table (or load at startup into memory) via a migration script
+HotelValidator.validate(name: str) -> ValidationResult — fuzzy match (normalized string distance) against known legal accommodations; return {valid: bool, matched_name, alternatives: list[Hotel]}
+Alternatives: same district, similar price tier (Open Issue #2 — recommend same-district filter as default)
+Wire into POST /trip/setup
+Tests: exact match, fuzzy match, no-match + alternatives, budget fallback
+Risk (MEDIUM): ODS data freshness. Include a disclaimer field in API response and a last_updated timestamp.
+
+Phase 6 — "該回家了" Timer Logic (Backend)
+Scope: app/services/go_home_advisor.py (new)
+
+Steps:
+
+GoHomeAdvisor.should_remind(session) -> GoHomeStatus:
+If return_time is None → {remind: false}
+Else: fetch route estimate from current location to hotel/station; compute reminder_at = return_time - transit_min - 30 min
+If now >= reminder_at → {remind: true, message, time_remaining_min}
+Call via GET /trip/should_go_home (polled by frontend every 60 s, or on each "next stop" load)
+Handle Open Issue #8 (throttle): set reminded_at in session; don't re-fire within 10 minutes
+Tests: null return time, fired/not-fired boundary, throttle dedup
+Phase 7 — Rating → Next-Recommendation Feedback (Backend)
+Scope: extends CandidatePicker + SessionModel
+
+Steps:
+
+On POST /trip/rate: append {venue_id, category, type, stars} to session.visited_stops
+Adjust gene affinity weights: 5★ → boost that category + type weight by +0.2; 1–2★ → penalize −0.3 (capped)
+CandidatePicker reads updated weights on next GET /trip/candidates
+Cold-start (first stop, no ratings yet): pure gene affinity + time-of-day signal (morning → café/breakfast; evening → bars/night markets per gene type)
+Tests: weight accumulation, cold start path, category diversity enforcement
+Phase 8 — Frontend: Onboarding Wizard (Quiz + Setup)
+Scope: frontend/src/pages/ — new pages; frontend/src/components/
+
+Steps:
+
+QuizPage.vue — 9-question card-style questionnaire:
+Progress bar (Q1–Q9)
+Q1: 3-option radio; Q2–Q9: A/B toggle buttons (large, tap-friendly)
+Animated transition between questions
+On submit → POST /trip/quiz → display travel gene card with mascot illustration + gene description
+SetupPage.vue — split into 3 sections:
+Accommodation: radio "已訂住宿 / 尚未訂住宿"; if booked → hotel name input with live validation badge; if not → district picker + budget slider (default 3,000 NT$)
+Return time: optional HH:MM time picker + destination (hotel / station selector)
+Transport mode (Step 2): 3-category checkbox grid + travel time slider (default TBD)
+Route: /quiz → /setup → /trip (main loop)
+Persist session_id + gene in localStorage
+Risk (MEDIUM): Hotel name validation UX — need clear loading state and "warning + alternatives" card when hotel is not found.
+
+Phase 9 — Frontend: Candidate Cards (6-choice + 3-choice)
+Scope: frontend/src/components/CandidateGrid.vue, DemandModal.vue
+
+Steps:
+
+CandidateGrid.vue — 2×3 grid of venue cards:
+Each card: photo, name, category badge (restaurant/attraction), distance estimate, rating, why_recommended snippet
+"None of these" button → opens DemandModal
+Selected card highlights with checkmark; triggers POST /trip/select
+DemandModal.vue — free-text or guided demand input:
+Placeholder examples: "我想找有點文藝的地方" / "附近有什麼好吃的湯麵？"
+Submit → POST /trip/demand → replace grid with 3 alternative cards (same card component)
+TripPage.vue — main loop container:
+Shows current location, gene mascot badge, elapsed stops counter
+Persistent "我想回家" button (fixed position, always visible)
+Cycles through: SELECTING → NAVIGATING → RATING → back to SELECTING
+Loading skeleton while fetching candidates
+Phase 10 — Frontend: Navigation Screen
+Scope: frontend/src/components/NavigationPanel.vue
+
+Steps:
+
+After POST /trip/select, show destination details: name, address, map thumbnail (Leaflet static-ish view centered on dest), estimated travel time
+"開啟地圖" buttons:
+Google Maps deep link: https://maps.google.com/?daddr={lat},{lng}&travelmode={mode}
+Apple Maps fallback: maps://maps.apple.com/?daddr={lat},{lng}
+LLM-generated encouragement message ("玩完再告訴我怎麼樣！") displayed below nav buttons
+"我到了！" button → transitions to Rating screen
+The existing MapPanel.vue can be reused/adapted for the route preview
+Phase 11 — Frontend: Rating + Journey Summary
+Scope: frontend/src/components/RatingCard.vue, frontend/src/pages/SummaryPage.vue
+
+Steps:
+
+RatingCard.vue — full-screen overlay after "我到了！":
+Venue name + photo
+5-star tap input (animated stars)
+Optional quick-tag buttons ("食物很好吃", "人太多了", "值得再來") as rating metadata
+Submit → POST /trip/rate → returns to candidate grid
+SummaryPage.vue — triggered by "我想回家" or "該回家了" confirm:
+Timeline view: each visited stop with time, name, rating stars
+Total distance / total time
+Share button (copy to clipboard or native share API)
+Gene mascot farewell message (LLM-generated)
+"該回家了" toast/banner — polls GET /trip/should_go_home every 60s; shows non-blocking banner with "繼續玩 / 回家去" option
