@@ -270,6 +270,8 @@ class PlaceToolAdapter:
         try:
             items = [
                 LodgingCandidateItem(
+                    license_no=item["lodging"].get("license_no"),
+                    place_id=item["lodging"].get("place_id"),
                     name=item["lodging"]["name"],
                     district=item["lodging"].get("district"),
                     address=item["lodging"].get("address"),

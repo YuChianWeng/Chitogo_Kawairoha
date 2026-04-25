@@ -47,7 +47,7 @@ from app.api.v1.trip import (
     post_setup,
 )
 from app.services import candidate_picker
-from app.session.models import FlowState, Session, TransportConfig, TripCandidateCard
+from app.session.models import AccommodationConfig, FlowState, Session, TransportConfig, TripCandidateCard
 from app.session.store import session_store
 from app.tools.models import (
     LegalLodgingListResult,
@@ -93,15 +93,21 @@ class TripApiTests(unittest.IsolatedAsyncioTestCase):
     async def asyncTearDown(self) -> None:
         await session_store.clear()
 
-    async def test_setup_request_rejects_transport_and_route_succeeds_without_it(self) -> None:
+    async def test_setup_request_rejects_transport_and_return_step_succeeds_without_accommodation(self) -> None:
         session_id = str(uuid4())
-        await session_store.set(Session(session_id=session_id, flow_state=FlowState.TRANSPORT))
+        await session_store.set(
+            Session(
+                session_id=session_id,
+                flow_state=FlowState.TRANSPORT,
+                accommodation=AccommodationConfig(mode="no_stay", booked=False),
+            )
+        )
 
         with self.assertRaises(ValidationError):
             SetupRequest.model_validate(
                 {
                     "session_id": session_id,
-                    "accommodation": {"booked": False, "district": "大安區"},
+                    "accommodation": {"mode": "no_stay"},
                     "transport": {"mode": "transit", "max_minutes_per_leg": 30},
                 }
             )
@@ -109,7 +115,6 @@ class TripApiTests(unittest.IsolatedAsyncioTestCase):
         response = await post_setup(
             SetupRequest(
                 session_id=session_id,
-                accommodation={"booked": False, "district": "大安區"},
                 return_time="21:00",
                 return_destination="飯店",
             )
@@ -117,6 +122,7 @@ class TripApiTests(unittest.IsolatedAsyncioTestCase):
         session = await session_store.get(session_id)
 
         self.assertTrue(response.setup_complete)
+        self.assertEqual(response.next_step, "trip")
         self.assertIsNotNone(session)
         self.assertEqual(session.flow_state, FlowState.RECOMMENDING)
         self.assertIsNone(session.last_transport_config)
@@ -182,28 +188,161 @@ class TripApiTests(unittest.IsolatedAsyncioTestCase):
             response = await post_setup(
                 SetupRequest(
                     session_id=session_id,
-                    accommodation={"booked": True, "hotel_name": "不存在飯店"},
+                    accommodation={"mode": "booked", "hotel_name": "不存在飯店"},
                 )
             )
 
         session = await session_store.get(session_id)
 
         self.assertFalse(response.setup_complete)
+        self.assertEqual(response.next_step, "accommodation")
         self.assertEqual(response.accommodation_status, "not_found")
         self.assertIsNotNone(response.hotel_validation)
         self.assertEqual(
-            [item["name"] for item in response.hotel_validation.alternatives],
+            [item.name for item in response.hotel_validation.alternatives],
             ["合法旅宿A"],
         )
         self.assertEqual(
-            [item["name"] for item in response.hotel_validation.recommendations],
+            [item.name for item in response.hotel_recommendations],
             ["合法旅宿B", "合法旅宿C"],
         )
         self.assertIsNotNone(session)
         self.assertEqual(session.flow_state, FlowState.TRANSPORT)
         self.assertIsNotNone(session.accommodation)
+        self.assertEqual(session.accommodation.mode, "booked")
         self.assertEqual(session.accommodation.hotel_name, "不存在飯店")
         self.assertFalse(session.accommodation.hotel_valid)
+
+    async def test_setup_need_hotel_returns_ranked_cards(self) -> None:
+        session_id = str(uuid4())
+        await session_store.set(Session(session_id=session_id, flow_state=FlowState.TRANSPORT))
+
+        with patch.object(
+            place_tool_adapter,
+            "list_legal_lodgings",
+            new=AsyncMock(
+                return_value=LegalLodgingListResult(
+                    status="ok",
+                    items=[
+                        LegalLodgingSummary(
+                            license_no="L-101",
+                            name="推薦旅宿甲",
+                            lodging_category="hotel",
+                            district="大安區",
+                            address="台北市大安區和平東路 1 號",
+                            place_id=101,
+                        ),
+                        LegalLodgingSummary(
+                            license_no="L-102",
+                            name="推薦旅宿乙",
+                            lodging_category="hotel",
+                            district="大安區",
+                            address="台北市大安區信義路 9 號",
+                            place_id=102,
+                        ),
+                    ],
+                )
+            ),
+        ), patch.object(
+            place_tool_adapter,
+            "batch_get_places",
+            new=AsyncMock(
+                return_value=PlaceListResult(
+                    status="ok",
+                    items=[
+                        ToolPlace(
+                            venue_id=101,
+                            name="推薦旅宿甲",
+                            district="大安區",
+                            formatted_address="台北市大安區和平東路 1 號",
+                            rating=4.7,
+                            budget_level="MODERATE",
+                        ),
+                        ToolPlace(
+                            venue_id=102,
+                            name="推薦旅宿乙",
+                            district="大安區",
+                            formatted_address="台北市大安區信義路 9 號",
+                            rating=4.5,
+                            budget_level="INEXPENSIVE",
+                        ),
+                    ],
+                    total=2,
+                )
+            ),
+        ):
+            response = await post_setup(
+                SetupRequest(
+                    session_id=session_id,
+                    accommodation={
+                        "mode": "need_hotel",
+                        "district": "大安區",
+                        "budget_tier": "mid",
+                    },
+                )
+            )
+
+        session = await session_store.get(session_id)
+
+        self.assertFalse(response.setup_complete)
+        self.assertEqual(response.next_step, "accommodation")
+        self.assertEqual(response.accommodation_status, "recommending")
+        self.assertEqual(response.recommendation_status, "matched_preferences")
+        self.assertEqual(
+            [item.name for item in response.hotel_recommendations],
+            ["推薦旅宿甲", "推薦旅宿乙"],
+        )
+        self.assertIsNotNone(session)
+        self.assertIsNotNone(session.accommodation)
+        self.assertEqual(session.accommodation.mode, "need_hotel")
+        self.assertFalse(session.accommodation.booked)
+
+    async def test_setup_no_stay_advances_to_return_info_step(self) -> None:
+        session_id = str(uuid4())
+        await session_store.set(Session(session_id=session_id, flow_state=FlowState.TRANSPORT))
+
+        response = await post_setup(
+            SetupRequest(
+                session_id=session_id,
+                accommodation={"mode": "no_stay"},
+            )
+        )
+
+        session = await session_store.get(session_id)
+
+        self.assertFalse(response.setup_complete)
+        self.assertEqual(response.next_step, "setup")
+        self.assertEqual(response.accommodation_status, "not_required")
+        self.assertIsNotNone(session)
+        self.assertIsNotNone(session.accommodation)
+        self.assertEqual(session.accommodation.mode, "no_stay")
+        self.assertEqual(session.flow_state, FlowState.TRANSPORT)
+
+    async def test_return_step_rejects_incomplete_accommodation(self) -> None:
+        session_id = str(uuid4())
+        await session_store.set(
+            Session(
+                session_id=session_id,
+                flow_state=FlowState.TRANSPORT,
+                accommodation=AccommodationConfig(
+                    mode="need_hotel",
+                    booked=False,
+                    district="大安區",
+                    budget_tier="mid",
+                ),
+            )
+        )
+
+        with self.assertRaises(HTTPException) as exc_info:
+            await post_setup(
+                SetupRequest(
+                    session_id=session_id,
+                    return_time="21:00",
+                )
+            )
+
+        self.assertEqual(exc_info.exception.status_code, 400)
+        self.assertEqual(exc_info.exception.detail, "setup_error:accommodation_incomplete")
 
     async def test_get_candidates_requires_transport_query(self) -> None:
         session_id = str(uuid4())

@@ -197,6 +197,7 @@ class FlowState(str, Enum):
 
 
 class AccommodationConfig(BaseModel):
+    mode: Literal["booked", "need_hotel", "no_stay"]
     booked: bool
     hotel_name: str | None = None
     hotel_lat: float | None = None

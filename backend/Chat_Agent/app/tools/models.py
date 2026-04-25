@@ -163,6 +163,8 @@ class LegalLodgingListResult(BaseModel):
 
 
 class LodgingCandidateItem(BaseModel):
+    license_no: str | None = None
+    place_id: int | None = None
     name: str
     district: str | None = None
     address: str | None = None
