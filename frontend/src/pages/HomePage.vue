@@ -197,9 +197,9 @@ type TabKey = 'home' | 'attractions' | 'agent' | 'profile' | 'settings'
 const NAV_TABS: { key: TabKey; label: string; icon?: string }[] = [
   { key: 'home',        label: '首頁',   icon: '/images/I111_161_1_103_47_149.svg' },
   { key: 'attractions', label: '景點',   icon: '/images/I111_160_1_103_47_158.svg' },
-  { key: 'agent',       label: 'Agent',  icon: '/images/I111_160_1_103_47_158.svg' },
+  { key: 'agent',       label: 'Agent',  icon: '/images/I111_160_1_103_47_159.svg' },
   { key: 'profile',     label: '個人資料', icon: '/images/I111_163_1_103_47_152.svg' },
-  { key: 'settings',    label: '設定' },
+  { key: 'settings',    label: '設定', icon: '/images/I111_163_1_103_47_153.svg' },
 ]
 
 const CHAT_MIN = 360
