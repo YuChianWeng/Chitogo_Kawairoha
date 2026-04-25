@@ -5,8 +5,9 @@ import unittest
 from app.chat.loop import AgentLoop
 from app.chat.trace_recorder import TraceRecorder
 from app.orchestration.intents import Intent
+from app.orchestration.turn_frame import CategoryMixItem
 from app.session.models import Preferences
-from app.tools.models import PlaceListResult, RouteResult, ToolPlace
+from app.tools.models import PlaceListResult, RouteResult, ToolPlace, VibeTagItem, VibeTagListResult
 from app.tools.registry import ToolRegistry
 from tests.fake_llm import StaticJSONClient
 
@@ -28,6 +29,7 @@ class StubPlaceAdapter:
     def __init__(self) -> None:
         self.calls: list[tuple[str, dict[str, object]]] = []
         self.search_results: list[PlaceListResult] = []
+        self.vibe_tags_result: VibeTagListResult | None = None
         self.search_result = PlaceListResult(
             status="ok",
             items=[build_place(1, "Search Cafe")],
@@ -70,10 +72,14 @@ class StubPlaceAdapter:
     async def get_categories(self) -> object:
         return None
 
-    async def get_vibe_tags(self, **_: object) -> object:
-        return None
+    async def get_vibe_tags(self, **kwargs: object) -> object:
+        self.calls.append(("place_vibe_tags", kwargs))
+        return self.vibe_tags_result or VibeTagListResult(status="empty", items=[], limit=50)
 
     async def get_stats(self) -> object:
+        return None
+
+    async def check_lodging_legal_status(self, **_: object) -> object:
         return None
 
 
@@ -145,6 +151,18 @@ class AgentLoopTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.place_adapter.calls[0][1]["internal_category"], "food")
         self.assertEqual(self.place_adapter.calls[0][1]["keyword"], "coffee")
         self.assertEqual(self.place_adapter.calls[0][1]["limit"], 3)
+
+    async def test_direct_park_discovery_infers_primary_type_from_message(self) -> None:
+        result = await self._run_with_invalid_plan(
+            message="幫我找一個好玩的公園",
+            preferences=Preferences(language="zh-TW"),
+            intent=Intent.CHAT_GENERAL,
+        )
+
+        self.assertEqual(result.status, "ok")
+        self.assertEqual(self.place_adapter.calls[0][0], "place_search")
+        self.assertEqual(self.place_adapter.calls[0][1]["internal_category"], "attraction")
+        self.assertEqual(self.place_adapter.calls[0][1]["primary_type"], "park")
 
     async def test_interest_tag_mapping_overrides_llm_search_params(self) -> None:
         self.loop._client = StaticJSONClient(
@@ -274,6 +292,7 @@ class AgentLoopTests(unittest.IsolatedAsyncioTestCase):
             result.original_filters,
             {
                 "district": "北投區",
+                "internal_category": "food",
                 "primary_type": "ramen_restaurant",
                 "max_budget_level": 2,
                 "indoor": True,
@@ -518,3 +537,110 @@ class AgentLoopTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.place_adapter.calls[0][1]["internal_category"], "attraction")
         self.assertEqual(self.place_adapter.calls[0][1]["keyword"], "temple")
         self.assertNotIn("primary_type", self.place_adapter.calls[0][1])
+
+    async def test_planned_search_accepts_vibe_tags_and_social_fields(self) -> None:
+        self.loop._client = StaticJSONClient(
+            {
+                "tool": "place_search",
+                "params": {
+                    "district": "信義區",
+                    "internal_category": "food",
+                    "primary_type": "japanese_restaurant",
+                    "vibe_tags": ["romantic"],
+                    "min_mentions": 1,
+                    "sort": "sentiment_desc",
+                    "limit": 4,
+                },
+            }
+        )
+        self.place_adapter.vibe_tags_result = VibeTagListResult(
+            status="ok",
+            items=[VibeTagItem(tag="romantic", place_count=4, mention_count=12)],
+            limit=50,
+        )
+
+        result = await self.loop.run(
+            intent=Intent.CHAT_GENERAL,
+            message="幫我找一間浪漫的日式餐廳",
+            preferences=Preferences(language="zh-TW"),
+        )
+
+        self.assertEqual(result.status, "ok")
+        self.assertEqual(self.place_adapter.calls[0][0], "place_vibe_tags")
+        self.assertEqual(self.place_adapter.calls[1][0], "place_search")
+        self.assertEqual(self.place_adapter.calls[1][1]["vibe_tags"], ["romantic"])
+        self.assertEqual(self.place_adapter.calls[1][1]["min_mentions"], 1)
+        self.assertEqual(self.place_adapter.calls[1][1]["sort"], "sentiment_desc")
+
+    async def test_category_mix_runs_one_search_per_requested_category(self) -> None:
+        self.place_adapter.search_results = [
+            PlaceListResult(
+                status="ok",
+                items=[build_place(11, "Park A"), build_place(12, "Park B")],
+                total=2,
+                limit=3,
+                offset=0,
+            ),
+            PlaceListResult(
+                status="ok",
+                items=[build_place(21, "Dinner A"), build_place(22, "Dinner B")],
+                total=2,
+                limit=3,
+                offset=0,
+            ),
+        ]
+
+        result = await self.loop.run(
+            intent=Intent.GENERATE_ITINERARY,
+            message="幫我排一個有玩有吃的行程",
+            preferences=Preferences(language="zh-TW"),
+            category_mix=[
+                CategoryMixItem(internal_category="attraction"),
+                CategoryMixItem(internal_category="food"),
+            ],
+        )
+
+        self.assertEqual(result.status, "ok")
+        self.assertEqual([call[0] for call in self.place_adapter.calls], ["place_search", "place_search"])
+        self.assertEqual(
+            [call[1]["internal_category"] for call in self.place_adapter.calls],
+            ["attraction", "food"],
+        )
+        self.assertEqual(
+            [place.source_category for place in result.places[:2]],
+            ["attraction", "attraction"],
+        )
+        self.assertEqual(result.requested_categories, ["attraction", "food"])
+
+    async def test_category_mix_trace_records_missing_categories(self) -> None:
+        self.place_adapter.search_results = [
+            PlaceListResult(status="empty", items=[], total=0, limit=3, offset=0),
+            PlaceListResult(
+                status="ok",
+                items=[build_place(21, "Dinner A"), build_place(22, "Dinner B")],
+                total=2,
+                limit=3,
+                offset=0,
+            ),
+        ]
+        trace_recorder = TraceRecorder()
+
+        result = await self.loop.run(
+            intent=Intent.GENERATE_ITINERARY,
+            message="幫我排一個有玩有吃的行程",
+            preferences=Preferences(language="zh-TW"),
+            category_mix=[
+                CategoryMixItem(internal_category="attraction"),
+                CategoryMixItem(internal_category="food"),
+            ],
+            trace_recorder=trace_recorder,
+        )
+        trace = trace_recorder.finalize(final_status="success", outcome="ok")
+        category_mix_step = next(
+            step for step in trace.steps if step.name == "category_mix.retrieve"
+        )
+
+        self.assertEqual(result.status, "ok")
+        self.assertEqual(category_mix_step.status, "fallback")
+        self.assertEqual(category_mix_step.detail["requested_categories"], ["attraction", "food"])
+        self.assertEqual(category_mix_step.detail["missing_categories"], ["attraction"])

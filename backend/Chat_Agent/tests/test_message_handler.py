@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import os
 import unittest
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 from uuid import uuid4
 
 from app.chat.loop import AgentLoop
@@ -14,7 +14,7 @@ from app.chat.trace_store import TraceStore
 from app.core.config import Settings, clear_settings_cache
 from app.session.manager import SessionManager
 from app.session.store import InMemorySessionStore
-from app.tools.models import PlaceListResult, RouteResult, ToolPlace
+from app.tools.models import PlaceListResult, RouteResult, ToolPlace, VibeTagItem, VibeTagListResult
 from app.tools.registry import ToolRegistry
 from tests.fake_llm import (
     DisabledLLMClient,
@@ -100,6 +100,11 @@ class StubPlaceAdapter:
             limit=5,
             offset=0,
         )
+        self.vibe_tag_result: VibeTagListResult = VibeTagListResult(
+            status="empty",
+            items=[],
+            limit=50,
+        )
         self.calls: list[tuple[str, dict[str, object]]] = []
 
     async def search_places(self, **kwargs: object) -> PlaceListResult:
@@ -126,10 +131,13 @@ class StubPlaceAdapter:
 
     async def get_vibe_tags(self, **kwargs: object) -> object:
         self.calls.append(("place_vibe_tags", kwargs))
-        return None
+        return self.vibe_tag_result
 
     async def get_stats(self) -> object:
         self.calls.append(("place_stats", {}))
+        return None
+
+    async def check_lodging_legal_status(self, **_: object) -> object:
         return None
 
 
@@ -345,7 +353,11 @@ class MessageHandlerTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(first.preferences.district, "萬華區")
         self.assertEqual(first.preferences.language, "zh-TW")
         self.assertFalse(second.needs_clarification)
-        self.assertIn("place_search", [name for name, _ in adapter.calls])
+        self.assertTrue(adapter.calls)
+
+        session = await self.manager.get_or_create(session_id)
+        self.assertEqual(session.preferences.origin, "台北車站")
+        self.assertEqual(session.preferences.district, "萬華區")
 
     async def test_general_chat_fallback_does_not_call_tools(self) -> None:
         handler, adapter, _ = self._build_handler()
@@ -549,6 +561,7 @@ class MessageHandlerTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(trace.intent, "REPLAN")
         self.assertEqual(trace.outcome, "replan_applied")
         self.assertIn("replan.parse_request", step_names)
+        self.assertIn("turn_frame.validate", step_names)
         self.assertIn("replan.apply", step_names)
         self.assertIn("replan.rebuild_itinerary", step_names)
 
@@ -576,6 +589,381 @@ class MessageHandlerTests(unittest.IsolatedAsyncioTestCase):
             [stop.stop_index for stop in second.itinerary.stops],
             list(range(len(second.itinerary.stops))),
         )
+
+    async def test_replan_refetches_when_cached_candidates_do_not_match_constraint(self) -> None:
+        adapter = StubPlaceAdapter()
+        adapter.search_results = [
+            PlaceListResult(
+                status="ok",
+                items=[
+                    build_place(1, "Cafe A"),
+                    build_place(2, "Cafe B"),
+                    build_place(3, "Cafe C"),
+                    build_place(4, "Cafe D"),
+                ],
+                total=4,
+                limit=5,
+                offset=0,
+            ),
+            PlaceListResult(
+                status="ok",
+                items=[
+                    build_place(
+                        20,
+                        "Huian Park",
+                        category="attraction",
+                        primary_type="park",
+                    )
+                ],
+                total=1,
+                limit=5,
+                offset=0,
+            ),
+        ]
+        handler, _, _ = self._build_handler(place_adapter=adapter)
+        session_id = str(uuid4())
+
+        await handler.handle(
+            ChatMessageRequest(
+                session_id=session_id,
+                message="幫我排今晚從台北車站出發的萬華區咖啡行程",
+            )
+        )
+        response = await handler.handle(
+            ChatMessageRequest(
+                session_id=session_id,
+                message="第三站換成公園",
+            )
+        )
+        trace = await self._latest_trace(handler)
+        cache_filter_step = next(
+            step for step in trace.steps if step.name == "replan.cache_candidate_filter"
+        )
+
+        self.assertEqual(response.intent.value, "REPLAN")
+        self.assertEqual(response.itinerary.stops[2].category, "attraction")
+        self.assertEqual([name for name, _ in adapter.calls].count("place_search"), 2)
+        self.assertEqual(adapter.calls[-1][1]["internal_category"], "attraction")
+        self.assertEqual(adapter.calls[-1][1]["primary_type"], "park")
+        self.assertEqual(cache_filter_step.status, "fallback")
+        self.assertEqual(cache_filter_step.summary, "no_matching_cached_candidate")
+        self.assertIn("internal_category", cache_filter_step.detail["failed_fields"])
+
+    async def test_replan_reuses_cached_candidate_when_constraint_matches(self) -> None:
+        adapter = StubPlaceAdapter(
+            search_result=PlaceListResult(
+                status="ok",
+                items=[
+                    build_place(1, "Cafe A"),
+                    build_place(2, "Cafe B"),
+                    build_place(3, "Cafe C"),
+                    build_place(
+                        20,
+                        "Huian Park",
+                        category="attraction",
+                        primary_type="park",
+                    ),
+                ],
+                total=4,
+                limit=5,
+                offset=0,
+            )
+        )
+        handler, _, _ = self._build_handler(place_adapter=adapter)
+        session_id = str(uuid4())
+
+        await handler.handle(
+            ChatMessageRequest(
+                session_id=session_id,
+                message="幫我排今晚從台北車站出發的萬華區咖啡行程",
+            )
+        )
+        response = await handler.handle(
+            ChatMessageRequest(
+                session_id=session_id,
+                message="第三站換成公園",
+            )
+        )
+        trace = await self._latest_trace(handler)
+        cache_filter_step = next(
+            step for step in trace.steps if step.name == "replan.cache_candidate_filter"
+        )
+
+        self.assertEqual(response.intent.value, "REPLAN")
+        self.assertEqual(response.itinerary.stops[2].venue_name, "Huian Park")
+        self.assertEqual([name for name, _ in adapter.calls].count("place_search"), 1)
+        self.assertEqual(cache_filter_step.status, "success")
+        self.assertEqual(cache_filter_step.summary, "cached_candidate_matched")
+        self.assertEqual(cache_filter_step.detail["matched_candidate_id"], 20)
+
+    async def test_turn_specific_interest_tags_do_not_pollute_later_turns(self) -> None:
+        handler, adapter, _ = self._build_handler()
+        session_id = str(uuid4())
+        handler._preference_extractor._client.generate_json = AsyncMock(
+            side_effect=[
+                {"interest_tags": ["nature"], "language": "zh-TW"},
+                {"interest_tags": ["日式"], "language": "zh-TW"},
+            ]
+        )
+
+        await handler.handle(
+            ChatMessageRequest(
+                session_id=session_id,
+                message="推薦一個公園",
+            )
+        )
+        second = await handler.handle(
+            ChatMessageRequest(
+                session_id=session_id,
+                message="推薦一間日式餐廳",
+            )
+        )
+        session = await self.manager.get_or_create(session_id)
+
+        self.assertEqual(adapter.calls[0][1]["primary_type"], "park")
+        self.assertEqual(adapter.calls[1][1]["primary_type"], "japanese_restaurant")
+        self.assertEqual(second.intent.value, "CHAT_GENERAL")
+        self.assertEqual(session.preferences.interest_tags, [])
+
+    async def test_romantic_japanese_discovery_uses_known_vibe_tag_search(self) -> None:
+        adapter = StubPlaceAdapter()
+        adapter.vibe_tag_result = VibeTagListResult(
+            status="ok",
+            items=[
+                VibeTagItem(tag="romantic", place_count=8, mention_count=20),
+                VibeTagItem(tag="scenic", place_count=5, mention_count=11),
+            ],
+            limit=50,
+        )
+        handler, _, _ = self._build_handler(place_adapter=adapter)
+        handler._agent_loop._client = StaticJSONClient(
+            {
+                "selected_tags": ["romantic"],
+                "rejected_tags": [],
+                "confidence": 0.9,
+                "fallback_strategy": "none",
+            }
+        )
+
+        response = await handler.handle(
+            ChatMessageRequest(message="想找一間浪漫一點的日式餐廳")
+        )
+        trace = await self._latest_trace(handler)
+        vibe_selection_step = next(
+            step for step in trace.steps if step.name == "vibe_tags.select"
+        )
+
+        self.assertEqual(response.intent.value, "CHAT_GENERAL")
+        self.assertEqual([name for name, _ in adapter.calls[:2]], ["place_vibe_tags", "place_search"])
+        search_call = next(kwargs for name, kwargs in adapter.calls if name == "place_search")
+        self.assertEqual(search_call["internal_category"], "food")
+        self.assertEqual(search_call["primary_type"], "japanese_restaurant")
+        self.assertEqual(search_call["vibe_tags"], ["romantic"])
+        self.assertEqual(search_call["min_mentions"], 1)
+        self.assertEqual(search_call["sort"], "sentiment_desc")
+        self.assertEqual(vibe_selection_step.detail["known_tag_count"], 2)
+        self.assertEqual(vibe_selection_step.detail["selected_tags"], ["romantic"])
+        self.assertEqual(vibe_selection_step.detail["rejected_tags"], [])
+
+    async def test_direct_park_discovery_uses_place_search_without_clarification(self) -> None:
+        handler, adapter, _ = self._build_handler()
+
+        response = await handler.handle(
+            ChatMessageRequest(message="幫我找一個好玩的公園")
+        )
+        trace = await self._latest_trace(handler)
+        turn_frame_step = next(
+            step for step in trace.steps if step.name == "turn_frame.validate"
+        )
+
+        self.assertEqual(response.intent.value, "CHAT_GENERAL")
+        self.assertFalse(response.needs_clarification)
+        self.assertEqual(adapter.calls[0][0], "place_search")
+        self.assertEqual(adapter.calls[0][1]["internal_category"], "attraction")
+        self.assertEqual(adapter.calls[0][1]["primary_type"], "park")
+        self.assertEqual(turn_frame_step.detail["route"], "discovery")
+        self.assertEqual(turn_frame_step.detail["search_primary_type"], "park")
+
+    async def test_empty_vibe_catalog_falls_back_to_broader_search(self) -> None:
+        adapter = StubPlaceAdapter()
+        adapter.vibe_tag_result = VibeTagListResult(status="empty", items=[], limit=50)
+        handler, _, _ = self._build_handler(place_adapter=adapter)
+        handler._agent_loop._client = StaticJSONClient(
+            {
+                "selected_tags": ["romantic"],
+                "rejected_tags": [],
+                "confidence": 0.9,
+                "fallback_strategy": "none",
+            }
+        )
+
+        await handler.handle(ChatMessageRequest(message="想找一間浪漫一點的日式餐廳"))
+
+        search_call = next(kwargs for name, kwargs in adapter.calls if name == "place_search")
+        self.assertNotIn("vibe_tags", search_call)
+        self.assertNotIn("min_mentions", search_call)
+
+    async def test_unavailable_vibe_catalog_falls_back_to_broader_search(self) -> None:
+        adapter = StubPlaceAdapter()
+        adapter.vibe_tag_result = VibeTagListResult(status="error", error="timeout")
+        handler, _, _ = self._build_handler(place_adapter=adapter)
+        handler._agent_loop._client = StaticJSONClient(
+            {
+                "selected_tags": ["romantic"],
+                "rejected_tags": [],
+                "confidence": 0.9,
+                "fallback_strategy": "none",
+            }
+        )
+
+        await handler.handle(ChatMessageRequest(message="想找一間浪漫一點的日式餐廳"))
+
+        search_call = next(kwargs for name, kwargs in adapter.calls if name == "place_search")
+        self.assertNotIn("vibe_tags", search_call)
+        self.assertNotIn("min_mentions", search_call)
+
+    async def test_play_and_eat_itinerary_returns_attraction_and_food(self) -> None:
+        adapter = StubPlaceAdapter()
+        adapter.search_results = [
+            PlaceListResult(
+                status="ok",
+                items=[
+                    build_place(101, "Park A", category="attraction", primary_type="park"),
+                    build_place(102, "Museum B", category="attraction", primary_type="museum"),
+                ],
+                total=2,
+                limit=3,
+                offset=0,
+            ),
+            PlaceListResult(
+                status="ok",
+                items=[
+                    build_place(201, "Dinner A", category="food", primary_type="japanese_restaurant"),
+                    build_place(202, "Dinner B", category="food", primary_type="ramen_restaurant"),
+                ],
+                total=2,
+                limit=3,
+                offset=0,
+            ),
+        ]
+        handler, _, _ = self._build_handler(place_adapter=adapter)
+
+        response = await handler.handle(
+            ChatMessageRequest(message="幫我排一個有玩有吃的行程今晚從台北車站出發")
+        )
+
+        self.assertEqual(response.intent.value, "GENERATE_ITINERARY")
+        self.assertIsNotNone(response.itinerary)
+        categories = {stop.category for stop in response.itinerary.stops}
+        self.assertIn("attraction", categories)
+        self.assertIn("food", categories)
+
+    async def test_play_and_eat_afternoon_itinerary_starts_after_1300(self) -> None:
+        adapter = StubPlaceAdapter()
+        adapter.search_results = [
+            PlaceListResult(
+                status="ok",
+                items=[
+                    build_place(101, "Park A", category="attraction", primary_type="park"),
+                    build_place(102, "Museum B", category="attraction", primary_type="museum"),
+                ],
+                total=2,
+                limit=3,
+                offset=0,
+            ),
+            PlaceListResult(
+                status="ok",
+                items=[
+                    build_place(201, "Dinner A", category="food", primary_type="japanese_restaurant"),
+                    build_place(202, "Dinner B", category="food", primary_type="ramen_restaurant"),
+                ],
+                total=2,
+                limit=3,
+                offset=0,
+            ),
+        ]
+        handler, _, _ = self._build_handler(place_adapter=adapter)
+
+        response = await handler.handle(
+            ChatMessageRequest(message="幫我排一個有玩有吃的行程下午從大安區出發")
+        )
+        trace = await self._latest_trace(handler)
+        turn_frame_step = next(
+            step for step in trace.steps if step.name == "turn_frame.validate"
+        )
+
+        self.assertEqual(response.intent.value, "GENERATE_ITINERARY")
+        self.assertIsNotNone(response.itinerary)
+        self.assertEqual(response.itinerary.stops[0].arrival_time, "13:00")
+        self.assertEqual(turn_frame_step.detail["time_window_start"], "13:00")
+        self.assertEqual(turn_frame_step.detail["category_mix"], ["attraction", "food"])
+
+    async def test_shopping_and_food_itinerary_returns_shopping_and_food(self) -> None:
+        adapter = StubPlaceAdapter()
+        adapter.search_results = [
+            PlaceListResult(
+                status="ok",
+                items=[
+                    build_place(301, "Mall A", category="shopping", primary_type="shopping_mall"),
+                    build_place(302, "Market B", category="shopping", primary_type="market"),
+                ],
+                total=2,
+                limit=3,
+                offset=0,
+            ),
+            PlaceListResult(
+                status="ok",
+                items=[
+                    build_place(401, "Lunch A", category="food", primary_type="cafe"),
+                    build_place(402, "Lunch B", category="food", primary_type="bakery"),
+                ],
+                total=2,
+                limit=3,
+                offset=0,
+            ),
+        ]
+        handler, _, _ = self._build_handler(place_adapter=adapter)
+
+        response = await handler.handle(
+            ChatMessageRequest(message="幫我排一個逛街吃飯的行程今晚從台北車站出發")
+        )
+
+        self.assertEqual(response.intent.value, "GENERATE_ITINERARY")
+        self.assertIsNotNone(response.itinerary)
+        categories = {stop.category for stop in response.itinerary.stops}
+        self.assertIn("shopping", categories)
+        self.assertIn("food", categories)
+
+    async def test_missing_mixed_category_adds_relaxation_note(self) -> None:
+        adapter = StubPlaceAdapter()
+        adapter.search_results = [
+            PlaceListResult(status="empty", items=[], total=0, limit=3, offset=0),
+            PlaceListResult(
+                status="ok",
+                items=[
+                    build_place(501, "Dinner A", category="food", primary_type="cafe"),
+                    build_place(502, "Dinner B", category="food", primary_type="bakery"),
+                ],
+                total=2,
+                limit=3,
+                offset=0,
+            ),
+        ]
+        handler, _, _ = self._build_handler(place_adapter=adapter)
+
+        response = await handler.handle(
+            ChatMessageRequest(message="幫我排一個有玩有吃的行程今晚從台北車站出發")
+        )
+        trace = await self._latest_trace(handler)
+        relaxation_step = next(
+            step for step in trace.steps if step.name == "category_mix.relaxation"
+        )
+
+        self.assertEqual(response.intent.value, "GENERATE_ITINERARY")
+        self.assertIn("沒找到合適的景點候選", response.message)
+        self.assertEqual(relaxation_step.status, "fallback")
+        self.assertEqual(relaxation_step.detail["requested_categories"], ["attraction", "food"])
+        self.assertEqual(relaxation_step.detail["missing_categories"], ["attraction"])
 
     async def test_concurrent_requests_same_session_keep_state_consistent(self) -> None:
         handler, _, _ = self._build_handler()

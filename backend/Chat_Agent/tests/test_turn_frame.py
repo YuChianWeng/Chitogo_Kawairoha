@@ -6,6 +6,8 @@ from pydantic import ValidationError
 
 from app.orchestration.intents import Intent
 from app.orchestration.turn_frame import (
+    candidate_matches_constraint,
+    extract_category_mix,
     PlaceConstraint,
     TargetReference,
     TurnIntentFrame,
@@ -16,6 +18,7 @@ from app.orchestration.turn_frame import (
     validate_turn_intent_frame,
 )
 from app.session.models import Itinerary, Leg, Preferences, Stop
+from app.tools.models import ToolPlace
 from tests.fake_llm import DisabledLLMClient, StaticJSONClient
 
 
@@ -160,6 +163,66 @@ class TurnIntentFrameValidationTests(unittest.TestCase):
         self.assertEqual(validated.vibe_tag_selection.selected_tags, ["romantic"])
         self.assertIn("quiet", validated.vibe_tag_selection.rejected_tags)
 
+    def test_candidate_matches_constraint_accepts_matching_candidate(self) -> None:
+        decision = candidate_matches_constraint(
+            ToolPlace(
+                venue_id=10,
+                name="Huian Park",
+                category="attraction",
+                district="信義區",
+                primary_type="park",
+                indoor=False,
+                vibe_tags=["fun", "family"],
+                budget_level="budget",
+            ),
+            PlaceConstraint(
+                internal_category="attraction",
+                district="信義區",
+                primary_type="park",
+                vibe_tags=["fun"],
+                indoor=False,
+                max_budget_level=1,
+            ),
+        )
+
+        self.assertTrue(decision.matched)
+        self.assertEqual(decision.failed_fields, [])
+
+    def test_candidate_matches_constraint_reports_failed_fields(self) -> None:
+        decision = candidate_matches_constraint(
+            ToolPlace(
+                venue_id=11,
+                name="Cafe A",
+                category="food",
+                district="大安區",
+                primary_type="coffee_shop",
+                indoor=True,
+                vibe_tags=["quiet"],
+                budget_level="mid",
+            ),
+            PlaceConstraint(
+                internal_category="attraction",
+                district="信義區",
+                primary_type="park",
+                vibe_tags=["fun"],
+                indoor=False,
+                max_budget_level=1,
+            ),
+        )
+
+        self.assertFalse(decision.matched)
+        self.assertEqual(
+            set(decision.failed_fields),
+            {
+                "internal_category",
+                "district",
+                "primary_type",
+                "vibe_tags",
+                "indoor",
+                "max_budget_level",
+            },
+        )
+
 
 class TurnIntentFrameExtractionTests(unittest.IsolatedAsyncioTestCase):
     async def test_extract_replan_turn_frame_fast_path_for_second_one_attraction(self) -> None:
@@ -198,6 +261,46 @@ class TurnIntentFrameExtractionTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(frame.target_reference.resolved_index, 0)
         self.assertEqual(frame.replacement_constraint.internal_category, "food")
         self.assertEqual(frame.replacement_constraint.primary_type, "japanese_restaurant")
+
+    async def test_extract_category_mix_fast_path_for_play_and_eat(self) -> None:
+        category_mix = await extract_category_mix(
+            "幫我排一個有玩有吃的行程",
+            client=DisabledLLMClient(),
+        )
+
+        self.assertEqual(
+            [item.internal_category for item in category_mix],
+            ["attraction", "food"],
+        )
+
+    async def test_extract_category_mix_llm_fallback_for_cafe_and_attraction(self) -> None:
+        category_mix = await extract_category_mix(
+            "幫我排咖啡廳和景點的行程",
+            client=StaticJSONClient(
+                {
+                    "category_mix": [
+                        {
+                            "internal_category": "food",
+                            "primary_type": "cafe",
+                            "min_count": 1,
+                            "weight": 1.0,
+                        },
+                        {
+                            "internal_category": "attraction",
+                            "primary_type": None,
+                            "min_count": 1,
+                            "weight": 1.0,
+                        },
+                    ]
+                }
+            ),
+        )
+
+        self.assertEqual(
+            [item.internal_category for item in category_mix],
+            ["food", "attraction"],
+        )
+        self.assertEqual(category_mix[0].primary_type, "cafe")
 
     async def test_extract_replan_turn_frame_fast_path_for_remove_variant(self) -> None:
         frame = await extract_replan_turn_frame(

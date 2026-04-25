@@ -9,6 +9,8 @@ from app.core.config import Settings, get_settings
 from app.tools.models import (
     CategoryItem,
     CategoryListResult,
+    LodgingLegalCheckResult,
+    LodgingLegalInfo,
     PlaceListResult,
     PlaceSort,
     PlaceStatsResult,
@@ -23,6 +25,7 @@ _BATCH_PATH = "/api/v1/places/batch"
 _NEARBY_PATH = "/api/v1/places/nearby"
 _CATEGORIES_PATH = "/api/v1/places/categories"
 _VIBE_TAGS_PATH = "/api/v1/places/vibe-tags"
+_LODGING_CHECK_PATH = "/api/v1/lodgings/check"
 _STATS_PATH = "/api/v1/places/stats"
 
 
@@ -210,6 +213,37 @@ class PlaceToolAdapter:
             limit=response_limit,
             scope=scope,
         )
+
+    async def check_lodging_legal_status(
+        self,
+        *,
+        name: str,
+        phone: str | None = None,
+        district: str | None = None,
+    ) -> LodgingLegalCheckResult:
+        """Check if a lodging is legally registered in the government list."""
+        payload, error = await self._request_json(
+            "GET",
+            _LODGING_CHECK_PATH,
+            params=self._compact_dict(name=name, phone=phone, district=district),
+        )
+        if error is not None:
+            return LodgingLegalCheckResult(status="error", error=error)
+        if not isinstance(payload, dict):
+            return LodgingLegalCheckResult(status="error", error="malformed_payload")
+        try:
+            is_legal = bool(payload.get("is_legal", False))
+            lodging_raw = payload.get("lodging")
+            lodging = LodgingLegalInfo.model_validate(lodging_raw) if lodging_raw else None
+            return LodgingLegalCheckResult(
+                status="ok",
+                is_legal=is_legal,
+                lodging=lodging,
+                match_type=payload.get("match_type"),
+                confidence=payload.get("confidence"),
+            )
+        except (TypeError, ValueError, ValidationError):
+            return LodgingLegalCheckResult(status="error", error="malformed_payload")
 
     async def get_stats(self) -> PlaceStatsResult:
         payload, error = await self._request_json("GET", _STATS_PATH)

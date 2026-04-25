@@ -144,6 +144,11 @@ class Place(BaseModel):
     venue_id: int | str | None = None
     name: str = Field(..., min_length=1)
     category: str | None = None
+    district: str | None = None
+    primary_type: str | None = None
+    budget_level: str | None = None
+    indoor: bool | None = None
+    vibe_tags: list[str] = Field(default_factory=list)
     lat: float | None = Field(default=None, ge=-90.0, le=90.0)
     lng: float | None = Field(default=None, ge=-180.0, le=180.0)
     raw_payload: dict[str, Any] = Field(default_factory=dict)

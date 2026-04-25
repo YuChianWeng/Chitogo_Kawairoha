@@ -28,6 +28,9 @@ class StubPlaceAdapter:
     async def get_stats(self) -> object:
         return None
 
+    async def check_lodging_legal_status(self, **_: object) -> object:
+        return None
+
 
 class StubRouteAdapter:
     async def estimate_route(self, **_: object) -> object:
@@ -57,7 +60,9 @@ class ToolRegistryTests(unittest.TestCase):
         generate_names = [tool.name for tool in self.registry.list_tools_for_intent(Intent.GENERATE_ITINERARY)]
 
         self.assertEqual(explain_names, [])
-        self.assertEqual(chat_names, ["place_search", "place_vibe_tags"])
+        self.assertIn("place_search", chat_names)
+        self.assertIn("place_vibe_tags", chat_names)
+        self.assertIn("lodging_legal_check", chat_names)
         self.assertIn("place_recommend", generate_names)
         self.assertIn("place_vibe_tags", generate_names)
         self.assertIn("route_estimate", generate_names)

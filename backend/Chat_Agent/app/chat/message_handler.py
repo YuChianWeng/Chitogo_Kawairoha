@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import re
 from uuid import uuid4
 
 from app.chat.itinerary_builder import ItineraryBuilder
@@ -25,11 +26,26 @@ from app.orchestration.intents import Intent
 from app.orchestration.language import detect_language_hint
 from app.orchestration.preferences import PreferenceExtractor
 from app.orchestration.slots import ChatGeneralSlots, ClassifierResult
-from app.session.manager import SessionManager, session_manager
+from app.orchestration.turn_frame import (
+    CandidateMatchDecision,
+    extract_category_mix,
+    PlaceConstraint,
+    candidate_matches_constraint,
+)
+from app.session.manager import (
+    SessionManager,
+    session_manager,
+    stable_preference_delta,
+)
 from app.session.models import Itinerary, Place, Preferences, Session, Turn
 from app.tools.models import ToolPlace
 
 logger = logging.getLogger(__name__)
+
+_ITINERARY_LANGUAGE_PATTERN = re.compile(
+    r"(行程|安排|排(?:一個|一下)?|schedule|itinerary|trip\s+plan)",
+    re.IGNORECASE,
+)
 
 
 class MessageHandler:
@@ -118,7 +134,31 @@ class MessageHandler:
                     preference_delta=preference_delta,
                     recorder=recorder,
                 )
-                preferences = session.preferences
+                preferences = self._preferences_for_current_turn(
+                    base_preferences=session.preferences,
+                    preference_delta=preference_delta,
+                    intent=classifier_result.intent,
+                )
+                discovery_request = self._should_use_discovery_flow(
+                    message=request.message,
+                    classifier_result=classifier_result,
+                    preferences=preferences,
+                )
+                if (
+                    classifier_result.intent == Intent.GENERATE_ITINERARY
+                    and discovery_request
+                    and self._should_override_generate_to_discovery(
+                        message=request.message,
+                        preferences=preferences,
+                    )
+                ):
+                    classifier_result = classifier_result.model_copy(
+                        update={
+                            "intent": Intent.CHAT_GENERAL,
+                            "needs_clarification": False,
+                            "missing_fields": [],
+                        }
+                    )
 
                 if classifier_result.intent == Intent.GENERATE_ITINERARY:
                     with recorder.step("generate.detect_missing_fields") as step:
@@ -144,6 +184,15 @@ class MessageHandler:
                         trace_recorder=recorder,
                     )
                 elif classifier_result.needs_clarification:
+                    self._record_turn_frame_validation(
+                        trace_recorder=recorder,
+                        message=request.message,
+                        intent=classifier_result.intent,
+                        preferences=preferences,
+                        route="clarification",
+                        needs_clarification=True,
+                        missing_fields=classifier_result.missing_fields,
+                    )
                     recorder.record_step(
                         name="orchestration.tools",
                         status="skipped",
@@ -165,6 +214,15 @@ class MessageHandler:
                         source=classifier_result.source,
                     )
                 elif classifier_result.intent == Intent.EXPLAIN:
+                    self._record_turn_frame_validation(
+                        trace_recorder=recorder,
+                        message=request.message,
+                        intent=classifier_result.intent,
+                        preferences=preferences,
+                        route="explain",
+                        needs_clarification=False,
+                        missing_fields=[],
+                    )
                     recorder.record_step(
                         name="orchestration.tools",
                         status="skipped",
@@ -198,7 +256,7 @@ class MessageHandler:
                         source=classifier_result.source,
                         trace_recorder=recorder,
                     )
-                elif self._agent_loop.is_discovery_message(request.message):
+                elif discovery_request:
                     response = await self._handle_discovery(
                         session_id=session_id,
                         turn_id=assistant_turn_id,
@@ -208,6 +266,15 @@ class MessageHandler:
                         trace_recorder=recorder,
                     )
                 else:
+                    self._record_turn_frame_validation(
+                        trace_recorder=recorder,
+                        message=request.message,
+                        intent=classifier_result.intent,
+                        preferences=preferences,
+                        route="chat_general",
+                        needs_clarification=False,
+                        missing_fields=[],
+                    )
                     recorder.record_step(
                         name="orchestration.tools",
                         status="skipped",
@@ -330,18 +397,34 @@ class MessageHandler:
         recorder: TraceRecorder,
     ) -> Session:
         with recorder.step("preferences.merge") as step:
+            persisted_delta = stable_preference_delta(preference_delta)
+            persisted_fields = (
+                sorted(persisted_delta.model_fields_set)
+                if persisted_delta is not None
+                else []
+            )
             try:
-                merged_session = await self._session_manager.update_preferences(
-                    session_id,
-                    preference_delta,
-                )
+                if persisted_delta is None:
+                    step.success(
+                        detail={
+                            "persisted_fields": [],
+                            "turn_fields": sorted(preference_delta.model_fields_set),
+                        }
+                    )
+                    return session
+                merged_session = await self._session_manager.update_preferences(session_id, persisted_delta)
             except Exception as exc:
                 step.fallback(
                     summary="preferences_preserved",
                     error=exc.__class__.__name__,
                 )
                 return session
-            step.success(detail={"fields": sorted(preference_delta.model_fields_set)})
+            step.success(
+                detail={
+                    "persisted_fields": persisted_fields,
+                    "turn_fields": sorted(preference_delta.model_fields_set),
+                }
+            )
             return merged_session
 
     async def _handle_discovery(
@@ -354,10 +437,21 @@ class MessageHandler:
         source: str,
         trace_recorder: TraceRecorder,
     ) -> ChatMessageResponse:
+        self._record_turn_frame_validation(
+            trace_recorder=trace_recorder,
+            message=request.message,
+            intent=Intent.CHAT_GENERAL,
+            preferences=preferences,
+            route="discovery",
+            needs_clarification=False,
+            missing_fields=[],
+        )
         loop_result = await self._run_loop(
             intent=Intent.CHAT_GENERAL,
             message=request.message,
             preferences=preferences,
+            replacement_constraint=None,
+            category_mix=None,
             user_context=request.user_context,
             trace_recorder=trace_recorder,
             step_name="agent_loop.chat_general",
@@ -437,10 +531,26 @@ class MessageHandler:
         source: str,
         trace_recorder: TraceRecorder,
     ) -> ChatMessageResponse:
+        category_mix = await self._extract_category_mix(
+            message=request.message,
+            trace_recorder=trace_recorder,
+        )
+        self._record_turn_frame_validation(
+            trace_recorder=trace_recorder,
+            message=request.message,
+            intent=Intent.GENERATE_ITINERARY,
+            preferences=preferences,
+            route="generate",
+            needs_clarification=False,
+            missing_fields=[],
+            category_mix=category_mix,
+        )
         loop_result = await self._run_loop(
             intent=Intent.GENERATE_ITINERARY,
             message=request.message,
             preferences=preferences,
+            replacement_constraint=None,
+            category_mix=category_mix,
             user_context=request.user_context,
             trace_recorder=trace_recorder,
             step_name="agent_loop.generate_itinerary",
@@ -489,6 +599,7 @@ class MessageHandler:
             itinerary_build = await self._itinerary_builder.build(
                 places=loop_result.places,
                 preferences=preferences,
+                category_mix=category_mix,
                 trace_recorder=trace_recorder,
             )
         except Exception as exc:
@@ -523,10 +634,24 @@ class MessageHandler:
                 routing_status=itinerary_build.routing_status,
                 preferences=preferences,
             )
+            if loop_result.missing_categories:
+                with trace_recorder.step("category_mix.relaxation") as relaxation_step:
+                    reply_text += self._composer.compose_category_mix_relaxation(
+                        preferences=preferences,
+                        missing_categories=loop_result.missing_categories,
+                    )
+                    relaxation_step.fallback(
+                        summary="missing_categories",
+                        detail={
+                            "requested_categories": loop_result.requested_categories,
+                            "missing_categories": loop_result.missing_categories,
+                        },
+                    )
             step.success(
                 detail={
                     "stop_count": len(itinerary_build.itinerary.stops),
                     "routing_status": itinerary_build.routing_status,
+                    "missing_categories": loop_result.missing_categories,
                 }
             )
         return ChatMessageResponse(
@@ -591,6 +716,32 @@ class MessageHandler:
                     summary=replan_request.operation,
                     detail={"target_index": replan_request.target_index},
                 )
+        self._record_turn_frame_validation(
+            trace_recorder=trace_recorder,
+            message=request.message,
+            intent=Intent.REPLAN,
+            preferences=preferences,
+            route="replan",
+            needs_clarification=replan_request.needs_clarification,
+            missing_fields=replan_request.missing_fields,
+            replan_request=replan_request,
+        )
+
+        if replan_request.stable_preference_delta is not None:
+            with trace_recorder.step("preferences.merge_replan_frame") as step:
+                try:
+                    persisted_delta = stable_preference_delta(replan_request.stable_preference_delta)
+                    if persisted_delta is None:
+                        step.success(detail={"fields": []})
+                    else:
+                        session = await self._session_manager.update_preferences(
+                            session_id,
+                            persisted_delta,
+                        )
+                        preferences = session.preferences
+                        step.success(detail={"fields": sorted(persisted_delta.model_fields_set)})
+                except Exception as exc:
+                    step.fallback(summary="preferences_preserved", error=exc.__class__.__name__)
 
         if replan_request.needs_clarification:
             trace_recorder.record_step(
@@ -621,22 +772,50 @@ class MessageHandler:
         summary = None
         replacement_place = None
         if replan_request.operation in {"replace", "insert"}:
-            replacement_place = self._pick_cached_replan_candidate(
+            replacement_place, cache_decisions = self._pick_cached_replan_candidate(
                 session=session,
                 target_index=replan_request.target_index,
+                replacement_constraint=replan_request.replacement_constraint,
+            )
+            trace_recorder.record_step(
+                name="replan.cache_candidate_filter",
+                status="success" if replacement_place is not None else "fallback",
+                summary=(
+                    "cached_candidate_matched"
+                    if replacement_place is not None
+                    else "no_matching_cached_candidate"
+                ),
+                detail={
+                    "evaluated_count": len(cache_decisions),
+                    "failed_fields": sorted(
+                        {
+                            field_name
+                            for decision in cache_decisions
+                            for field_name in decision.failed_fields
+                        }
+                    ),
+                    "matched_candidate_id": (
+                        replacement_place.venue_id if replacement_place is not None else None
+                    ),
+                },
             )
             if replacement_place is not None:
                 trace_recorder.record_step(
                     name="replan.pick_cached_candidate",
                     status="success",
                     summary="cached_candidate_reused",
-                    detail={"target_index": replan_request.target_index},
+                    detail={
+                        "target_index": replan_request.target_index,
+                        "candidate_id": replacement_place.venue_id,
+                    },
                 )
             if replacement_place is None:
                 loop_result = await self._run_loop(
                     intent=Intent.REPLAN,
                     message=request.message,
                     preferences=preferences,
+                    replacement_constraint=replan_request.replacement_constraint,
+                    category_mix=None,
                     user_context=request.user_context,
                     trace_recorder=trace_recorder,
                     step_name="agent_loop.replan",
@@ -686,6 +865,21 @@ class MessageHandler:
                     current_itinerary=session.latest_itinerary,
                     places=loop_result.places,
                     target_index=replan_request.target_index,
+                    replacement_constraint=replan_request.replacement_constraint,
+                )
+                trace_recorder.record_step(
+                    name="replan.pick_tool_candidate",
+                    status="success" if replacement_place is not None else "fallback",
+                    summary=(
+                        "tool_candidate_selected"
+                        if replacement_place is not None
+                        else "no_replacement_candidate"
+                    ),
+                    detail={
+                        "candidate_id": (
+                            replacement_place.venue_id if replacement_place is not None else None
+                        )
+                    },
                 )
                 with trace_recorder.step("session.cache_candidates") as step:
                     await self._session_manager.cache_candidates(
@@ -778,6 +972,8 @@ class MessageHandler:
         intent: Intent,
         message: str,
         preferences: Preferences,
+        replacement_constraint: PlaceConstraint | None,
+        category_mix,
         user_context,
         trace_recorder: TraceRecorder,
         step_name: str,
@@ -788,6 +984,8 @@ class MessageHandler:
                     intent=intent,
                     message=message,
                     preferences=preferences,
+                    replacement_constraint=replacement_constraint,
+                    category_mix=category_mix,
                     user_context=user_context,
                     trace_recorder=trace_recorder,
                 )
@@ -877,6 +1075,120 @@ class MessageHandler:
             candidate_count=len(getattr(loop_result, "places", [])),
         )
 
+    async def _extract_category_mix(
+        self,
+        *,
+        message: str,
+        trace_recorder: TraceRecorder,
+    ):
+        with trace_recorder.step("category_mix.extract") as step:
+            category_mix = await extract_category_mix(
+                message,
+                client=self._agent_loop._client,
+            )
+            step.success(
+                detail={
+                    "categories": [item.internal_category for item in category_mix],
+                }
+            )
+            return category_mix
+
+    def _should_use_discovery_flow(
+        self,
+        *,
+        message: str,
+        classifier_result: ClassifierResult,
+        preferences: Preferences,
+    ) -> bool:
+        if classifier_result.intent in {Intent.REPLAN, Intent.EXPLAIN}:
+            return False
+        if self._agent_loop.is_discovery_message(message):
+            return True
+        return (
+            classifier_result.intent in {Intent.CHAT_GENERAL, Intent.GENERATE_ITINERARY}
+            and self._is_specific_place_request(message, preferences)
+        )
+
+    def _should_override_generate_to_discovery(
+        self,
+        *,
+        message: str,
+        preferences: Preferences,
+    ) -> bool:
+        if _ITINERARY_LANGUAGE_PATTERN.search(message):
+            return False
+        return preferences.origin is None and preferences.time_window is None
+
+    def _is_specific_place_request(
+        self,
+        message: str,
+        preferences: Preferences,
+    ) -> bool:
+        if self._agent_loop.infer_primary_type(message, preferences) is not None:
+            return True
+        return (
+            self._agent_loop.infer_internal_category(message, preferences) is not None
+            and self._agent_loop._preferred_tag_keyword(preferences) is not None
+        )
+
+    def _record_turn_frame_validation(
+        self,
+        *,
+        trace_recorder: TraceRecorder,
+        message: str,
+        intent: Intent,
+        preferences: Preferences,
+        route: str,
+        needs_clarification: bool,
+        missing_fields: list[str],
+        category_mix: list | None = None,
+        replan_request=None,
+    ) -> None:
+        inferred_primary_type = self._agent_loop.infer_primary_type(message, preferences)
+        inferred_category = self._agent_loop.infer_internal_category(message, preferences)
+        selected_vibe_tags: list[str] = []
+        operation = None
+        target_index = None
+        replacement_internal_category = None
+        replacement_primary_type = None
+
+        if replan_request is not None:
+            operation = replan_request.operation
+            target_index = replan_request.target_index
+            if replan_request.replacement_constraint is not None:
+                replacement_internal_category = replan_request.replacement_constraint.internal_category
+                replacement_primary_type = replan_request.replacement_constraint.primary_type
+                selected_vibe_tags = list(replan_request.replacement_constraint.vibe_tags)
+
+        trace_recorder.record_step(
+            name="turn_frame.validate",
+            status="fallback" if needs_clarification else "success",
+            summary=route,
+            detail={
+                "intent": intent.value,
+                "route": route,
+                "operation": operation,
+                "target_index": target_index,
+                "origin": preferences.origin,
+                "district": preferences.district,
+                "time_window_start": (
+                    preferences.time_window.start_time if preferences.time_window else None
+                ),
+                "time_window_end": (
+                    preferences.time_window.end_time if preferences.time_window else None
+                ),
+                "search_internal_category": inferred_category,
+                "search_primary_type": inferred_primary_type,
+                "replacement_internal_category": replacement_internal_category,
+                "replacement_primary_type": replacement_primary_type,
+                "selected_vibe_tags": selected_vibe_tags,
+                "category_mix": [
+                    item.internal_category for item in (category_mix or [])
+                ],
+                "missing_fields": missing_fields,
+            },
+        )
+
     @staticmethod
     def _final_status_for_response(response: ChatMessageResponse) -> TraceFinalStatus:
         if response.needs_clarification:
@@ -937,6 +1249,11 @@ class MessageHandler:
             venue_id=getattr(tool_place, "venue_id", None),
             name=getattr(tool_place, "name"),
             category=getattr(tool_place, "category", None),
+            district=getattr(tool_place, "district", None),
+            primary_type=getattr(tool_place, "primary_type", None),
+            budget_level=getattr(tool_place, "budget_level", None),
+            indoor=getattr(tool_place, "indoor", None),
+            vibe_tags=list(getattr(tool_place, "vibe_tags", None) or []),
             lat=getattr(tool_place, "lat", None),
             lng=getattr(tool_place, "lng", None),
             raw_payload=getattr(tool_place, "raw_payload", {}) or {},
@@ -958,25 +1275,36 @@ class MessageHandler:
         *,
         session: Session,
         target_index: int | None,
-    ) -> ToolPlace | None:
+        replacement_constraint: PlaceConstraint | None,
+    ) -> tuple[ToolPlace | None, list[CandidateMatchDecision]]:
         used_ids = (
             {stop.venue_id for stop in session.latest_itinerary.stops}
             if session.latest_itinerary
             else set()
         )
+        decisions = []
         for candidate in session.cached_candidates:
             candidate_id = candidate.venue_id or candidate.place_id
             if candidate_id is None or candidate_id in used_ids:
+                continue
+            decision = candidate_matches_constraint(candidate, replacement_constraint)
+            decisions.append(decision)
+            if not decision.matched:
                 continue
             return ToolPlace(
                 venue_id=candidate_id,
                 name=candidate.name,
                 category=candidate.category,
+                district=candidate.district,
+                primary_type=candidate.primary_type,
+                budget_level=candidate.budget_level,
+                indoor=candidate.indoor,
+                vibe_tags=list(candidate.vibe_tags),
                 lat=candidate.lat,
                 lng=candidate.lng,
                 raw_payload=candidate.raw_payload,
-            )
-        return None
+            ), decisions
+        return None, decisions
 
     @staticmethod
     def _pick_tool_replan_candidate(
@@ -984,15 +1312,55 @@ class MessageHandler:
         current_itinerary: Itinerary,
         places: list[ToolPlace],
         target_index: int | None,
+        replacement_constraint: PlaceConstraint | None,
     ) -> ToolPlace | None:
         used_ids = {stop.venue_id for stop in current_itinerary.stops}
         target_venue_id = None
         if target_index is not None and 0 <= target_index < len(current_itinerary.stops):
             target_venue_id = current_itinerary.stops[target_index].venue_id
         for place in places:
-            if place.venue_id not in used_ids:
+            if place.venue_id not in used_ids and candidate_matches_constraint(
+                place,
+                replacement_constraint,
+            ).matched:
                 return place
         for place in places:
-            if target_venue_id is None or place.venue_id != target_venue_id:
+            if (
+                (target_venue_id is None or place.venue_id != target_venue_id)
+                and candidate_matches_constraint(place, replacement_constraint).matched
+            ):
                 return place
         return None
+
+    @staticmethod
+    def _preferences_for_current_turn(
+        *,
+        base_preferences: Preferences,
+        preference_delta: Preferences,
+        intent: Intent,
+    ) -> Preferences:
+        if intent == Intent.REPLAN:
+            return base_preferences.model_copy(deep=True)
+
+        payload = base_preferences.model_dump()
+        for field_name in preference_delta.model_fields_set:
+            value = getattr(preference_delta, field_name)
+            if field_name in {"interest_tags", "avoid_tags"}:
+                payload[field_name] = list(value or [])
+                continue
+            if field_name == "time_window" and value is not None:
+                current_time_window = base_preferences.time_window or {}
+                current_time_window_data = (
+                    current_time_window.model_dump(exclude_none=True)
+                    if hasattr(current_time_window, "model_dump")
+                    else {}
+                )
+                payload[field_name] = {
+                    "start_time": value.start_time or current_time_window_data.get("start_time"),
+                    "end_time": value.end_time or current_time_window_data.get("end_time"),
+                }
+                continue
+            if value is None:
+                continue
+            payload[field_name] = value
+        return Preferences.model_validate(payload)

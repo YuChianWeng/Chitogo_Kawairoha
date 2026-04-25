@@ -75,6 +75,9 @@ class StubPlaceAdapter:
     async def get_stats(self) -> object:
         return None
 
+    async def check_lodging_legal_status(self, **_: object) -> object:
+        return None
+
 
 class StubRouteAdapter:
     def __init__(self) -> None:

@@ -3,6 +3,7 @@ from __future__ import annotations
 import unittest
 
 from app.chat.itinerary_builder import ItineraryBuilder
+from app.orchestration.turn_frame import CategoryMixItem
 from app.session.models import Preferences, TimeWindow
 from app.tools.models import RouteResult, ToolPlace
 from app.tools.registry import ToolRegistry
@@ -41,6 +42,9 @@ class StubPlaceAdapter:
         return None
 
     async def get_stats(self) -> object:
+        return None
+
+    async def check_lodging_legal_status(self, **_: object) -> object:
         return None
 
 
@@ -109,3 +113,54 @@ class ItineraryBuilderTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(result.routing_status, "partial_fallback")
         self.assertTrue(result.itinerary.legs[0].estimated)
+
+    async def test_build_prefers_category_diversity_for_category_mix(self) -> None:
+        route_adapter = StubRouteAdapter(status="ok")
+        builder = ItineraryBuilder(
+            registry=ToolRegistry(
+                place_adapter=StubPlaceAdapter(),
+                route_adapter=route_adapter,
+            )
+        )
+
+        result = await builder.build(
+            places=[
+                build_place(1, "Park A").model_copy(
+                    update={
+                        "category": "attraction",
+                        "primary_type": "park",
+                        "source_category": "attraction",
+                    }
+                ),
+                build_place(2, "Park B").model_copy(
+                    update={
+                        "category": "attraction",
+                        "primary_type": "park",
+                        "source_category": "attraction",
+                    }
+                ),
+                build_place(3, "Dinner A").model_copy(
+                    update={
+                        "category": "food",
+                        "primary_type": "japanese_restaurant",
+                        "source_category": "food",
+                    }
+                ),
+                build_place(4, "Dinner B").model_copy(
+                    update={
+                        "category": "food",
+                        "primary_type": "ramen_restaurant",
+                        "source_category": "food",
+                    }
+                ),
+            ],
+            preferences=Preferences(language="zh-TW"),
+            category_mix=[
+                CategoryMixItem(internal_category="attraction"),
+                CategoryMixItem(internal_category="food"),
+            ],
+        )
+
+        categories = {stop.category for stop in result.itinerary.stops}
+        self.assertIn("attraction", categories)
+        self.assertIn("food", categories)

@@ -80,6 +80,16 @@ class ToolRegistry:
                     handler=self._route_adapter.estimate_route,
                     intents=frozenset({Intent.GENERATE_ITINERARY, Intent.REPLAN}),
                 ),
+                ToolDefinition(
+                    name="lodging_legal_check",
+                    description=(
+                        "Check if a lodging is legally registered with Taipei City government. "
+                        "Pass the lodging name; optionally phone and district. "
+                        "Works even if the lodging has no Google Places record."
+                    ),
+                    handler=self._place_adapter.check_lodging_legal_status,
+                    intents=frozenset({Intent.CHECK_LODGING_LEGAL, Intent.CHAT_GENERAL}),
+                ),
             ]
         }
 

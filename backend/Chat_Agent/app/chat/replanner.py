@@ -10,7 +10,7 @@ from app.chat.itinerary_builder import ItineraryBuildResult, ItineraryBuilder
 from app.chat.schemas import RoutingStatus
 from app.llm.client import llm_client
 from app.orchestration.slots import extract_stop_index
-from app.orchestration.turn_frame import extract_replan_turn_frame
+from app.orchestration.turn_frame import PlaceConstraint, extract_replan_turn_frame
 from app.session.models import Itinerary, Leg, Preferences, Stop
 from app.tools.models import ToolPlace
 
@@ -24,6 +24,8 @@ class ReplanRequest(BaseModel):
     operation: Literal["replace", "insert", "remove"]
     target_index: int | None = Field(default=None, ge=0)
     insert_index: int | None = Field(default=None, ge=0)
+    replacement_constraint: PlaceConstraint | None = None
+    stable_preference_delta: Preferences | None = None
     needs_clarification: bool = False
     missing_fields: list[str] = Field(default_factory=list)
 
@@ -62,6 +64,8 @@ class Replanner:
         if frame.needs_clarification:
             return ReplanRequest(
                 operation=operation,
+                replacement_constraint=frame.replacement_constraint,
+                stable_preference_delta=frame.stable_preference_delta,
                 needs_clarification=True,
                 missing_fields=self._clarification_fields(frame.missing_fields),
             )
@@ -71,6 +75,8 @@ class Replanner:
             if insert_index is None:
                 return ReplanRequest(
                     operation=operation,
+                    replacement_constraint=frame.replacement_constraint,
+                    stable_preference_delta=frame.stable_preference_delta,
                     needs_clarification=True,
                     missing_fields=["stop_index"],
                 )
@@ -78,11 +84,15 @@ class Replanner:
                 operation=operation,
                 target_index=max(0, insert_index - 1) if insert_index > 0 else 0,
                 insert_index=insert_index,
+                replacement_constraint=frame.replacement_constraint,
+                stable_preference_delta=frame.stable_preference_delta,
             )
 
         return ReplanRequest(
             operation=operation,
             target_index=target_index,
+            replacement_constraint=frame.replacement_constraint,
+            stable_preference_delta=frame.stable_preference_delta,
         )
 
     async def apply(
@@ -288,7 +298,7 @@ class Replanner:
                 stops=new_stops,
                 legs=rebuilt_legs,
                 preferences=preferences,
-                default_start_time="10:00",
+                default_start_time=self._builder.settings.default_start_time,
             )
             itinerary = Itinerary(
                 summary="",

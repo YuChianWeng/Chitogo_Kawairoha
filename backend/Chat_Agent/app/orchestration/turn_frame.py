@@ -46,6 +46,26 @@ _SIMPLE_REPLACEMENT_RULES: tuple[tuple[re.Pattern[str], dict[str, Any]], ...] = 
         },
     ),
 )
+_CATEGORY_MIX_RULES: tuple[tuple[re.Pattern[str], list[dict[str, Any]]], ...] = (
+    (
+        re.compile(r"(有玩有吃|玩樂?吃|景點加餐廳|景點配(?:餐廳|吃飯|美食))", re.IGNORECASE),
+        [
+            {"internal_category": "attraction", "min_count": 1, "weight": 1.0},
+            {"internal_category": "food", "min_count": 1, "weight": 1.0},
+        ],
+    ),
+    (
+        re.compile(r"(逛街吃飯|購物吃飯|shopping\s*(?:and|with)\s*food)", re.IGNORECASE),
+        [
+            {"internal_category": "shopping", "min_count": 1, "weight": 1.0},
+            {"internal_category": "food", "min_count": 1, "weight": 1.0},
+        ],
+    ),
+)
+_LIKELY_CATEGORY_MIX_PATTERN = re.compile(
+    r"((和|加|配|再加|以及|with|and).*(餐廳|吃飯|美食|景點|逛街|購物|咖啡))|(有玩有吃|逛街吃飯)",
+    re.IGNORECASE,
+)
 # Fields eligible to persist from a TurnIntentFrame into the session.
 # interest_tags and avoid_tags are intentionally excluded because they are
 # turn-specific constraints and must not pollute later turns (T033).
@@ -61,6 +81,11 @@ _STABLE_PREFERENCE_FIELDS = frozenset(
         "language",
     }
 )
+_BUDGET_LEVEL_TO_MAX = {
+    "budget": 1,
+    "mid": 2,
+    "luxury": 4,
+}
 
 
 class PlaceConstraint(BaseModel):
@@ -199,6 +224,66 @@ class TurnIntentFrame(BaseModel):
 
 def stable_preference_delta_for_merge(frame: TurnIntentFrame) -> Preferences | None:
     return _sanitize_stable_preference_delta(frame.stable_preference_delta)
+
+
+def candidate_matches_constraint(
+    candidate: Any,
+    constraint: PlaceConstraint | None,
+) -> CandidateMatchDecision:
+    candidate_id = getattr(candidate, "venue_id", None) or getattr(candidate, "place_id", None) or "unknown"
+    candidate_name = getattr(candidate, "name", None) or getattr(candidate, "venue_name", None) or str(candidate_id)
+    failed_fields: list[str] = []
+
+    if constraint is None:
+        return CandidateMatchDecision(
+            candidate_id=candidate_id,
+            candidate_name=candidate_name,
+            matched=True,
+            constraint_summary={},
+        )
+
+    candidate_category = _normalize_optional_text(getattr(candidate, "category", None))
+    candidate_district = _normalize_optional_text(getattr(candidate, "district", None))
+    candidate_primary_type = _normalize_optional_text(getattr(candidate, "primary_type", None))
+    candidate_indoor = getattr(candidate, "indoor", None)
+    candidate_budget_level = _normalize_optional_text(getattr(candidate, "budget_level", None))
+    candidate_vibe_tags = _normalize_casefolded_tags(getattr(candidate, "vibe_tags", None))
+    raw_payload = getattr(candidate, "raw_payload", {}) or {}
+
+    if constraint.internal_category is not None and candidate_category != constraint.internal_category:
+        failed_fields.append("internal_category")
+    if constraint.district is not None and candidate_district != constraint.district:
+        failed_fields.append("district")
+    if constraint.primary_type is not None and not _candidate_supports_primary_type(
+        candidate_primary_type,
+        raw_payload,
+        constraint.primary_type,
+    ):
+        failed_fields.append("primary_type")
+    if constraint.vibe_tags and not _candidate_supports_vibe_tags(
+        candidate_vibe_tags,
+        raw_payload,
+        constraint.vibe_tags,
+    ):
+        failed_fields.append("vibe_tags")
+    if constraint.indoor is not None and candidate_indoor is not None and candidate_indoor != constraint.indoor:
+        failed_fields.append("indoor")
+    if constraint.indoor is not None and candidate_indoor is None:
+        failed_fields.append("indoor")
+    if constraint.max_budget_level is not None and not _candidate_within_budget(
+        candidate_budget_level,
+        raw_payload,
+        constraint.max_budget_level,
+    ):
+        failed_fields.append("max_budget_level")
+
+    return CandidateMatchDecision(
+        candidate_id=candidate_id,
+        candidate_name=candidate_name,
+        matched=not failed_fields,
+        failed_fields=failed_fields,
+        constraint_summary=_constraint_summary(constraint),
+    )
 
 
 def validate_turn_intent_frame(
@@ -354,6 +439,37 @@ async def select_known_vibe_tags(
     )
 
 
+async def extract_category_mix(
+    message: str,
+    *,
+    client: Any | None = None,
+) -> list[CategoryMixItem]:
+    regex_items = _extract_category_mix_regex(message)
+    if regex_items:
+        return regex_items
+    if not _LIKELY_CATEGORY_MIX_PATTERN.search(message):
+        return []
+
+    prompt = (
+        "Extract a mixed itinerary category request from the latest user message.\n"
+        f"User message: {message}\n"
+        "Return strict JSON with one key: category_mix.\n"
+        "category_mix must be an array of objects with keys: internal_category, primary_type, min_count, weight.\n"
+        'internal_category must be one of: "food", "attraction", "shopping", "nightlife", "lodging".\n'
+        "Use an empty array when the request is not asking for a multi-category itinerary.\n"
+        "Return JSON only, without markdown."
+    )
+    try:
+        payload = await (client or llm_client).generate_json(prompt)
+    except Exception:
+        logger.warning("turn frame category-mix extraction error", exc_info=True)
+        return []
+
+    if not isinstance(payload, dict):
+        return []
+    return _normalize_category_mix(payload.get("category_mix"))
+
+
 def _build_replan_regex_frame(message: str, itinerary: Itinerary) -> TurnIntentFrame:
     detected_operation = _detect_replan_operation(message)
     operation = detected_operation or "replace"
@@ -424,6 +540,13 @@ def _extract_simple_replacement_constraint(message: str) -> PlaceConstraint | No
         if pattern.search(message):
             return PlaceConstraint.model_validate(payload)
     return None
+
+
+def _extract_category_mix_regex(message: str) -> list[CategoryMixItem]:
+    for pattern, payload in _CATEGORY_MIX_RULES:
+        if pattern.search(message):
+            return [CategoryMixItem.model_validate(item) for item in payload]
+    return []
 
 
 async def _extract_replan_turn_frame_with_llm(
@@ -640,6 +763,91 @@ def _sanitize_stable_preference_delta(delta: Preferences | None) -> Preferences 
     return Preferences.model_validate(payload)
 
 
+def _constraint_summary(constraint: PlaceConstraint) -> dict[str, Any]:
+    return {
+        key: value
+        for key, value in constraint.model_dump().items()
+        if value not in (None, [], {})
+    }
+
+
+def _candidate_supports_primary_type(
+    candidate_primary_type: str | None,
+    raw_payload: dict[str, Any],
+    expected_primary_type: str,
+) -> bool:
+    expected = expected_primary_type.casefold()
+    if candidate_primary_type is not None and candidate_primary_type.casefold() == expected:
+        return True
+
+    for key in ("types", "types_json", "google_types"):
+        value = raw_payload.get(key)
+        if isinstance(value, list) and any(
+            isinstance(item, str) and item.casefold() == expected for item in value
+        ):
+            return True
+
+    raw_primary_type = raw_payload.get("primary_type")
+    return isinstance(raw_primary_type, str) and raw_primary_type.casefold() == expected
+
+
+def _candidate_supports_vibe_tags(
+    candidate_vibe_tags: set[str],
+    raw_payload: dict[str, Any],
+    expected_tags: list[str],
+) -> bool:
+    if not candidate_vibe_tags:
+        raw_vibe_tags = raw_payload.get("vibe_tags")
+        if isinstance(raw_vibe_tags, list):
+            candidate_vibe_tags = _normalize_casefolded_tags(raw_vibe_tags)
+
+    expected = _normalize_casefolded_tags(expected_tags)
+    return expected.issubset(candidate_vibe_tags)
+
+
+def _candidate_within_budget(
+    candidate_budget_level: str | None,
+    raw_payload: dict[str, Any],
+    max_budget_level: int,
+) -> bool:
+    if candidate_budget_level is not None:
+        normalized_level = _BUDGET_LEVEL_TO_MAX.get(candidate_budget_level.casefold())
+        if normalized_level is not None:
+            return normalized_level <= max_budget_level
+
+    raw_budget_level = raw_payload.get("budget_level")
+    if isinstance(raw_budget_level, str):
+        normalized_level = _BUDGET_LEVEL_TO_MAX.get(raw_budget_level.casefold())
+        if normalized_level is not None:
+            return normalized_level <= max_budget_level
+
+    raw_max_budget_level = raw_payload.get("max_budget_level")
+    if isinstance(raw_max_budget_level, (int, float)) and not isinstance(raw_max_budget_level, bool):
+        return int(raw_max_budget_level) <= max_budget_level
+
+    return False
+
+
+def _normalize_optional_text(value: object) -> str | None:
+    if not isinstance(value, str):
+        return None
+    stripped = value.strip()
+    return stripped or None
+
+
+def _normalize_casefolded_tags(value: object) -> set[str]:
+    if not isinstance(value, list):
+        return set()
+    normalized: set[str] = set()
+    for item in value:
+        if not isinstance(item, str):
+            continue
+        stripped = item.strip()
+        if stripped:
+            normalized.add(stripped.casefold())
+    return normalized
+
+
 def _normalize_target_reference(value: object) -> TargetReference | None:
     if value is None:
         return None
@@ -773,8 +981,10 @@ def _append_missing_field(missing_fields: list[str], field_name: str) -> None:
 
 
 __all__ = [
+    "candidate_matches_constraint",
     "CandidateMatchDecision",
     "CategoryMixItem",
+    "extract_category_mix",
     "PlaceConstraint",
     "TargetReference",
     "TurnIntentFrame",

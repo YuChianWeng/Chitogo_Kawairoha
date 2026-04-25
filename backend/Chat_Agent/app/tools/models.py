@@ -33,6 +33,7 @@ class ToolPlace(BaseModel):
 
     venue_id: int | str
     name: str = Field(..., min_length=1)
+    source_category: str | None = None
     category: str | None = None
     district: str | None = None
     primary_type: str | None = None
@@ -109,6 +110,33 @@ class PlaceStatsResult(BaseModel):
     by_district: dict[str, int] = Field(default_factory=dict)
     by_internal_category: dict[str, int] = Field(default_factory=dict)
     by_primary_type: dict[str, int] = Field(default_factory=dict)
+    error: str | None = None
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class LodgingLegalInfo(BaseModel):
+    license_no: str
+    name: str
+    lodging_category: str
+    district: str | None = None
+    address: str | None = None
+    phone: str | None = None
+    room_count: int | None = None
+    has_hot_spring: bool
+    approved_date: str | None = None
+    place_id: int | None = None
+
+    model_config = ConfigDict(extra="ignore")
+
+
+class LodgingLegalCheckResult(BaseModel):
+    status: Literal["ok", "error"]
+    is_legal: bool = False
+    lodging: LodgingLegalInfo | None = None
+    # 'phone' | 'website' | 'name' | 'exact'
+    match_type: str | None = None
+    confidence: float | None = None
     error: str | None = None
 
     model_config = ConfigDict(extra="forbid")

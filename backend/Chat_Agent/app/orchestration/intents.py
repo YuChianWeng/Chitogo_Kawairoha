@@ -10,6 +10,7 @@ class Intent(str, Enum):
     REPLAN = "REPLAN"
     EXPLAIN = "EXPLAIN"
     CHAT_GENERAL = "CHAT_GENERAL"
+    CHECK_LODGING_LEGAL = "CHECK_LODGING_LEGAL"
 
 
 __all__ = ["Intent"]
