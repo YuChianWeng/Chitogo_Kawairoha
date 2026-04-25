@@ -4,15 +4,12 @@ import asyncio
 import json
 import logging
 import math
+from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from app.llm.client import llm_client
-from app.services.reachability import (
-    graduated_fallback,
-    haversine_pre_filter,
-    route_time_estimate,
-)
+from app.services.reachability import haversine_pre_filter, route_time_estimate
 from app.session.models import ReachableCache, Session, TransportConfig, TripCandidateCard
 from app.tools.place_adapter import place_tool_adapter
 
@@ -20,12 +17,54 @@ logger = logging.getLogger(__name__)
 
 _CACHE_TTL_MINUTES = 5
 _ROUTE_SEMAPHORE_LIMIT = 5
+_SEARCH_LIMIT = 50
+_TRIP_TARGET_PER_CATEGORY = 3
+_TRIP_TARGET_TOTAL = 6
+_DEMAND_TARGET_TOTAL = 3
+_RELAXED_TIME_OFFSETS = (0, 10, 20)
 
 # Bayesian prior: pull ratings toward neutral when review count is low
-_BAYES_PRIOR_RATING = 3.8   # neutral quality baseline
-_BAYES_PRIOR_COUNT = 50     # reviews needed to trust the rating fully
+_BAYES_PRIOR_RATING = 3.8
+_BAYES_PRIOR_COUNT = 50
 # Popularity bonus: log-scaled, capped so it doesn't overwhelm rating signal
-_POPULARITY_LOG_BASE = 14.0  # log10(10 000) / 14 ≈ 0.29 max bonus
+_POPULARITY_LOG_BASE = 14.0
+
+
+@dataclass(frozen=True)
+class _PreparedVenue:
+    venue: Any
+    travel_min: int
+    quality_score: float
+    affinity_key: str
+
+
+@dataclass(frozen=True)
+class _RankedVenue:
+    venue: Any
+    travel_min: int
+    rank_score: float
+
+
+@dataclass(frozen=True)
+class _TripStage:
+    max_minutes: int
+    use_affinity: bool
+    open_now: bool
+
+
+@dataclass(frozen=True)
+class _DemandQueryPlan:
+    internal_category: str | None = None
+    primary_type: str | None = None
+    keyword: str | None = None
+    use_default_categories: bool = False
+
+
+@dataclass(frozen=True)
+class _DemandStage:
+    query_plan: _DemandQueryPlan
+    max_minutes: int
+    open_now: bool
 
 
 def _venue_quality_score(
@@ -34,24 +73,13 @@ def _venue_quality_score(
     mention_count: int | None,
     trend_score: float | None,
 ) -> float:
-    """
-    Blended quality score for ranking candidates.
-
-    Components:
-    - Bayesian rating: smooths raw rating toward the prior when reviews are scarce
-    - Popularity bonus: log-scaled review count adds up to +0.3 for very popular venues
-    - Social bonus: mention_count / trend_score add a small signal when present
-    """
+    """Blended quality score for ranking candidates."""
     r = float(rating) if rating is not None else _BAYES_PRIOR_RATING
     count = user_rating_count or 0
 
-    # Bayesian average: weight rating by review volume, pull toward prior when count is low
     bayesian = (count * r + _BAYES_PRIOR_COUNT * _BAYES_PRIOR_RATING) / (count + _BAYES_PRIOR_COUNT)
-
-    # Popularity bonus: +0 for 0 reviews → +~0.29 for 10 000 reviews
     popularity_bonus = min(math.log10(count + 1) / _POPULARITY_LOG_BASE, 0.3)
 
-    # Social bonus: trend_score [0,1] adds up to +0.1; mention_count adds up to +0.1
     social_bonus = 0.0
     if trend_score is not None:
         social_bonus += float(trend_score) * 0.1
@@ -61,18 +89,6 @@ def _venue_quality_score(
     return bayesian + popularity_bonus + social_bonus
 
 
-def _is_cache_valid(cache: ReachableCache | None, lat: float, lng: float) -> bool:
-    if cache is None:
-        return False
-    now = datetime.now(UTC)
-    if cache.expires_at < now:
-        return False
-    # Invalidate if origin moved more than ~100m (roughly 0.001 degrees)
-    if abs(cache.origin_lat - lat) > 0.001 or abs(cache.origin_lng - lng) > 0.001:
-        return False
-    return True
-
-
 async def pick_candidates(
     session: Session,
     origin_lat: float,
@@ -80,108 +96,84 @@ async def pick_candidates(
     *,
     transport_config: TransportConfig,
 ) -> tuple[list[TripCandidateCard], bool, str | None]:
-    """Return (cards, partial, fallback_reason) — exactly 6 cards (3 rest + 3 attr) if possible."""
-    max_minutes = transport_config.max_minutes_per_leg
-    primary_mode = transport_config.mode
+    """Return up to 6 cards, preferring a 3 restaurant + 3 attraction mix."""
+    base_max_minutes = transport_config.max_minutes_per_leg
+    widest_max_minutes = _widest_max_minutes(base_max_minutes)
+    visited_ids = {str(vs.venue_id) for vs in session.visited_stops}
 
-    # Fetch venues from Data Service
-    try:
-        rest_result = await place_tool_adapter.search_places(
-            internal_category="food",
-            limit=50,
-        )
-        attr_result = await place_tool_adapter.search_places(
-            internal_category="attraction",
-            limit=50,
-        )
-        all_venues = list(rest_result.items) + list(attr_result.items)
-    except Exception as exc:
-        raise ValueError(f"candidates_error:data_service_unavailable:{exc}") from exc
+    pool_cache: dict[bool, tuple[list[Any], list[Any]]] = {}
+    prepared_cache: dict[bool, tuple[list[_PreparedVenue], list[_PreparedVenue]]] = {}
 
-    if not all_venues:
+    async def get_prepared_pools(open_now: bool) -> tuple[list[_PreparedVenue], list[_PreparedVenue]]:
+        cached = prepared_cache.get(open_now)
+        if cached is not None:
+            return cached
+
+        rest_venues, attr_venues = await _load_trip_pools(
+            open_now=open_now,
+            visited_ids=visited_ids,
+            pool_cache=pool_cache,
+        )
+        prepared = await asyncio.gather(
+            _prepare_venues(
+                rest_venues,
+                origin_lat,
+                origin_lng,
+                max_minutes=widest_max_minutes,
+                primary_mode=transport_config.mode,
+            ),
+            _prepare_venues(
+                attr_venues,
+                origin_lat,
+                origin_lng,
+                max_minutes=widest_max_minutes,
+                primary_mode=transport_config.mode,
+            ),
+        )
+        prepared_cache[open_now] = (prepared[0], prepared[1])
+        return prepared[0], prepared[1]
+
+    chosen_stage: _TripStage | None = None
+    final_rest_ranked: list[_RankedVenue] = []
+    final_attr_ranked: list[_RankedVenue] = []
+
+    for stage in _trip_stages(base_max_minutes):
+        rest_prepared, attr_prepared = await get_prepared_pools(stage.open_now)
+        final_rest_ranked = _rank_trip_venues(
+            rest_prepared,
+            session,
+            max_minutes=stage.max_minutes,
+            use_affinity=stage.use_affinity,
+        )
+        final_attr_ranked = _rank_trip_venues(
+            attr_prepared,
+            session,
+            max_minutes=stage.max_minutes,
+            use_affinity=stage.use_affinity,
+        )
+        chosen_stage = stage
+        if (
+            len(final_rest_ranked) >= _TRIP_TARGET_PER_CATEGORY
+            and len(final_attr_ranked) >= _TRIP_TARGET_PER_CATEGORY
+        ):
+            break
+
+    if chosen_stage is None:
         raise ValueError("candidates_error:data_service_unavailable:no_venues")
 
-    # Exclude already-visited venues
-    visited_ids = {str(vs.venue_id) for vs in session.visited_stops}
-    all_venues = [v for v in all_venues if str(getattr(v, "venue_id", "")) not in visited_ids]
-
-    # Filter by reachability
-    restaurants_raw = [v for v in all_venues if _is_restaurant(v)]
-    attractions_raw = [v for v in all_venues if not _is_restaurant(v)]
-
-    semaphore = asyncio.Semaphore(_ROUTE_SEMAPHORE_LIMIT)
-
-    async def score_venues(venues: list[Any]) -> list[tuple[Any, int]]:
-        pre = haversine_pre_filter(venues, origin_lat, origin_lng, max_minutes, primary_mode)
-        tasks = [
-            route_time_estimate(v, origin_lat, origin_lng, primary_mode, semaphore)
-            for v in pre
-        ]
-        times = await asyncio.gather(*tasks)
-        within = [(v, t) for v, t in zip(pre, times) if t <= max_minutes]
-        # Sort by affinity × blended quality (Bayesian rating + popularity + social)
-        def rank(item: tuple[Any, int]) -> float:
-            v, _ = item
-            category = getattr(v, "primary_type", None) or getattr(v, "category", None) or ""
-            affinity = session.gene_affinity_weights.get(category, 1.0)
-            quality = _venue_quality_score(
-                rating=getattr(v, "rating", None),
-                user_rating_count=getattr(v, "user_rating_count", None),
-                mention_count=getattr(v, "mention_count", None),
-                trend_score=getattr(v, "trend_score", None),
-            )
-            return affinity * quality
-
-        within.sort(key=rank, reverse=True)
-        return within
-
-    rest_scored, attr_scored = await asyncio.gather(
-        score_venues(restaurants_raw),
-        score_venues(attractions_raw),
+    selected = _select_trip_candidates(final_rest_ranked, final_attr_ranked)
+    partial = len(selected) < _TRIP_TARGET_TOTAL
+    fallback_reason = _build_trip_fallback_reason(
+        base_max_minutes,
+        chosen_stage,
+        partial=partial,
+    )
+    cards = await _build_cards_from_ranked(
+        selected,
+        gene=session.travel_gene or "旅人",
+        partial=partial,
     )
 
-    # Try 3+3 split, fall back to partial
-    partial = False
-    fallback_reason: str | None = None
-
-    top_rest = rest_scored[:3]
-    top_attr = attr_scored[:3]
-
-    if len(top_rest) < 3 or len(top_attr) < 3:
-        partial = True
-        # Pad with whatever we have
-        all_scored = rest_scored + attr_scored
-        all_scored.sort(key=lambda x: x[1])  # sort by travel time
-        combined = all_scored[:6]
-        top_rest = [(v, t) for v, t in combined if _is_restaurant(v)][:3]
-        top_attr = [(v, t) for v, t in combined if not _is_restaurant(v)][:3]
-        fallback_reason = f"partial: only {len(rest_scored)} restaurants and {len(attr_scored)} attractions reachable"
-
-    # Build candidate list
-    selected = top_rest + top_attr
-
-    # Batch LLM call for why_recommended
-    gene = session.travel_gene or "旅人"
-    why_reasons = await _batch_why_recommended(selected, gene)
-
-    cards: list[TripCandidateCard] = []
-    for idx, (v, travel_min) in enumerate(selected):
-        card = TripCandidateCard(
-            venue_id=getattr(v, "venue_id", str(idx)),
-            name=v.name,
-            category="restaurant" if _is_restaurant(v) else "attraction",
-            primary_type=getattr(v, "primary_type", None),
-            address=getattr(v, "formatted_address", None),
-            lat=v.lat or 0.0,
-            lng=v.lng or 0.0,
-            rating=getattr(v, "rating", None),
-            distance_min=travel_min,
-            why_recommended=why_reasons[idx] if idx < len(why_reasons) else "",
-            partial=partial,
-        )
-        cards.append(card)
-
-    # Update reachable cache
     session.reachable_cache = ReachableCache(
         origin_lat=origin_lat,
         origin_lng=origin_lng,
@@ -202,89 +194,71 @@ async def demand_mode(
     transport_config: TransportConfig,
 ) -> tuple[list[TripCandidateCard], str | None]:
     """Return up to 3 alternative venues matching the demand text."""
-    max_minutes = transport_config.max_minutes_per_leg
-    primary_mode = transport_config.mode
-
-    # Use LLM to map free-form demand text to structured search parameters
+    base_max_minutes = transport_config.max_minutes_per_leg * 2
+    widest_max_minutes = _widest_max_minutes(base_max_minutes)
     llm_category, llm_primary_type = await _llm_parse_demand(demand_text)
     logger.info(
         "demand_mode LLM parse: text=%r → category=%r, primary_type=%r",
-        demand_text, llm_category, llm_primary_type,
+        demand_text,
+        llm_category,
+        llm_primary_type,
     )
 
-    try:
-        if llm_category:
-            # Structured search: use LLM-inferred category (+ optional primary_type)
-            r = await place_tool_adapter.search_places(
-                internal_category=llm_category,
-                primary_type=llm_primary_type,
-                limit=50,
-            )
-            venues = list(r.items)
-            # If primary_type filter was too narrow, retry with category only
-            if not venues and llm_primary_type:
-                r = await place_tool_adapter.search_places(
-                    internal_category=llm_category, limit=50
-                )
-                venues = list(r.items)
-        else:
-            # LLM couldn't infer — try keyword search then broad fallback
-            r = await place_tool_adapter.search_places(keyword=demand_text, limit=50)
-            venues = list(r.items)
-            if not venues:
-                rest_r = await place_tool_adapter.search_places(internal_category="food", limit=50)
-                attr_r = await place_tool_adapter.search_places(internal_category="attraction", limit=50)
-                venues = list(rest_r.items) + list(attr_r.items)
-    except Exception as exc:
-        raise ValueError(f"candidates_error:data_service_unavailable:{exc}") from exc
-
     visited_ids = {str(vs.venue_id) for vs in session.visited_stops}
-    venues = [v for v in venues if str(getattr(v, "venue_id", "")) not in visited_ids]
+    strict_query, relaxed_query = _build_demand_query_plans(
+        demand_text=demand_text,
+        llm_category=llm_category,
+        llm_primary_type=llm_primary_type,
+    )
 
-    # If visited-filter wiped everything, fall back with same category preference
-    if not venues:
-        try:
-            category_fallback = llm_category or "food"
-            r = await place_tool_adapter.search_places(internal_category=category_fallback, limit=50)
-            venues = [v for v in r.items if str(getattr(v, "venue_id", "")) not in visited_ids]
-            if not venues:
-                rest_r = await place_tool_adapter.search_places(internal_category="food", limit=50)
-                attr_r = await place_tool_adapter.search_places(internal_category="attraction", limit=50)
-                venues = [v for v in list(rest_r.items) + list(attr_r.items)
-                          if str(getattr(v, "venue_id", "")) not in visited_ids]
-        except Exception as exc:
-            raise ValueError(f"candidates_error:data_service_unavailable:{exc}") from exc
+    prepared_cache: dict[tuple[_DemandQueryPlan, bool], list[_PreparedVenue]] = {}
 
-    semaphore = asyncio.Semaphore(_ROUTE_SEMAPHORE_LIMIT)
-    pre = haversine_pre_filter(venues, origin_lat, origin_lng, max_minutes * 2, primary_mode)
-    tasks = [route_time_estimate(v, origin_lat, origin_lng, primary_mode, semaphore) for v in pre]
-    times = await asyncio.gather(*tasks)
-    within = [(v, t) for v, t in zip(pre, times) if t <= max_minutes * 2]
-    within.sort(key=lambda x: x[1])
-    top3 = within[:3]
+    async def get_prepared(plan: _DemandQueryPlan, open_now: bool) -> list[_PreparedVenue]:
+        cache_key = (plan, open_now)
+        cached = prepared_cache.get(cache_key)
+        if cached is not None:
+            return cached
 
-    fallback_reason: str | None = None
-    if len(top3) < 3:
-        fallback_reason = f"only {len(top3)} alternatives found within range"
-
-    gene = session.travel_gene or "旅人"
-    why_reasons = await _batch_why_recommended(top3, gene)
-
-    cards: list[TripCandidateCard] = []
-    for idx, (v, travel_min) in enumerate(top3):
-        card = TripCandidateCard(
-            venue_id=getattr(v, "venue_id", str(idx)),
-            name=v.name,
-            category="restaurant" if _is_restaurant(v) else "attraction",
-            primary_type=getattr(v, "primary_type", None),
-            address=getattr(v, "formatted_address", None),
-            lat=v.lat or 0.0,
-            lng=v.lng or 0.0,
-            rating=getattr(v, "rating", None),
-            distance_min=travel_min,
-            why_recommended=why_reasons[idx] if idx < len(why_reasons) else "",
+        venues = await _load_demand_venues(
+            plan,
+            open_now=open_now,
+            visited_ids=visited_ids,
         )
-        cards.append(card)
+        prepared = await _prepare_venues(
+            venues,
+            origin_lat,
+            origin_lng,
+            max_minutes=widest_max_minutes,
+            primary_mode=transport_config.mode,
+        )
+        prepared_cache[cache_key] = prepared
+        return prepared
+
+    chosen_stage: _DemandStage | None = None
+    final_ranked: list[_RankedVenue] = []
+
+    for stage in _demand_stages(base_max_minutes, strict_query, relaxed_query):
+        prepared = await get_prepared(stage.query_plan, stage.open_now)
+        final_ranked = _rank_demand_venues(prepared, max_minutes=stage.max_minutes)
+        chosen_stage = stage
+        if len(final_ranked) >= _DEMAND_TARGET_TOTAL:
+            break
+
+    if chosen_stage is None:
+        raise ValueError("candidates_error:data_service_unavailable:no_venues")
+
+    selected = final_ranked[:_DEMAND_TARGET_TOTAL]
+    fallback_reason = _build_demand_fallback_reason(
+        base_max_minutes,
+        chosen_stage,
+        strict_query=strict_query,
+        partial=len(selected) < _DEMAND_TARGET_TOTAL,
+    )
+    cards = await _build_cards_from_ranked(
+        selected,
+        gene=session.travel_gene or "旅人",
+        partial=False,
+    )
 
     session.reachable_cache = ReachableCache(
         origin_lat=origin_lat,
@@ -295,6 +269,334 @@ async def demand_mode(
     session.last_candidate_ids = [c.venue_id for c in cards]
 
     return cards, fallback_reason
+
+
+async def _load_trip_pools(
+    *,
+    open_now: bool,
+    visited_ids: set[str],
+    pool_cache: dict[bool, tuple[list[Any], list[Any]]],
+) -> tuple[list[Any], list[Any]]:
+    cached = pool_cache.get(open_now)
+    if cached is not None:
+        return cached
+
+    rest_venues, attr_venues = await asyncio.gather(
+        _search_places_or_raise(
+            internal_category="food",
+            open_now=True if open_now else None,
+            limit=_SEARCH_LIMIT,
+        ),
+        _search_places_or_raise(
+            internal_category="attraction",
+            open_now=True if open_now else None,
+            limit=_SEARCH_LIMIT,
+        ),
+    )
+    filtered = (
+        _dedupe_venues(_filter_visited(rest_venues, visited_ids)),
+        _dedupe_venues(_filter_visited(attr_venues, visited_ids)),
+    )
+    pool_cache[open_now] = filtered
+    return filtered
+
+
+async def _load_demand_venues(
+    query_plan: _DemandQueryPlan,
+    *,
+    open_now: bool,
+    visited_ids: set[str],
+) -> list[Any]:
+    if query_plan.use_default_categories:
+        venues = []
+        for internal_category in ("food", "attraction"):
+            venues.extend(
+                await _search_places_or_raise(
+                    internal_category=internal_category,
+                    open_now=True if open_now else None,
+                    limit=_SEARCH_LIMIT,
+                )
+            )
+    else:
+        venues = await _search_places_or_raise(
+            internal_category=query_plan.internal_category,
+            primary_type=query_plan.primary_type,
+            keyword=query_plan.keyword,
+            open_now=True if open_now else None,
+            limit=_SEARCH_LIMIT,
+        )
+
+    return _dedupe_venues(_filter_visited(venues, visited_ids))
+
+
+async def _search_places_or_raise(**kwargs: Any) -> list[Any]:
+    result = await place_tool_adapter.search_places(**kwargs)
+    if result.status == "error":
+        raise ValueError(
+            f"candidates_error:data_service_unavailable:{result.error or 'search_error'}"
+        )
+    return list(result.items)
+
+
+def _filter_visited(venues: list[Any], visited_ids: set[str]) -> list[Any]:
+    if not visited_ids:
+        return list(venues)
+    return [
+        venue
+        for venue in venues
+        if str(getattr(venue, "venue_id", "")) not in visited_ids
+    ]
+
+
+def _dedupe_venues(venues: list[Any]) -> list[Any]:
+    deduped: list[Any] = []
+    seen: set[str] = set()
+    for venue in venues:
+        venue_id = str(getattr(venue, "venue_id", ""))
+        if venue_id in seen:
+            continue
+        seen.add(venue_id)
+        deduped.append(venue)
+    return deduped
+
+
+async def _prepare_venues(
+    venues: list[Any],
+    origin_lat: float,
+    origin_lng: float,
+    *,
+    max_minutes: int,
+    primary_mode: str,
+) -> list[_PreparedVenue]:
+    if not venues:
+        return []
+
+    semaphore = asyncio.Semaphore(_ROUTE_SEMAPHORE_LIMIT)
+    prefiltered = haversine_pre_filter(venues, origin_lat, origin_lng, max_minutes, primary_mode)
+    tasks = [
+        route_time_estimate(venue, origin_lat, origin_lng, primary_mode, semaphore)
+        for venue in prefiltered
+    ]
+    times = await asyncio.gather(*tasks)
+
+    prepared: list[_PreparedVenue] = []
+    for venue, travel_min in zip(prefiltered, times):
+        prepared.append(
+            _PreparedVenue(
+                venue=venue,
+                travel_min=travel_min,
+                quality_score=_venue_quality_score(
+                    rating=getattr(venue, "rating", None),
+                    user_rating_count=getattr(venue, "user_rating_count", None),
+                    mention_count=getattr(venue, "mention_count", None),
+                    trend_score=getattr(venue, "trend_score", None),
+                ),
+                affinity_key=(
+                    getattr(venue, "primary_type", None)
+                    or getattr(venue, "category", None)
+                    or ""
+                ),
+            )
+        )
+    return prepared
+
+
+def _rank_trip_venues(
+    prepared: list[_PreparedVenue],
+    session: Session,
+    *,
+    max_minutes: int,
+    use_affinity: bool,
+) -> list[_RankedVenue]:
+    ranked: list[_RankedVenue] = []
+    for item in prepared:
+        if item.travel_min > max_minutes:
+            continue
+        affinity = 1.0
+        if use_affinity:
+            affinity = session.gene_affinity_weights.get(item.affinity_key, 1.0)
+        ranked.append(
+            _RankedVenue(
+                venue=item.venue,
+                travel_min=item.travel_min,
+                rank_score=affinity * item.quality_score,
+            )
+        )
+
+    ranked.sort(key=lambda item: (-item.rank_score, item.travel_min, getattr(item.venue, "name", "")))
+    return ranked
+
+
+def _rank_demand_venues(
+    prepared: list[_PreparedVenue],
+    *,
+    max_minutes: int,
+) -> list[_RankedVenue]:
+    ranked = [
+        _RankedVenue(
+            venue=item.venue,
+            travel_min=item.travel_min,
+            rank_score=item.quality_score,
+        )
+        for item in prepared
+        if item.travel_min <= max_minutes
+    ]
+    ranked.sort(key=lambda item: (item.travel_min, -item.rank_score, getattr(item.venue, "name", "")))
+    return ranked
+
+
+def _select_trip_candidates(
+    rest_ranked: list[_RankedVenue],
+    attr_ranked: list[_RankedVenue],
+) -> list[_RankedVenue]:
+    selected = list(rest_ranked[:_TRIP_TARGET_PER_CATEGORY]) + list(attr_ranked[:_TRIP_TARGET_PER_CATEGORY])
+    selected_ids = {str(getattr(item.venue, "venue_id", "")) for item in selected}
+
+    remaining = [
+        item
+        for item in list(rest_ranked[_TRIP_TARGET_PER_CATEGORY:]) + list(attr_ranked[_TRIP_TARGET_PER_CATEGORY:])
+        if str(getattr(item.venue, "venue_id", "")) not in selected_ids
+    ]
+    remaining.sort(key=lambda item: (-item.rank_score, item.travel_min, getattr(item.venue, "name", "")))
+
+    selected.extend(remaining[: max(0, _TRIP_TARGET_TOTAL - len(selected))])
+    return selected[:_TRIP_TARGET_TOTAL]
+
+
+async def _build_cards_from_ranked(
+    ranked: list[_RankedVenue],
+    *,
+    gene: str,
+    partial: bool,
+) -> list[TripCandidateCard]:
+    why_reasons = await _batch_why_recommended(
+        [(item.venue, item.travel_min) for item in ranked],
+        gene,
+    )
+
+    cards: list[TripCandidateCard] = []
+    for idx, item in enumerate(ranked):
+        venue = item.venue
+        cards.append(
+            TripCandidateCard(
+                venue_id=getattr(venue, "venue_id", str(idx)),
+                name=venue.name,
+                category="restaurant" if _is_restaurant(venue) else "attraction",
+                primary_type=getattr(venue, "primary_type", None),
+                address=getattr(venue, "formatted_address", None),
+                lat=venue.lat or 0.0,
+                lng=venue.lng or 0.0,
+                rating=getattr(venue, "rating", None),
+                distance_min=item.travel_min,
+                why_recommended=why_reasons[idx] if idx < len(why_reasons) else "",
+                partial=partial,
+            )
+        )
+    return cards
+
+
+def _widest_max_minutes(base_max_minutes: int) -> int:
+    return base_max_minutes + _RELAXED_TIME_OFFSETS[-1]
+
+
+def _trip_stages(base_max_minutes: int) -> list[_TripStage]:
+    widest = _widest_max_minutes(base_max_minutes)
+    stages = [
+        _TripStage(max_minutes=base_max_minutes + offset, use_affinity=True, open_now=True)
+        for offset in _RELAXED_TIME_OFFSETS
+    ]
+    stages.append(_TripStage(max_minutes=widest, use_affinity=False, open_now=True))
+    stages.append(_TripStage(max_minutes=widest, use_affinity=False, open_now=False))
+    return stages
+
+
+def _demand_stages(
+    base_max_minutes: int,
+    strict_query: _DemandQueryPlan,
+    relaxed_query: _DemandQueryPlan,
+) -> list[_DemandStage]:
+    widest = _widest_max_minutes(base_max_minutes)
+    stages = [
+        _DemandStage(
+            query_plan=strict_query,
+            max_minutes=base_max_minutes + offset,
+            open_now=True,
+        )
+        for offset in _RELAXED_TIME_OFFSETS
+    ]
+    if relaxed_query != strict_query:
+        stages.append(
+            _DemandStage(
+                query_plan=relaxed_query,
+                max_minutes=widest,
+                open_now=True,
+            )
+        )
+    stages.append(
+        _DemandStage(
+            query_plan=relaxed_query,
+            max_minutes=widest,
+            open_now=False,
+        )
+    )
+    return stages
+
+
+def _build_demand_query_plans(
+    *,
+    demand_text: str,
+    llm_category: str | None,
+    llm_primary_type: str | None,
+) -> tuple[_DemandQueryPlan, _DemandQueryPlan]:
+    stripped_text = demand_text.strip()
+    if llm_category:
+        strict_query = _DemandQueryPlan(
+            internal_category=llm_category,
+            primary_type=llm_primary_type,
+        )
+        relaxed_query = _DemandQueryPlan(internal_category=llm_category)
+        return strict_query, relaxed_query
+
+    strict_query = _DemandQueryPlan(keyword=stripped_text or None)
+    relaxed_query = _DemandQueryPlan(use_default_categories=True)
+    return strict_query, relaxed_query
+
+
+def _build_trip_fallback_reason(
+    base_max_minutes: int,
+    stage: _TripStage,
+    *,
+    partial: bool,
+) -> str | None:
+    steps: list[str] = []
+    if stage.max_minutes > base_max_minutes:
+        steps.append(f"expanded_max_minutes_to_{stage.max_minutes}")
+    if not stage.use_affinity:
+        steps.append("relaxed_gene_affinity")
+    if not stage.open_now:
+        steps.append("dropped_open_now")
+    if partial:
+        steps.append("partial_results")
+    return "; ".join(steps) or None
+
+
+def _build_demand_fallback_reason(
+    base_max_minutes: int,
+    stage: _DemandStage,
+    *,
+    strict_query: _DemandQueryPlan,
+    partial: bool,
+) -> str | None:
+    steps: list[str] = []
+    if stage.max_minutes > base_max_minutes:
+        steps.append(f"expanded_max_minutes_to_{stage.max_minutes}")
+    if stage.query_plan != strict_query:
+        steps.append("relaxed_demand_filters")
+    if not stage.open_now:
+        steps.append("dropped_open_now")
+    if partial:
+        steps.append("partial_results")
+    return "; ".join(steps) or None
 
 
 _VALID_CATEGORIES = ("food", "attraction", "shopping", "nightlife", "lodging", "other")
@@ -360,7 +662,7 @@ async def _llm_parse_demand(demand_text: str) -> tuple[str | None, str | None]:
             return None, None
         cat = result.get("internal_category")
         pt = result.get("primary_type")
-        if cat not in _VALID_CATEGORIES:
+        if cat not in _VALID_CATEGORIES or cat == "other":
             cat = None
         if not isinstance(pt, str) or not pt:
             pt = None
@@ -372,9 +674,9 @@ async def _llm_parse_demand(demand_text: str) -> tuple[str | None, str | None]:
 
 def _is_restaurant(venue: Any) -> bool:
     cat = (
-        getattr(venue, "category", None) or
-        getattr(venue, "source_category", None) or
-        ""
+        getattr(venue, "category", None)
+        or getattr(venue, "source_category", None)
+        or ""
     ).lower()
     return cat in {"food", "restaurant", "cafe", "bar", "nightmarket"}
 
@@ -388,7 +690,7 @@ async def _batch_why_recommended(
         return []
 
     venue_list = "\n".join(
-        f"{i+1}. {v.name} ({getattr(v, 'primary_type', '') or getattr(v, 'category', '')})"
+        f"{i + 1}. {v.name} ({getattr(v, 'primary_type', '') or getattr(v, 'category', '')})"
         for i, (v, _) in enumerate(scored)
     )
     prompt = (
@@ -399,7 +701,6 @@ async def _batch_why_recommended(
 
     try:
         text = await llm_client.generate_text(prompt)
-        # Extract JSON array
         start = text.find("[")
         end = text.rfind("]")
         if start != -1 and end != -1:

@@ -525,7 +525,9 @@ class CandidatePickerDemandTests(unittest.IsolatedAsyncioTestCase):
                 transport_config=TransportConfig(mode="walk", max_minutes_per_leg=15),
             )
 
-        self.assertEqual(fallback_reason, "only 1 alternatives found within range")
+        self.assertIsNotNone(fallback_reason)
+        self.assertIn("partial_results", fallback_reason)
+        self.assertIn("dropped_open_now", fallback_reason)
         self.assertEqual([card.venue_id for card in cards], [303])
         self.assertEqual(session.last_candidate_ids, [303])
         self.assertIsNotNone(session.reachable_cache)
