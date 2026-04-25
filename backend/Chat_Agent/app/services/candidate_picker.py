@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import math
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
@@ -19,6 +20,45 @@ logger = logging.getLogger(__name__)
 
 _CACHE_TTL_MINUTES = 5
 _ROUTE_SEMAPHORE_LIMIT = 5
+
+# Bayesian prior: pull ratings toward neutral when review count is low
+_BAYES_PRIOR_RATING = 3.8   # neutral quality baseline
+_BAYES_PRIOR_COUNT = 50     # reviews needed to trust the rating fully
+# Popularity bonus: log-scaled, capped so it doesn't overwhelm rating signal
+_POPULARITY_LOG_BASE = 14.0  # log10(10 000) / 14 ≈ 0.29 max bonus
+
+
+def _venue_quality_score(
+    rating: float | None,
+    user_rating_count: int | None,
+    mention_count: int | None,
+    trend_score: float | None,
+) -> float:
+    """
+    Blended quality score for ranking candidates.
+
+    Components:
+    - Bayesian rating: smooths raw rating toward the prior when reviews are scarce
+    - Popularity bonus: log-scaled review count adds up to +0.3 for very popular venues
+    - Social bonus: mention_count / trend_score add a small signal when present
+    """
+    r = float(rating) if rating is not None else _BAYES_PRIOR_RATING
+    count = user_rating_count or 0
+
+    # Bayesian average: weight rating by review volume, pull toward prior when count is low
+    bayesian = (count * r + _BAYES_PRIOR_COUNT * _BAYES_PRIOR_RATING) / (count + _BAYES_PRIOR_COUNT)
+
+    # Popularity bonus: +0 for 0 reviews → +~0.29 for 10 000 reviews
+    popularity_bonus = min(math.log10(count + 1) / _POPULARITY_LOG_BASE, 0.3)
+
+    # Social bonus: trend_score [0,1] adds up to +0.1; mention_count adds up to +0.1
+    social_bonus = 0.0
+    if trend_score is not None:
+        social_bonus += float(trend_score) * 0.1
+    if mention_count:
+        social_bonus += min(math.log10(mention_count + 1) / 30.0, 0.1)
+
+    return bayesian + popularity_bonus + social_bonus
 
 
 def _is_cache_valid(cache: ReachableCache | None, lat: float, lng: float) -> bool:
@@ -79,13 +119,18 @@ async def pick_candidates(
         ]
         times = await asyncio.gather(*tasks)
         within = [(v, t) for v, t in zip(pre, times) if t <= max_minutes]
-        # Sort by affinity score * rating
+        # Sort by affinity × blended quality (Bayesian rating + popularity + social)
         def rank(item: tuple[Any, int]) -> float:
             v, _ = item
             category = getattr(v, "primary_type", None) or getattr(v, "category", None) or ""
             affinity = session.gene_affinity_weights.get(category, 1.0)
-            base_rating = getattr(v, "rating", None) or 3.0
-            return affinity * base_rating
+            quality = _venue_quality_score(
+                rating=getattr(v, "rating", None),
+                user_rating_count=getattr(v, "user_rating_count", None),
+                mention_count=getattr(v, "mention_count", None),
+                trend_score=getattr(v, "trend_score", None),
+            )
+            return affinity * quality
 
         within.sort(key=rank, reverse=True)
         return within

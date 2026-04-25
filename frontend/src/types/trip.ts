@@ -109,6 +109,7 @@ export interface SelectResult {
     google_maps_url: string
     apple_maps_url: string
     estimated_travel_min: number
+    transport_mode: TransportMode
   }
   encouragement_message: string
 }

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from sqlalchemy import or_
+from sqlalchemy import and_, or_
 from sqlalchemy.orm import Query
 from sqlalchemy.orm import Session
 
@@ -75,6 +75,13 @@ def build_place_search_query(db: Session, params: PlaceSearchParams) -> Query:
 
 
 def apply_place_search_filters(query: Query, params: PlaceSearchParams) -> Query:
+    # Always exclude permanently or temporarily closed places
+    query = query.filter(
+        or_(
+            Place.business_status.is_(None),
+            Place.business_status == "OPERATIONAL",
+        )
+    )
     if params.district is not None:
         query = query.filter(Place.district == params.district)
     if params.internal_category is not None:

@@ -342,9 +342,11 @@ class SearchApiTests(unittest.TestCase):
         keyword_response = self.client.get(
             "/api/v1/places/search", params={"keyword": "cafe"}
         )
+        # Places 2 ("Daan Brunch Cafe") and 3 ("Quiet Coffee Lab") both match:
+        # place 2 via display_name, place 3 via primary_type="cafe"
         self.assertEqual(
-            [item["id"] for item in keyword_response.json()["items"]],
-            [2],
+            {item["id"] for item in keyword_response.json()["items"]},
+            {2, 3},
         )
 
     def test_search_primary_type_matches_types_json(self):

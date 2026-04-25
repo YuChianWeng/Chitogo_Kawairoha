@@ -91,3 +91,13 @@ GOOGLE_TYPE_TO_CATEGORY: dict[str, str] = {
     "book_store": "shopping",
     "spa": "activity",
 }
+
+# Google place types that are never tourist attractions — filtered out before ingestion.
+BLOCKED_PLACE_TYPES: frozenset[str] = frozenset({
+    "real_estate_agency", "insurance_agency", "lawyer", "accounting",
+    "doctor", "dentist", "hospital", "pharmacy", "veterinary_care",
+    "bank", "atm",
+    "gas_station", "car_wash", "car_repair", "car_dealer",
+    "storage", "moving_company",
+    "funeral_home", "cemetery",
+})
