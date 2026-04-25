@@ -794,13 +794,16 @@ async def post_select(payload: SelectRequest) -> JSONResponse:
     # Check venue is in last candidate set or is special GO_HOME
     venue_id_str = str(payload.venue_id)
     candidate_ids = [str(cid) for cid in session.last_candidate_ids]
-    
+
     is_go_home = venue_id_str == "GO_HOME"
-    
+
+    # Allow chat-originated candidates (not in last_candidate_ids) — the data-service
+    # lookup below validates the venue exists, so no hard rejection here.
     if not is_go_home and venue_id_str not in candidate_ids:
-        raise HTTPException(status_code=400, detail="select_error:venue_not_in_candidates")
-    if session.last_transport_config is None:
-        raise HTTPException(status_code=400, detail="select_error:missing_transport_context")
+        logger.info("venue %s not in last_candidate_ids; proceeding via data-service lookup", venue_id_str)
+
+    # Use default transport when none is set (e.g. first selection from a chat card).
+    transport_config = session.last_transport_config or TransportConfig()
 
     # Find the candidate from the reachable cache (rebuild minimal card from last known data)
     # We need to fetch the venue details from the Data Service
@@ -858,7 +861,7 @@ async def post_select(payload: SelectRequest) -> JSONResponse:
     session.pending_venue = card
 
     # Build navigation URLs
-    primary_mode = session.last_transport_config.mode
+    primary_mode = transport_config.mode
     google_mode = {"walk": "walking", "transit": "transit", "drive": "driving"}.get(primary_mode, "transit")
     google_url = f"https://maps.google.com/?daddr={card.lat},{card.lng}&travelmode={google_mode}"
     apple_url = f"maps://maps.apple.com/?daddr={card.lat},{card.lng}"
