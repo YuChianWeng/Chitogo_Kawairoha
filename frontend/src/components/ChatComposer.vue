@@ -83,6 +83,7 @@ function onMicError(msg: string) {
 .composer-bar {
   position: sticky;
   bottom: 0;
+  z-index: 10;
   display: flex;
   align-items: flex-end;
   gap: 10px;

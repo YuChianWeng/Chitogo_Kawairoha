@@ -31,7 +31,7 @@
         </div>
 
         <div v-if="locationDenied" class="message-row assistant">
-          <div class="assistant-avatar">旅</div>
+          <div class="assistant-avatar">Go</div>
           <div class="message-stack">
             <div class="message-bubble assistant warning-bubble">
               <p>我現在拿不到你的位置，先告訴我你在台北哪一區，我一樣可以照附近幫你推薦。</p>
@@ -46,8 +46,8 @@
           </div>
         </div>
 
-        <div v-if="lastRoundFeedback" class="message-row assistant">
-          <div class="assistant-avatar">旅</div>
+        <div v-if="lastRoundFeedback && !chatFlowActive" class="message-row assistant">
+          <div class="assistant-avatar">Go</div>
           <div class="message-stack">
             <div class="message-bubble assistant success-bubble">
               <p>{{ lastRoundFeedbackMessage }}</p>
@@ -55,15 +55,15 @@
           </div>
         </div>
 
-        <div v-if="showTransportReply" class="message-row user">
+        <div v-if="showTransportReply && !chatFlowActive" class="message-row user">
           <div class="message-bubble user">
             這一輪我想用 {{ transportSummary }} 找景點。
           </div>
         </div>
 
-        <template v-if="tripPhase === 'TRANSPORT_PROMPT'">
+        <template v-if="tripPhase === 'TRANSPORT_PROMPT' && !chatFlowActive">
           <div class="message-row assistant">
-            <div class="assistant-avatar">旅</div>
+            <div class="assistant-avatar">Go</div>
             <div class="message-stack">
               <div class="message-bubble assistant">
                 <p class="message-kicker">本輪設定</p>
@@ -133,9 +133,9 @@
           </div>
         </template>
 
-        <template v-else-if="tripPhase === 'SELECTING'">
+        <template v-else-if="tripPhase === 'SELECTING' && !chatFlowActive">
           <div class="message-row assistant">
-            <div class="assistant-avatar">旅</div>
+            <div class="assistant-avatar">Go</div>
             <div class="message-stack">
               <div class="message-bubble assistant">
                 <p class="message-kicker">推薦候選</p>
@@ -170,7 +170,7 @@
           </div>
         </template>
 
-        <template v-else-if="tripPhase === 'NAVIGATING' && selectResult">
+        <template v-else-if="tripPhase === 'NAVIGATING' && selectResult && !chatFlowActive">
           <div class="message-row user">
             <div class="message-bubble user">
               那就去 {{ currentVenueName }}。
@@ -178,7 +178,7 @@
           </div>
 
           <div class="message-row assistant">
-            <div class="assistant-avatar">旅</div>
+            <div class="assistant-avatar">Go</div>
             <div class="message-stack">
               <div class="message-bubble assistant">
                 <p>好，我把路線整理好了。到了之後按一下「我到了，繼續」，我再接著問你感受。</p>
@@ -195,7 +195,7 @@
           </div>
         </template>
 
-        <template v-else-if="tripPhase === 'RATING' && selectResult">
+        <template v-else-if="tripPhase === 'RATING' && selectResult && !chatFlowActive">
           <div class="message-row user">
             <div class="message-bubble user">
               我到 {{ currentVenueName }} 了。
@@ -203,7 +203,7 @@
           </div>
 
           <div class="message-row assistant">
-            <div class="assistant-avatar">旅</div>
+            <div class="assistant-avatar">Go</div>
             <div class="message-stack">
               <div class="message-bubble assistant">
                 <p>這一站走完了，你覺得 {{ currentVenueName }} 怎麼樣？給我一個評價，我下一輪會更懂你的口味。</p>
@@ -220,9 +220,9 @@
             <div class="message-bubble user">{{ msg.text }}</div>
           </div>
           <div v-else class="message-row assistant">
-            <div class="assistant-avatar">旅</div>
+            <div class="assistant-avatar">Go</div>
             <div class="message-stack">
-              <div class="message-bubble assistant">
+              <div v-if="msg.pending || msg.text" class="message-bubble assistant">
                 <template v-if="msg.pending">
                   <div class="loading-dots">
                     <span class="dot"></span>
@@ -251,6 +251,17 @@
                     <span v-if="c.category">· {{ c.category }}</span>
                     <span v-if="c.budget_level">· {{ c.budget_level }}</span>
                   </div>
+                  <div v-if="c.vibe_tags && c.vibe_tags.length" class="chat-card-vibes">
+                    <span v-for="tag in c.vibe_tags.slice(0, 3)" :key="tag" class="chat-vibe-tag"># {{ tag }}</span>
+                  </div>
+                  <div v-if="c.mention_count && c.mention_count > 0" class="chat-card-social">
+                    <span class="social-mention">💬 {{ c.mention_count }} 則討論</span>
+                    <span
+                      v-if="c.sentiment_score != null"
+                      class="social-sentiment"
+                      :class="sentimentClass(c.sentiment_score)"
+                    >{{ sentimentLabel(c.sentiment_score) }}</span>
+                  </div>
                   <p v-if="c.why_recommended" class="chat-card-why">{{ c.why_recommended }}</p>
                   <span class="chat-card-action">
                     <span v-if="chatSelectingId === c.place_id" class="chat-card-spinner" />
@@ -258,6 +269,74 @@
                   </span>
                 </button>
                 <div v-if="chatSelectError" class="chat-select-error">{{ chatSelectError }}</div>
+              </div>
+              <div v-if="msg.widget?.kind === 'navigation'" class="message-surface nav-surface">
+                <NavigationPanel
+                  :venue="msg.widget.data.venue"
+                  :navigation="msg.widget.data.navigation"
+                  :encouragement="msg.widget.data.encouragement_message"
+                  @arrived="onArrivedFromMessage"
+                />
+              </div>
+              <div v-if="msg.widget?.kind === 'rating'" class="message-surface rating-surface">
+                <RatingCard
+                  :venue="msg.widget.data.venue"
+                  @rated="(p: RatingPayload) => onRatedFromMessage(p, msg.id)"
+                />
+              </div>
+              <div
+                v-if="msg.widget?.kind === 'transport_prompt' && !msg.widget.submitted"
+                class="message-surface composer-surface"
+                :class="{ 'composer-surface--loading': loadingCandidates }"
+              >
+                <div class="transport-grid">
+                  <label
+                    v-for="mode in transportOptions"
+                    :key="mode.value"
+                    class="transport-option"
+                    :class="{ active: transportMode === mode.value }"
+                  >
+                    <input v-model="transportMode" type="radio" name="transport-mode" :value="mode.value" />
+                    <span>{{ mode.label }}</span>
+                  </label>
+                </div>
+                <div class="slider-group">
+                  <div class="slider-header">
+                    <span>每段最長時間</span>
+                    <strong>{{ maxMinutesPerLeg }} 分鐘</strong>
+                  </div>
+                  <input v-model.number="maxMinutesPerLeg" type="range" min="5" max="120" step="5" class="slider" />
+                </div>
+                <Transition name="loading-swap" mode="out-in">
+                  <div v-if="loadingCandidates" class="loading-panel" key="loading">
+                    <div class="loading-orb-wrap">
+                      <div class="loading-orb-ring"></div>
+                      <div class="loading-orb">GO</div>
+                    </div>
+                    <Transition name="step-fade" mode="out-in">
+                      <p class="loading-step" :key="loadingStepIndex">{{ LOADING_STEPS[loadingStepIndex] }}</p>
+                    </Transition>
+                    <div class="loading-dots">
+                      <span class="dot"></span>
+                      <span class="dot"></span>
+                      <span class="dot"></span>
+                    </div>
+                  </div>
+                  <button v-else class="primary-btn" type="button" key="btn" @click="submitTransportFromMessage(msg.id)">
+                    開始聽推薦
+                  </button>
+                </Transition>
+              </div>
+              <div v-if="msg.widget?.kind === 'selecting'" class="message-surface candidate-surface">
+                <div class="surface-header">
+                  <p>我先幫你挑了 {{ msg.widget.data.candidates.length }} 個選項，你可以直接點卡片決定這一站。</p>
+                  <button class="secondary-btn" type="button" @click="reopenTransportPrompt">改交通</button>
+                </div>
+                <CandidateGrid
+                  :candidates="msg.widget.data.candidates"
+                  :rain-filtered="msg.widget.data.rain_filtered ?? []"
+                  @select="onVenueSelected"
+                />
               </div>
             </div>
           </div>
@@ -304,7 +383,7 @@ import RatingCard from '../components/RatingCard.vue'
 import { useSimLocation } from '../composables/useSimLocation'
 import { useSimTime } from '../composables/useSimTime'
 import { checkGoHome, getCandidates, getSummary, selectVenue, sendMessage, snoozeGoHome } from '../services/api'
-import type { ChatMessage } from '../types/chat'
+import type { ChatMessage, ChatWidget } from '../types/chat'
 import type { ChatCandidate } from '../types/itinerary'
 
 const LOADING_STEPS = [
@@ -388,6 +467,7 @@ const sendingMessage = ref(false)
 const goHomeDialog = ref<HTMLDialogElement | null>(null)
 const chatSelectingId = ref<string | number | null>(null)
 const chatSelectError = ref<string | null>(null)
+const chatFlowActive = ref(false)
 
 const transportMode = ref<TransportMode>('transit')
 const maxMinutesPerLeg = ref(30)
@@ -662,6 +742,22 @@ async function onVenueSelected(venueId: string | number) {
       appleMapsUrl: selectResult.value.navigation.apple_maps_url,
       estimatedTravelMin: selectResult.value.navigation.estimated_travel_min,
     })
+
+    if (chatFlowActive.value) {
+      const snapshot = selectResult.value
+      messages.value = [...messages.value, {
+        id: crypto.randomUUID(),
+        role: 'user',
+        text: `那就去 ${snapshot.venue.name}。`,
+      }]
+      messages.value = [...messages.value, {
+        id: crypto.randomUUID(),
+        role: 'assistant',
+        text: '好，我把路線整理好了。到了之後按一下「我到了，繼續」，我再接著問你感受。',
+        widget: { kind: 'navigation', data: snapshot } satisfies ChatWidget,
+      }]
+    }
+
     tripPhase.value = 'NAVIGATING'
   } catch (err: unknown) {
     const error = err as { response?: { data?: { detail?: string } } }
@@ -690,6 +786,21 @@ async function onChatVenueSelected(candidate: ChatCandidate) {
       appleMapsUrl: selectResult.value.navigation.apple_maps_url,
       estimatedTravelMin: selectResult.value.navigation.estimated_travel_min,
     })
+
+    const snapshot = selectResult.value
+    messages.value = [...messages.value, {
+      id: crypto.randomUUID(),
+      role: 'user',
+      text: `那就去 ${snapshot.venue.name}。`,
+    }]
+    messages.value = [...messages.value, {
+      id: crypto.randomUUID(),
+      role: 'assistant',
+      text: '好，我把路線整理好了。到了之後按一下「我到了，繼續」，我再接著問你感受。',
+      widget: { kind: 'navigation', data: snapshot } satisfies ChatWidget,
+    }]
+
+    chatFlowActive.value = true
     tripPhase.value = 'NAVIGATING'
   } catch (err: unknown) {
     const error = err as { response?: { data?: { detail?: string } } }
@@ -727,6 +838,101 @@ function onRated(payload: RatingPayload) {
   candidatesError.value = null
   clearNavigation()
   tripPhase.value = 'TRANSPORT_PROMPT'
+}
+
+function onArrivedFromMessage() {
+  if (selectResult.value?.venue.venue_id === 'GO_HOME') {
+    void triggerSummary()
+    return
+  }
+
+  const venueName = selectResult.value?.venue.name || selectedVenueName.value || '這一站'
+  const snapshot = selectResult.value!
+
+  clearNavigation()
+
+  messages.value = [...messages.value, {
+    id: crypto.randomUUID(),
+    role: 'user',
+    text: `我到 ${venueName} 了。`,
+  }]
+  messages.value = [...messages.value, {
+    id: crypto.randomUUID(),
+    role: 'assistant',
+    text: `這一站走完了，你覺得 ${venueName} 怎麼樣？給我一個評價，我下一輪會更懂你的口味。`,
+    widget: { kind: 'rating', data: snapshot } satisfies ChatWidget,
+  }]
+
+  tripPhase.value = 'RATING'
+}
+
+function onRatedFromMessage(payload: RatingPayload, msgId: string) {
+  const venueName = selectResult.value?.venue.name || selectedVenueName.value || '這一站'
+  const tagSummary = payload.tags.length ? `，也提到 ${payload.tags.join('、')}` : ''
+  const feedbackText = `收到，你剛剛給 ${venueName} ${payload.stars} 星${tagSummary}。下一輪我會照這個感受繼續推薦。`
+
+  messages.value = messages.value.map(m =>
+    m.id === msgId ? { ...m, widget: undefined } : m
+  )
+
+  messages.value = [...messages.value, {
+    id: crypto.randomUUID(),
+    role: 'assistant',
+    text: feedbackText,
+  }]
+
+  messages.value = [...messages.value, {
+    id: crypto.randomUUID(),
+    role: 'assistant',
+    text: '這一輪想繼續怎麼移動？選好就按「開始聽推薦」。',
+    widget: { kind: 'transport_prompt' } satisfies ChatWidget,
+  }]
+
+  selectResult.value = null
+  selectedVenueName.value = ''
+  candidatesResult.value = null
+  candidatesError.value = null
+  clearNavigation()
+  tripPhase.value = 'TRANSPORT_PROMPT'
+}
+
+async function submitTransportFromMessage(msgId: string) {
+  messages.value = [...messages.value, {
+    id: crypto.randomUUID(),
+    role: 'user',
+    text: `這一輪我想用 ${transportSummary.value} 找景點。`,
+  }]
+
+  const pendingId = crypto.randomUUID()
+  messages.value = [...messages.value, {
+    id: pendingId,
+    role: 'assistant',
+    text: '',
+    pending: true,
+  }]
+
+  await loadCandidates(buildTransportInput())
+
+  // Hide the transport form only after loading finishes so the orb animation plays
+  messages.value = messages.value.map(m =>
+    m.id === msgId
+      ? { ...m, widget: { kind: 'transport_prompt' as const, submitted: true } }
+      : m
+  )
+
+  if (candidatesResult.value) {
+    messages.value = messages.value.map(m =>
+      m.id === pendingId
+        ? { ...m, text: recommendationLead.value, pending: false, widget: { kind: 'selecting' as const, data: candidatesResult.value! } }
+        : m
+    )
+  } else {
+    messages.value = messages.value.map(m =>
+      m.id === pendingId
+        ? { ...m, text: candidatesError.value || '無法載入推薦，請重試。', pending: false }
+        : m
+    )
+  }
 }
 
 async function handleComposerSubmit(text: string) {
@@ -809,6 +1015,18 @@ watch(simTimeHHMM, async () => {
   }
   await runGoHomeCheck()
 })
+
+function sentimentClass(score: number): string {
+  if (score >= 0.6) return 'sentiment--positive'
+  if (score <= 0.35) return 'sentiment--negative'
+  return 'sentiment--neutral'
+}
+
+function sentimentLabel(score: number): string {
+  if (score >= 0.6) return '好評'
+  if (score <= 0.35) return '評價偏低'
+  return '評價中性'
+}
 
 async function dismissBanner() {
   const sessionId = localStorage.getItem('chitogo_session_id')
@@ -1550,6 +1768,58 @@ async function dismissBanner() {
   color: var(--text-secondary, #555);
   margin: 0;
   line-height: 1.4;
+}
+
+.chat-card-vibes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.chat-vibe-tag {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #4f46e5;
+  background: #ede9fe;
+  border-radius: 999px;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+
+.chat-card-social {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.social-mention {
+  font-size: 0.72rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.social-sentiment {
+  font-size: 0.72rem;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+
+.sentiment--positive {
+  color: #15803d;
+  background: #dcfce7;
+}
+
+.sentiment--neutral {
+  color: #92400e;
+  background: #fef3c7;
+}
+
+.sentiment--negative {
+  color: #b91c1c;
+  background: #fee2e2;
 }
 
 .chat-card-action {
