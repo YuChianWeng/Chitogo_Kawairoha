@@ -7,14 +7,20 @@ export interface ChatRequest {
 export interface ChatCandidate {
   place_id: string | number
   name: string
+  name_en?: string | null
   district?: string
   category?: string
+  primary_type?: string | null
+  address?: string | null
+  lat?: number | null
+  lng?: number | null
   rating?: number
   budget_level?: string
   why_recommended?: string
   vibe_tags?: string[] | null
   mention_count?: number | null
   sentiment_score?: number | null
+  trend_score?: number | null
 }
 
 export interface ItineraryLeg {

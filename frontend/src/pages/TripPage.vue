@@ -262,8 +262,8 @@
                 </div>
                 <div class="slider-group">
                   <div class="slider-header">
-                    <span>每段最長時間</span>
-                    <strong>{{ maxMinutesPerLeg }} 分鐘</strong>
+                    <span>{{ locale.trip.transportPrompt.sliderLabel }}</span>
+                    <strong>{{ maxMinutesPerLeg }} {{ locale.trip.transportPrompt.sliderUnit }}</strong>
                   </div>
                   <input v-model.number="maxMinutesPerLeg" type="range" min="5" max="120" step="5" class="slider" />
                 </div>
@@ -283,14 +283,20 @@
                     </div>
                   </div>
                   <button v-else class="primary-btn" type="button" key="btn" @click="submitTransportFromMessage(msg.id)">
-                    開始聽推薦
+                    {{ locale.trip.transportPrompt.submit }}
                   </button>
                 </Transition>
               </div>
+              <div
+                v-if="msg.widget?.kind === 'selecting' && msg.widget.note && !msg.widget.submitted"
+                class="message-bubble assistant subtle-bubble"
+              >
+                <p>{{ msg.widget.note }}</p>
+              </div>
               <div v-if="msg.widget?.kind === 'selecting' && !msg.widget.submitted" class="message-surface candidate-surface">
                 <div class="surface-header">
-                  <p>我先幫你挑了 {{ msg.widget.data.candidates.length }} 個選項，你可以直接點卡片決定這一站。</p>
-                  <button class="secondary-btn" type="button" @click="reopenTransportPrompt">改交通</button>
+                  <p>{{ locale.trip.selecting.countLabel(msg.widget.data.candidates.length) }}</p>
+                  <button class="secondary-btn" type="button" @click="reopenTransportPrompt">{{ locale.trip.selecting.changeTransport }}</button>
                 </div>
                 <CandidateGrid
                   :candidates="msg.widget.data.candidates"
@@ -347,8 +353,10 @@ import type { ChatMessage, ChatWidget } from '../types/chat'
 import type { ChatCandidate } from '../types/itinerary'
 import { useLocale } from '../composables/useLocale'
 import type {
+  CandidateCard,
   CandidateTransportInput,
   CandidatesResult,
+  DemandResult,
   RateResult,
   SelectResult,
   TransportMode,
@@ -555,6 +563,73 @@ function transportLabel(mode: TransportMode) {
   return transportOptions.value.find(option => option.value === mode)?.label || mode
 }
 
+function normalizeChatCandidateCategory(category: string | undefined): CandidateCard['category'] {
+  const normalized = (category || '').toLowerCase()
+  if (normalized === 'go_home') return 'go_home'
+  if (['food', 'restaurant', 'cafe', 'bar', 'nightmarket', 'nightlife'].includes(normalized)) {
+    return 'restaurant'
+  }
+  return 'attraction'
+}
+
+function hasMappableCoordinates(card: CandidateCard): boolean {
+  return Number.isFinite(card.lat) && Number.isFinite(card.lng) && !(card.lat === 0 && card.lng === 0)
+}
+
+function buildChatFallbackCandidatesResult(
+  sessionId: string,
+  chatCandidates: ChatCandidate[],
+): CandidatesResult {
+  const candidates = chatCandidates.map<CandidateCard>((candidate) => ({
+    venue_id: candidate.place_id,
+    name: candidate.name,
+    name_en: candidate.name_en ?? null,
+    category: normalizeChatCandidateCategory(candidate.category),
+    primary_type: candidate.primary_type ?? null,
+    address: candidate.address ?? null,
+    lat: candidate.lat ?? 0,
+    lng: candidate.lng ?? 0,
+    rating: candidate.rating ?? null,
+    distance_min: 0,
+    why_recommended: candidate.why_recommended || '',
+    vibe_tags: candidate.vibe_tags ?? [],
+    mention_count: candidate.mention_count ?? null,
+    sentiment_score: candidate.sentiment_score ?? null,
+    trend_score: candidate.trend_score ?? null,
+  }))
+
+  return {
+    session_id: sessionId,
+    candidates,
+    rain_filtered: [],
+    partial: true,
+    fallback_reason: null,
+    restaurant_count: candidates.filter(candidate => candidate.category === 'restaurant').length,
+    attraction_count: candidates.filter(candidate => candidate.category === 'attraction').length,
+  }
+}
+
+function buildDemandCandidatesResult(result: DemandResult): CandidatesResult {
+  return {
+    session_id: result.session_id,
+    candidates: result.alternatives,
+    rain_filtered: result.rain_filtered ?? [],
+    partial: false,
+    fallback_reason: result.fallback_reason,
+    restaurant_count: result.alternatives.filter(candidate => candidate.category === 'restaurant').length,
+    attraction_count: result.alternatives.filter(candidate => candidate.category === 'attraction').length,
+  }
+}
+
+function syncCandidateMap(cards: CandidateCard[]) {
+  const mappableCandidates = cards.filter(hasMappableCoordinates)
+  if (mappableCandidates.length > 0) {
+    setSpotCandidates(mappableCandidates)
+    return
+  }
+  clearSpotCandidates()
+}
+
 function applyDistrictFallback() {
   const centroid = DISTRICT_CENTROIDS.find(d => d.name === selectedDistrict.value)
   if (!centroid) return
@@ -677,6 +752,8 @@ async function retryCurrentRound() {
 }
 
 function reopenTransportPrompt() {
+  chatFlowActive.value = false
+  chatSelectError.value = null
   candidatesError.value = null
   tripPhase.value = 'TRANSPORT_PROMPT'
 }
@@ -914,33 +991,35 @@ async function handleComposerSubmit(text: string) {
     })
 
     if (res.candidates?.length) {
-      // Backend signalled recommendation intent — collapse old grids and fetch text-aware results
+      chatFlowActive.value = true
+      let selectingData = buildChatFallbackCandidatesResult(res.session_id, res.candidates)
+      let selectingNote: string | null = locale.value.trip.selecting.chatFallback
+
+      try {
+        const demand = await submitDemand(sessionId, text, effectiveLat.value, effectiveLng.value)
+        const demandData = buildDemandCandidatesResult(demand)
+        if (demandData.candidates.length > 0) {
+          selectingData = demandData
+          selectingNote = null
+        }
+      } catch {
+        // Keep the chat-provided candidates as a fallback widget when demand-mode is unavailable.
+      }
+
+      candidatesResult.value = selectingData
+      tripPhase.value = 'SELECTING'
+      syncCandidateMap(selectingData.candidates)
       messages.value = messages.value.map(m =>
         m.widget?.kind === 'selecting' ? { ...m, widget: { ...m.widget, submitted: true } } : m
       )
-      candidatesResult.value = null
-      chatFlowActive.value = true
-
-      let widget: ChatWidget | undefined
-      try {
-        const demand = await submitDemand(sessionId, text, effectiveLat.value, effectiveLng.value)
-        const result = {
-          session_id: demand.session_id,
-          candidates: demand.alternatives,
-          rain_filtered: demand.rain_filtered ?? [],
-          partial: false,
-          fallback_reason: demand.fallback_reason,
-          restaurant_count: demand.alternatives.filter(c => c.category === 'restaurant').length,
-          attraction_count: demand.alternatives.filter(c => c.category === 'attraction').length,
-        }
-        setSpotCandidates(result.candidates)
-        widget = { kind: 'selecting', data: result }
-      } catch {
-        // Fall through: show text reply without candidate grid
-      }
       messages.value = messages.value.map(m =>
         m.id === pendingId
-          ? { ...m, text: res.message, pending: false, ...(widget ? { widget } : {}) }
+          ? {
+            ...m,
+            text: res.message,
+            pending: false,
+            widget: { kind: 'selecting', data: selectingData, note: selectingNote } satisfies ChatWidget,
+          }
           : m
       )
     } else {
