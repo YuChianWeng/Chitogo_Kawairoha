@@ -33,7 +33,7 @@
           <div class="info-bar">
             <div class="info-item">
               <img src="/images/111_361.svg" alt="Weather">
-              <span>{{ locale.nav.weather }}</span>
+              <span>{{ weatherDisplay }}</span>
             </div>
             <div class="info-item">
               <img src="/images/111_363.svg" alt="Time">
@@ -41,7 +41,7 @@
             </div>
             <div class="info-item">
               <img src="/images/111_362.svg" alt="Location">
-              <span>{{ locale.nav.location }}</span>
+              <span>{{ locationDisplay }}</span>
             </div>
           </div>
         </header>
@@ -124,8 +124,12 @@ import { RouterView } from 'vue-router'
 import MapPanel from '../components/MapPanel.vue'
 import LangToggle from '../components/LangToggle.vue'
 import { useLocale } from '../composables/useLocale'
+import { useWeather } from '../composables/useWeather'
+import { useMapState } from '../composables/useMapState'
 
 const { locale } = useLocale()
+const { weather } = useWeather()
+const { currentLocation } = useMapState()
 
 type TabKey = 'home' | 'attractions' | 'agent' | 'profile' | 'settings'
 
@@ -148,6 +152,18 @@ const activeTab = ref<TabKey>('agent')
 // ── Mobile state ──
 const isMobile = ref(window.innerWidth <= MOBILE_BREAKPOINT)
 const isMobileMapOpen = ref(false)
+
+const weatherDisplay = computed(() => {
+  if (weather.value.loading) return '讀取中...'
+  const prob = weather.value.rainProbability
+  const condition = weather.value.isRainingLikely ? '多雲有雨' : (prob !== null && prob > 20) ? '多雲' : '晴朗'
+  if (prob === null) return condition
+  return `${condition} • 降雨機率 ${prob}%`
+})
+
+const locationDisplay = computed(() => {
+  return currentLocation.value?.label || locale.value.nav.location
+})
 
 function onResize() {
   isMobile.value = window.innerWidth <= MOBILE_BREAKPOINT

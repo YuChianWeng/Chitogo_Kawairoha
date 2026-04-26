@@ -149,6 +149,11 @@ export async function getSummary(sessionId: string): Promise<JourneySummary> {
   return data
 }
 
+export async function getWeather(): Promise<{ is_raining_likely: boolean; rain_probability: number | null }> {
+  const { data } = await client.get('/weather')
+  return data
+}
+
 export async function transcribeAudio(blob: Blob): Promise<{ text: string }> {
   const form = new FormData()
   const filename = blob.type.includes('webm') ? 'audio.webm' : 'audio.wav'

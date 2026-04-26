@@ -4,11 +4,13 @@ from app.api.v1.chat import router as chat_router
 from app.api.v1.health import router as health_router
 from app.api.v1.speech import router as speech_router
 from app.api.v1.trip import router as trip_router
+from app.api.v1.weather import router as weather_router
 
 router = APIRouter()
 router.include_router(health_router)
 router.include_router(chat_router)
 router.include_router(trip_router)
 router.include_router(speech_router)
+router.include_router(weather_router)
 
 __all__ = ["router"]
