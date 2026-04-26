@@ -339,6 +339,8 @@ OPENROUTER_API_KEY=optional_openrouter_key
 GOOGLE_MAPS_API_KEY=your_google_maps_key
 DATA_SERVICE_BASE_URL=http://localhost:8000
 CWA_API_KEY=your_cwa_key
+HF_API_KEY=your_HF_key
+HF_ENDPOINT_URL=https://huggingface.co/MediaTek-Research/Breeze-ASR-26
 ```
 
 **`backend/Chitogo_DataBase/.env`** (Place Data Service):
