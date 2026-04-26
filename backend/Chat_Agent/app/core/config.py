@@ -51,6 +51,8 @@ class Settings(BaseSettings):
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
     cwa_api_key: str | None = None
     cwa_weather_timeout_sec: int = Field(default=3, ge=1)
+    hf_api_key: str | None = None
+    hf_endpoint_url: str | None = None
 
     model_config = SettingsConfigDict(
         env_file=".env",
