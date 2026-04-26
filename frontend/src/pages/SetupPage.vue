@@ -1,28 +1,35 @@
 <template>
   <div class="setup-container">
     <div class="setup-card">
-      <h1 class="title">返回設定</h1>
-      <p class="subtitle">最後補上今天的返回安排，就能開始探索</p>
+      <h1 class="title">{{ locale.setup.title }}</h1>
+      <p class="subtitle">{{ locale.setup.subtitle }}</p>
 
       <div v-if="accommodationSummary" class="summary-box">
-        <div class="summary-label">住宿狀態</div>
+        <div class="summary-label">{{ locale.setup.accommodationLabel }}</div>
         <div class="summary-value">{{ accommodationSummary }}</div>
       </div>
 
       <section class="section">
-        <h3 class="section-title">預計返回時間（選填）</h3>
+        <h3 class="section-title">{{ locale.setup.returnTimeSection }}</h3>
         <input v-model="returnTime" type="time" class="text-input" />
+<<<<<<< HEAD
         <ReturnDestinationPicker
           v-model="returnPlace"
           class="mt-8"
           placeholder="返回地點（從建議選一個，或直接輸入）"
+=======
+        <input
+          v-model="returnDestination"
+          class="text-input mt-8"
+          :placeholder="locale.setup.returnDestPlaceholder"
+>>>>>>> origin/diff-language
         />
       </section>
 
       <div v-if="errorText" class="error">{{ errorText }}</div>
 
       <button class="submit-btn" :disabled="loading" @click="handleSubmit">
-        {{ loading ? '設定中…' : '開始探索' }}
+        {{ loading ? locale.setup.loading : locale.setup.submit }}
       </button>
     </div>
   </div>
@@ -34,10 +41,15 @@ import { useRouter } from 'vue-router'
 import { submitSetup } from '../services/api'
 import type { SetupResult } from '../types/trip'
 import { readAccommodationState } from '../utils/accommodation'
+<<<<<<< HEAD
 import ReturnDestinationPicker from '../components/setup/ReturnDestinationPicker.vue'
 import type { PlaceValue } from '../components/setup/ReturnDestinationPicker.vue'
+=======
+import { useLocale } from '../composables/useLocale'
+>>>>>>> origin/diff-language
 
 const router = useRouter()
+const { locale } = useLocale()
 
 const returnTime = ref('')
 const returnPlace = ref<PlaceValue | null>(null)
@@ -47,8 +59,8 @@ const errorText = ref('')
 const storedAccommodation = readAccommodationState()
 const accommodationSummary = computed(() => {
   if (!storedAccommodation) return ''
-  if (storedAccommodation.mode === 'no_stay') return '本次不住宿'
-  return storedAccommodation.displayName || storedAccommodation.hotelName || '已選擇住宿'
+  if (storedAccommodation.mode === 'no_stay') return locale.value.setup.noStayLabel
+  return storedAccommodation.displayName || storedAccommodation.hotelName || locale.value.setup.selectedLabel
 })
 
 async function handleSubmit() {
@@ -78,7 +90,7 @@ async function handleSubmit() {
     }
   } catch (err: unknown) {
     const e = err as { response?: { data?: { detail?: string } } }
-    errorText.value = e?.response?.data?.detail ?? '設定失敗，請重試。'
+    errorText.value = e?.response?.data?.detail ?? locale.value.setup.error
   } finally {
     loading.value = false
   }

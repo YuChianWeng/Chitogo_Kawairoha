@@ -22,6 +22,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useVoiceRecorder } from '../composables/useVoiceRecorder'
+import { useLocale } from '../composables/useLocale'
 
 const props = defineProps<{ disabled?: boolean }>()
 const emit = defineEmits<{
@@ -30,11 +31,12 @@ const emit = defineEmits<{
 }>()
 
 const { isSupported, isRecording, isTranscribing, error, start, stop } = useVoiceRecorder()
+const { locale } = useLocale()
 
 const label = computed(() => {
-  if (isTranscribing.value) return '辨識中…'
-  if (isRecording.value) return '停止錄音'
-  return '語音輸入'
+  if (isTranscribing.value) return locale.value.common.mic.transcribing
+  if (isRecording.value) return locale.value.common.mic.recording
+  return locale.value.common.mic.idle
 })
 
 async function toggle() {

@@ -19,6 +19,9 @@
           <span>{{ tab.label }}</span>
         </button>
       </nav>
+      <div class="sidebar-footer">
+        <LangToggle />
+      </div>
     </aside>
 
     <!-- Agent tab: chat + map -->
@@ -30,7 +33,7 @@
           <div class="info-bar">
             <div class="info-item">
               <img src="/images/111_361.svg" alt="Weather">
-              <span>多雲•降雨機率 30%</span>
+              <span>{{ locale.nav.weather }}</span>
             </div>
             <div class="info-item">
               <img src="/images/111_363.svg" alt="Time">
@@ -38,7 +41,7 @@
             </div>
             <div class="info-item">
               <img src="/images/111_362.svg" alt="Location">
-              <span>台北市•信義區</span>
+              <span>{{ locale.nav.location }}</span>
             </div>
           </div>
         </header>
@@ -82,11 +85,11 @@
         v-if="isMobile"
         class="map-toggle-btn"
         type="button"
-        :aria-label="isMobileMapOpen ? '返回對話' : '開啟地圖'"
+        :aria-label="isMobileMapOpen ? locale.nav.mapToggle.closeMapAria : locale.nav.mapToggle.openMapAria"
         @click="isMobileMapOpen = !isMobileMapOpen"
       >
         <span class="map-toggle-icon">{{ isMobileMapOpen ? '💬' : '🗺️' }}</span>
-        <span class="map-toggle-label">{{ isMobileMapOpen ? '對話' : '地圖' }}</span>
+        <span class="map-toggle-label">{{ isMobileMapOpen ? locale.nav.mapToggle.openChat : locale.nav.mapToggle.openMap }}</span>
       </button>
     </div>
 
@@ -94,7 +97,7 @@
     <div v-else class="main-content placeholder-content">
       <div class="placeholder-view">
         <h2>{{ NAV_TABS.find(t => t.key === activeTab)?.label }}</h2>
-        <p>即將推出</p>
+        <p>{{ locale.nav.comingSoon }}</p>
       </div>
     </div>
 
@@ -119,16 +122,20 @@
 import { ref, computed, onBeforeUnmount, onMounted } from 'vue'
 import { RouterView } from 'vue-router'
 import MapPanel from '../components/MapPanel.vue'
+import LangToggle from '../components/LangToggle.vue'
+import { useLocale } from '../composables/useLocale'
+
+const { locale } = useLocale()
 
 type TabKey = 'home' | 'attractions' | 'agent' | 'profile' | 'settings'
 
-const NAV_TABS: { key: TabKey; label: string; icon?: string }[] = [
-  { key: 'home',        label: '首頁',     icon: '/images/I111_161_1_103_47_149.svg' },
-  { key: 'attractions', label: '景點',     icon: '/images/I111_160_1_103_47_158.svg' },
-  { key: 'agent',       label: 'Agent',    icon: '/images/I111_160_1_103_47_159.svg' },
-  { key: 'profile',     label: '個人資料', icon: '/images/I111_163_1_103_47_152.svg' },
-  { key: 'settings',    label: '設定',     icon: '/images/I111_163_1_103_47_153.svg' },
-]
+const NAV_TABS = computed<{ key: TabKey; label: string; icon?: string }[]>(() => [
+  { key: 'home',        label: locale.value.nav.tabs.home,        icon: '/images/I111_161_1_103_47_149.svg' },
+  { key: 'attractions', label: locale.value.nav.tabs.attractions, icon: '/images/I111_160_1_103_47_158.svg' },
+  { key: 'agent',       label: locale.value.nav.tabs.agent,       icon: '/images/I111_160_1_103_47_159.svg' },
+  { key: 'profile',     label: locale.value.nav.tabs.profile,     icon: '/images/I111_163_1_103_47_152.svg' },
+  { key: 'settings',    label: locale.value.nav.tabs.settings,    icon: '/images/I111_163_1_103_47_153.svg' },
+])
 
 const CHAT_MIN = 360
 const CHAT_MAX = 760
@@ -235,6 +242,11 @@ onBeforeUnmount(() => {
   flex-direction: column;
   align-items: center;
   box-shadow: 0 8px 32px rgba(37, 99, 235, 0.08), 0 1px 4px rgba(37, 99, 235, 0.06);
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  padding-top: 16px;
 }
 
 /* ── Logo ── */

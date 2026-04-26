@@ -188,6 +188,7 @@ def _card_to_dict(card: TripCandidateCard) -> dict[str, Any]:
     return {
         "venue_id": card.venue_id,
         "name": card.name,
+        "name_en": card.name_en,
         "category": card.category,
         "primary_type": card.primary_type,
         "address": card.address,
@@ -949,6 +950,7 @@ async def post_select(payload: SelectRequest) -> JSONResponse:
                 card = TripCandidateCard(
                     venue_id=v.venue_id,
                     name=v.name,
+                    name_en=v.raw_payload.get("name_en") or None,
                     category="restaurant" if _is_food(v) else "attraction",
                     primary_type=getattr(v, "primary_type", None),
                     address=getattr(v, "formatted_address", None),
@@ -1006,6 +1008,7 @@ async def post_select(payload: SelectRequest) -> JSONResponse:
         "venue": {
             "venue_id": card.venue_id,
             "name": card.name,
+            "name_en": card.name_en,
             "category": card.category,
             "address": card.address,
             "lat": card.lat,

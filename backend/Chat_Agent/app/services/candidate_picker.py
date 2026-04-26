@@ -505,6 +505,7 @@ async def _build_rain_cards(
             TripCandidateCard(
                 venue_id=getattr(venue, "venue_id", str(idx)),
                 name=venue.name,
+                name_en=venue.raw_payload.get("name_en") or None,
                 category="restaurant" if _is_restaurant(venue) else "attraction",
                 primary_type=getattr(venue, "primary_type", None),
                 address=getattr(venue, "formatted_address", None),
@@ -691,6 +692,7 @@ async def _build_cards_from_ranked(
             TripCandidateCard(
                 venue_id=getattr(venue, "venue_id", str(idx)),
                 name=venue.name,
+                name_en=venue.raw_payload.get("name_en") or None,
                 category="restaurant" if _is_restaurant(venue) else "attraction",
                 primary_type=getattr(venue, "primary_type", None),
                 address=getattr(venue, "formatted_address", None),

@@ -2,29 +2,29 @@
   <div class="modal-overlay" @click.self="$emit('close')">
     <div class="modal">
       <button class="close-btn" type="button" @click="$emit('close')">✕</button>
-      <p class="modal-kicker">換個條件再推薦</p>
-      <h3 class="modal-title">直接用一句話告訴我你想找什麼</h3>
+      <p class="modal-kicker">{{ locale.demand.kicker }}</p>
+      <h3 class="modal-title">{{ locale.demand.title }}</h3>
 
       <div v-if="!searched || results.length === 0">
         <textarea
           v-model="inputText"
           class="demand-input"
-          placeholder="例如：我想找安靜一點、適合散步拍照的地方"
+          :placeholder="locale.demand.placeholder"
           rows="3"
         ></textarea>
-        <p class="input-hint">留白也可以，我會先給你同一輪原本的推薦景點。</p>
+        <p class="input-hint">{{ locale.demand.inputHint }}</p>
         <button class="search-btn" type="button" :disabled="loading" @click="doSearch">
-          {{ loading ? '整理中…' : '幫我重新推薦' }}
+          {{ loading ? locale.demand.loading : locale.demand.submit }}
         </button>
         <div v-if="errorText" class="error">{{ errorText }}</div>
         <div v-if="searched && results.length === 0 && !loading && !errorText" class="no-results">
-          我附近找不到特別接近的地點，換個描述試試看。
+          {{ locale.demand.noResults }}
         </div>
       </div>
 
       <div v-else>
         <p class="result-intro">
-          {{ showingOriginalCandidates ? '這是你這一輪原本的推薦景點。' : '我幫你整理了幾個比較接近你剛剛描述的地方。' }}
+          {{ showingOriginalCandidates ? locale.demand.showingOriginal : locale.demand.showingNew }}
         </p>
         <p v-if="fallbackReason" class="fallback-note">{{ fallbackReason }}</p>
         <div class="results">
@@ -36,11 +36,11 @@
           >
             <div class="result-header">
               <span class="category-badge" :class="card.category">
-                {{ card.category === 'restaurant' ? '美食' : '景點' }}
+                {{ locale.trip.categories[card.category as 'restaurant' | 'attraction'] ?? card.category }}
               </span>
-              <span class="distance">{{ card.distance_min }} 分鐘</span>
+              <span class="distance">{{ locale.common.minutes(card.distance_min) }}</span>
             </div>
-            <h4 class="result-name">{{ card.name }}</h4>
+            <h4 class="result-name">{{ lang === 'en' && card.name_en ? card.name_en : card.name }}</h4>
             <p class="result-why">{{ card.why_recommended }}</p>
           </div>
         </div>
@@ -48,7 +48,7 @@
         <div v-if="rainFiltered.length > 0" class="rain-section">
           <div class="rain-section-header">
             <span>🌧️</span>
-            <span class="rain-section-title">因預報降雨，以下戶外景點暫不推薦</span>
+            <span class="rain-section-title">{{ locale.demand.rainDeferredNote }}</span>
           </div>
           <div class="results">
             <div
@@ -58,17 +58,17 @@
             >
               <div class="result-header">
                 <span class="category-badge" :class="card.category">
-                  {{ card.category === 'restaurant' ? '美食' : '景點' }}
+                  {{ locale.trip.categories[card.category as 'restaurant' | 'attraction'] ?? card.category }}
                 </span>
-                <span class="rain-badge">🌧 戶外</span>
+                <span class="rain-badge">{{ locale.trip.rain.badge }}</span>
               </div>
-              <h4 class="result-name rain-name">{{ card.name }}</h4>
+              <h4 class="result-name rain-name">{{ lang === 'en' && card.name_en ? card.name_en : card.name }}</h4>
               <p class="rain-note-text">{{ card.rain_note }}</p>
             </div>
           </div>
         </div>
 
-        <button class="search-btn outline" type="button" @click="results = []; rainFiltered = []; inputText = ''; searched = false">重新輸入條件</button>
+        <button class="search-btn outline" type="button" @click="results = []; rainFiltered = []; inputText = ''; searched = false">{{ locale.trip.selecting.retry }}</button>
       </div>
     </div>
   </div>
@@ -77,7 +77,10 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { submitDemand } from '../services/api'
+import { useLocale } from '../composables/useLocale'
 import type { CandidateCard } from '../types/trip'
+
+const { lang, locale } = useLocale()
 
 const props = defineProps<{
   lat: number
@@ -128,7 +131,7 @@ async function doSearch() {
     searched.value = true
   } catch (err: unknown) {
     const e = err as { response?: { data?: { detail?: string } } }
-    errorText.value = e?.response?.data?.detail ?? '搜尋失敗，請重試。'
+    errorText.value = e?.response?.data?.detail ?? locale.value.demand.error
   } finally {
     loading.value = false
   }

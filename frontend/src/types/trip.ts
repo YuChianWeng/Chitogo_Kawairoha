@@ -1,4 +1,16 @@
-export type TravelGene = '文清' | '親子' | '不常來' | '夜貓子' | '一日' | '野外'
+export type TravelGene =
+  | '文山包種茶'
+  | '古早味彈珠汽水'
+  | '珍珠奶茶'
+  | '深夜永和豆漿'
+  | '甘蔗青茶'
+  | '野生愛玉冰'
+  | '文清'
+  | '親子'
+  | '不常來'
+  | '夜貓子'
+  | '一日'
+  | '野外'
 export type TransportMode = 'walk' | 'transit' | 'drive'
 export type FlowState = 'QUIZ' | 'TRANSPORT' | 'RECOMMENDING' | 'RATING' | 'ENDED'
 export type AccommodationMode = 'booked' | 'need_hotel' | 'no_stay'
@@ -85,6 +97,7 @@ export interface SetupResult {
 export interface CandidateCard {
   venue_id: string | number
   name: string
+  name_en?: string | null
   category: 'restaurant' | 'attraction' | 'go_home'
   primary_type: string | null
   address: string | null
@@ -115,7 +128,7 @@ export interface CandidatesResult {
 
 export interface SelectResult {
   session_id: string
-  venue: Pick<CandidateCard, 'venue_id' | 'name' | 'category' | 'address' | 'lat' | 'lng'>
+  venue: Pick<CandidateCard, 'venue_id' | 'name' | 'name_en' | 'category' | 'address' | 'lat' | 'lng'>
   navigation: {
     google_maps_url: string
     apple_maps_url: string

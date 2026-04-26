@@ -235,6 +235,7 @@ class VisitedStop(BaseModel):
 class TripCandidateCard(BaseModel):
     venue_id: str | int
     name: str
+    name_en: str | None = None
     category: str
     primary_type: str | None = None
     address: str | None = None

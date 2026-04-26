@@ -2,32 +2,32 @@
   <div class="nav-panel">
     <div class="panel-header">
       <div>
-        <p class="panel-kicker">前往中</p>
+        <p class="panel-kicker">{{ locale.trip.nav.kicker }}</p>
         <div class="mode-pill">{{ transportLabel }}</div>
       </div>
       <div class="eta-block">
-        <p class="travel-time">預計 {{ travelTimeText }} 到達</p>
+        <p class="travel-time">{{ locale.trip.nav.eta(travelTimeText) }}</p>
         <p v-if="distanceText" class="travel-distance">{{ distanceText }}</p>
       </div>
     </div>
 
     <div class="venue-info">
-      <h2 class="venue-name">{{ venue.name }}</h2>
+      <h2 class="venue-name">{{ lang === 'en' && venue.name_en ? venue.name_en : venue.name }}</h2>
       <p class="venue-address">{{ venue.address || '台北市' }}</p>
     </div>
 
     <p class="encouragement">{{ encouragement }}</p>
 
     <div v-if="navigationStatus === 'loading'" class="status-card">
-      右側地圖正在計算最佳路線與步驟…
+      {{ locale.trip.nav.routeLoading }}
     </div>
 
     <div v-else-if="navigationStatus === 'error'" class="status-card status-card--error">
-      {{ navigationError || '目前無法取得導航路線，請改用外部地圖。' }}
+      {{ navigationError || locale.trip.nav.routeError }}
     </div>
 
     <div v-else-if="navigationSteps.length" class="steps-card">
-      <p class="steps-title">導航步驟</p>
+      <p class="steps-title">{{ locale.trip.nav.navSteps }}</p>
       <ol class="steps-list">
         <li v-for="(step, index) in navigationSteps" :key="`${index}-${step.instruction}`" class="step-item">
           <span class="step-index">{{ index + 1 }}</span>
@@ -44,13 +44,13 @@
     </div>
 
     <div class="action-area">
-      <p class="action-label">選一個地圖 App 開始導航</p>
+      <p class="action-label">{{ locale.trip.nav.mapAction }}</p>
       <div class="map-buttons">
         <a :href="navigation.google_maps_url" target="_blank" rel="noreferrer" class="map-btn google">
           <span class="map-btn-icon google-icon">G</span>
           <span class="map-btn-text">
             <span class="map-btn-name">Google Maps</span>
-            <span class="map-btn-hint">開啟導航</span>
+            <span class="map-btn-hint">{{ locale.trip.nav.openNav }}</span>
           </span>
           <span class="map-btn-arrow">↗</span>
         </a>
@@ -58,7 +58,7 @@
           <span class="map-btn-icon apple-icon">⌘</span>
           <span class="map-btn-text">
             <span class="map-btn-name">Apple Maps</span>
-            <span class="map-btn-hint">開啟導航</span>
+            <span class="map-btn-hint">{{ locale.trip.nav.openNav }}</span>
           </span>
           <span class="map-btn-arrow">↗</span>
         </a>
@@ -68,8 +68,8 @@
     <button class="arrived-btn" type="button" @click="$emit('arrived')">
       <span class="arrived-check">✓</span>
       <span class="arrived-text">
-        <span class="arrived-main">我到了！</span>
-        <span class="arrived-sub">繼續下一站</span>
+        <span class="arrived-main">{{ locale.trip.nav.arrived }}</span>
+        <span class="arrived-sub">{{ locale.trip.nav.arrivedSub }}</span>
       </span>
     </button>
   </div>
@@ -78,6 +78,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useMapState } from '../composables/useMapState'
+import { useLocale } from '../composables/useLocale'
 import type { SelectResult, TransportMode } from '../types/trip'
 
 const props = defineProps<{
@@ -97,6 +98,8 @@ const {
   navigationError,
 } = useMapState()
 
+const { lang, locale } = useLocale()
+
 const transportLabel = computed(() => transportModeLabel(props.navigation.transport_mode))
 
 const travelTimeText = computed(() => (
@@ -106,9 +109,7 @@ const travelTimeText = computed(() => (
 const distanceText = computed(() => routeSummary.value?.distanceText ?? null)
 
 function transportModeLabel(mode: TransportMode) {
-  if (mode === 'walk') return '步行'
-  if (mode === 'drive') return '開車'
-  return '大眾運輸'
+  return locale.value.trip.transport[mode] ?? mode
 }
 </script>
 
