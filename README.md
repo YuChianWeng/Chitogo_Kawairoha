@@ -108,36 +108,75 @@
 
 ## Architecture
 
+### System Overview
+
+The system is composed of four independent FastAPI microservices and a Vue 3 SPA. The **Chat Agent** is the primary user-facing backend; it holds session state, calls an LLM with a tool registry, and fans out to the **Place Data Service** for venue lookups. The **Itinerary Planner** is an independent scoring/routing pipeline that can be called directly. The **Speech API** handles Taiwanese ASR as a standalone service.
+
 ```
-Browser (Vue 3 SPA)
-    |  POST /api/v1/itinerary
-    v
-FastAPI ──────────────────────────────────────────────
-    |
-    ├── Candidate Providers (parallel fetch)
-    |     ├── Google Places API (New) ──┐
-    |     ├── Crawler / Social API ─────┤→ normalize → merge/dedup → filter
-    |     └── Local seed (fallback) ────┘
-    |
-    ├── ScoringEngine
-    |     └── score = interest(40%) + weather(30%) + trend(20%) + budget(10%)
-    |
-    ├── RouteOptimizer
-    |     └── Greedy nearest-neighbor with time budget
-    |
-    └── ItineraryBuilder
-          └── Assemble response with reasons
+Browser (Vue 3 SPA :5173)
+    │
+    ├── Conversational flow ──────────────────────────────────────────────►  Chat Agent (:8100)
+    │                                                                               │
+    │                                                                               ├── LLM Layer
+    │                                                                               │     ├── Gemini 2.5 Flash  (primary)
+    │                                                                               │     ├── Claude Sonnet 4.6 (fallback)
+    │                                                                               │     └── OpenRouter GPT-4.1-mini (alt)
+    │                                                                               │
+    │                                                                               ├── Session Store (in-memory + TTL sweeper)
+    │                                                                               │
+    │                                                                               └── Tool Registry
+    │                                                                                     ├── place_search ──────────────────► Place Data Service (:8000)
+    │                                                                                     │                                           │
+    │                                                                                     │                                    PostgreSQL (venues, social)
+    │                                                                                     │
+    │                                                                                     └── route_advisor ─────────────────► Google Maps API
+    │
+    ├── Itinerary planning ──────────────────────────────────────────────► Itinerary Planner (:8000*)
+    │       POST /api/v1/itinerary                                                  │
+    │                                                                               ├── Candidate Providers (parallel fetch)
+    │                                                                               │     ├── Google Places API (New) ──┐
+    │                                                                               │     ├── Crawler / Social API ─────┼─► normalize → merge/dedup → filter
+    │                                                                               │     └── Local SQLite seed ─────────┘
+    │                                                                               │
+    │                                                                               ├── ScoringEngine
+    │                                                                               │     └── interest(40%) + weather(30%) + trend(20%) + budget(10%)
+    │                                                                               │
+    │                                                                               └── RouteOptimizer
+    │                                                                                     └── Greedy nearest-neighbor with time budget
+    │
+    └── Voice input ──────────────────────────────────────────────────────► Speech API (Hugging Face)
+            (Taiwanese Mandarin audio)                                              └── Breeze-ASR-26
 ```
+
+> \* Itinerary Planner and Place Data Service share the default port `:8000` — run only one at a time unless ports are overridden.
+
+### Services
+
+| Service | Directory | Port | Responsibility |
+|---------|-----------|------|----------------|
+| **Chat Agent** | `backend/Chat_Agent/` | 8100 | LLM orchestration, session management, tool dispatch |
+| **Itinerary Planner** | `backend/app/` | 8000 | Score and route venues into a day plan (SQLite seed) |
+| **Place Data Service** | `backend/Chitogo_DataBase/` | 8000 | PostgreSQL store for Taipei venues; search, nearby, recommend APIs |
+| **Speech API** | `backend/taiwanese_speech/` | — | Taiwanese speech-to-text via Breeze-ASR-26 on Hugging Face |
+| **Frontend** | `frontend/` | 5173 | Vue 3 + Vite SPA |
+
+---
 
 ## Tech Stack
 
-| Layer | Tech |
-|-------|------|
-| Backend | Python 3.11, FastAPI 0.111, Pydantic v2, httpx |
-| Frontend | Vue 3, Vite 5, TypeScript 5, Axios |
-| Data Sources | Google Places API, Crawler API, local SQLite seed |
-| Weather | OpenWeatherMap API (free tier) |
-| Cache | In-memory TTL (candidates: 5 min, weather: 30 min) |
+| Layer | Technology |
+|-------|------------|
+| **Frontend** | Vue 3, Vite 5, TypeScript 5, Axios, vue-router 4 |
+| **Backend runtime** | Python 3.11, FastAPI 0.111, Pydantic v2, uvicorn, httpx |
+| **LLM providers** | Gemini 2.5 Flash (primary), Claude Sonnet 4.6 (fallback), OpenRouter GPT-4.1-mini |
+| **Databases** | SQLite via aiosqlite (Itinerary Planner), PostgreSQL via SQLAlchemy 2.x (Place Data Service) |
+| **Speech / ASR** | Hugging Face — Breeze-ASR-26 (Taiwanese Mandarin) |
+| **External APIs** | Google Places API (New), OpenWeatherMap, Google Maps Directions |
+| **Data sources** | Google Places, Threads, IG, Pixnet, PTT, Booking.com, Agoda, 台灣旅宿網 |
+| **Cache** | In-memory TTL dict (candidates: 5 min, weather: 30 min, sessions: configurable) |
+| **Testing** | pytest, pytest-asyncio, httpx async test client |
+
+---
 
 ## Prerequisites
 
@@ -145,18 +184,29 @@ FastAPI ────────────────────────
 - Node.js 20+
 - Google Places API key ([Google Cloud Console](https://console.cloud.google.com/apis/credentials)) — enable "Places API (New)"
 - OpenWeatherMap API key ([get one free](https://openweathermap.org/api)) — optional, for weather integration
+- Gemini / Anthropic / OpenRouter API key — for the Chat Agent LLM layer
+
+---
 
 ## Setup
 
-### Backend
+Each service has its own `.env.example`. Copy and fill in the relevant keys:
+
+```bash
+cp backend/.env.example            backend/.env
+cp backend/Chat_Agent/.env.example backend/Chat_Agent/.env
+cp backend/Chitogo_DataBase/.env.example backend/Chitogo_DataBase/.env
+cp backend/taiwanese_speech/.env.example backend/taiwanese_speech/.env
+```
+
+### Backend (Itinerary Planner)
 
 ```bash
 cd backend
 python3.11 -m venv .venv
 source .venv/bin/activate       # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-cp .env.example .env
-# Edit .env and add your API keys
+# Edit backend/.env and add your API keys
 ```
 
 ### Frontend
@@ -166,47 +216,111 @@ cd frontend
 npm install
 ```
 
+---
+
 ## Running
 
-**Using Make (recommended):**
+**Using Make (recommended — starts Itinerary Planner + Frontend concurrently):**
 
 ```bash
-make dev        # Start both backend and frontend concurrently
+make dev
 ```
 
-**Or manually in two terminals:**
+**Running all services manually:**
 
 ```bash
-# Terminal 1 — backend (http://localhost:8000)
+# Terminal 1 — Itinerary Planner (http://localhost:8000)
 cd backend && source .venv/bin/activate
 uvicorn app.main:app --reload --port 8000
 
-# Terminal 2 — frontend (http://localhost:5173)
+# Terminal 2 — Chat Agent (http://localhost:8100)
+cd backend/Chat_Agent && source ../.venv/bin/activate
+uvicorn app.main:app --reload --port 8100
+
+# Terminal 3 — Place Data Service (http://localhost:8000, or a different port)
+cd backend/Chitogo_DataBase && source ../.venv/bin/activate
+uvicorn app.main:app --reload --port 8001
+
+# Terminal 4 — Frontend (http://localhost:5173)
 cd frontend && npm run dev
 ```
 
 Open http://localhost:5173 in your browser.
 
-API docs are available at http://localhost:8000/docs.
+Interactive API docs:
+- Itinerary Planner: http://localhost:8000/docs
+- Chat Agent: http://localhost:8100/docs
+
+---
 
 ## Environment Variables
 
-Create `backend/.env` from `backend/.env.example`:
+### Itinerary Planner (`backend/.env`)
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `GOOGLE_PLACES_API_KEY` | (empty) | Google Places API key for live venue fetching |
 | `CRAWLER_API_URL` | (empty) | Crawler/social source endpoint URL |
 | `CANDIDATE_CACHE_TTL_MINUTES` | `5` | Cache duration for external candidate results |
-| `OPENWEATHER_API_KEY` | (empty) | OpenWeatherMap API key for weather integration |
+| `OPENWEATHER_API_KEY` | (empty) | OpenWeatherMap API key |
 | `MOCK_WEATHER` | (empty) | Override weather for demos: `rain`, `clear`, `cloudy` |
-| `USE_LLM` | `false` | Enable LLM-based reason generation (stretch goal) |
+| `USE_LLM` | `false` | Enable LLM-based reason generation |
 | `DB_PATH` | `./taipei.db` | SQLite database path (seed/fallback data) |
 | `WEATHER_CACHE_TTL_MINUTES` | `30` | Weather cache duration in minutes |
 
-## API
+### Chat Agent (`backend/Chat_Agent/.env`)
 
-### `POST /api/v1/itinerary`
+| Variable | Description |
+|----------|-------------|
+| `LLM_PROVIDER` | `gemini`, `anthropic`, or `openrouter` |
+| `GEMINI_API_KEY` | Gemini API key |
+| `ANTHROPIC_API_KEY` | Anthropic API key (Claude Sonnet 4.6 fallback) |
+| `OPENROUTER_API_KEY` | OpenRouter API key (GPT-4.1-mini alternative) |
+| `DATA_SERVICE_BASE_URL` | URL of the Place Data Service (default: `http://localhost:8000`) |
+
+---
+
+## API Reference
+
+### Chat Agent
+
+#### `POST /api/v1/chat`
+
+Send a message within a session. The agent maintains conversation history and calls tools (place search, route planning) as needed.
+
+**Request body:**
+
+```json
+{
+  "session_id": "b8f20dcd-1894-475e-8895-891b73fc473b",
+  "message": "推薦我大安區適合下雨天的景點",
+  "lat": 25.033,
+  "lng": 121.543
+}
+```
+
+**Response:**
+
+```json
+{
+  "session_id": "b8f20dcd-...",
+  "reply": "根據天氣狀況，以下是幾個適合雨天的室內景點：...",
+  "tool_calls": ["place_search"],
+  "candidates": [ ... ]
+}
+```
+
+#### `GET /api/v1/trip/should_go_home`
+
+Checks whether the user should head home based on current location and remaining itinerary time.
+
+```
+GET /api/v1/trip/should_go_home?session_id=<id>&lat=25.077&lng=121.573
+```
+
+### Itinerary Planner
+
+#### `POST /api/v1/itinerary`
 
 Generate a personalized itinerary.
 
@@ -261,13 +375,15 @@ Generate a personalized itinerary.
 - `indoor_pref`: `indoor`, `outdoor`, `both`
 - `interests`: `food`, `culture`, `shopping`, `nature`, `nightlife`, `art`, `history`, `cafe`, `sports`, `temple`
 
-### `GET /api/v1/health`
+#### `GET /api/v1/health`
 
 Liveness check.
 
-### `GET /api/v1/venues`
+#### `GET /api/v1/venues`
 
 List seeded venues (debug endpoint).
+
+---
 
 ## Scoring
 
@@ -277,57 +393,97 @@ Venues are ranked by a weighted score:
 |--------|--------|-------------|
 | Interest match | 40% | How well the venue's tags match selected interests |
 | Weather suitability | 30% | Indoor/outdoor preference adjusted for current weather |
-| Trend score | 20% | Venue popularity signal (0.0-1.0) |
+| Trend score | 20% | Venue popularity signal (0.0–1.0) |
 | Budget compatibility | 10% | Venue cost level vs. user budget |
+
+---
 
 ## Data Flow
 
 1. **Fetch** — Google Places + Crawler queried in parallel (cached results used when available)
 2. **Normalize** — External results mapped to internal `Venue` schema, districts assigned from coordinates
-3. **Merge & Dedup** — Combined by name similarity and 50m proximity; trend scores merged (max)
+3. **Merge & Dedup** — Combined by name similarity and 50 m proximity; trend scores merged (max)
 4. **Filter** — District proximity, indoor preference, cost level (relaxed progressively if < 3 results)
 5. **Fallback** — If external sources return < 3 venues, local seed data fills the gap
 6. **Score** — Weighted scoring: interest + weather + trend + budget
 7. **Route** — Greedy nearest-neighbor ordering within time budget
 8. **Respond** — Assembled itinerary with arrival times, durations, and reasons
 
+---
+
 ## Tests
 
 ```bash
-cd backend
-source .venv/bin/activate
+# Itinerary Planner
+cd backend && source .venv/bin/activate
+pytest tests/ -v --cov=app --cov-report=term-missing
+
+# Chat Agent
+cd backend/Chat_Agent
+pytest tests/ -v
+
+# Place Data Service
+cd backend/Chitogo_DataBase
 pytest tests/ -v
 ```
+
+---
 
 ## Project Structure
 
 ```
 backend/
-├── app/
-│   ├── main.py               # App factory, CORS, DB init
-│   ├── config.py             # Settings (pydantic-settings)
+├── app/                          # Itinerary Planner service (SQLite)
+│   ├── main.py                   # App factory, CORS, DB init
+│   ├── config.py                 # Settings (pydantic-settings)
 │   ├── api/v1/
-│   │   ├── itinerary.py      # POST /itinerary handler
+│   │   ├── itinerary.py          # POST /itinerary handler
 │   │   └── router.py
 │   ├── providers/
-│   │   ├── base.py           # CandidateProvider protocol, helpers
-│   │   ├── google_places.py  # Google Places API (New) provider
-│   │   ├── crawler.py        # Crawler/social source provider
-│   │   ├── cache.py          # In-memory TTL cache
-│   │   └── aggregator.py     # Merge, dedup, fallback orchestrator
+│   │   ├── base.py               # CandidateProvider protocol
+│   │   ├── google_places.py      # Google Places API (New) provider
+│   │   ├── crawler.py            # Crawler/social source provider
+│   │   ├── cache.py              # In-memory TTL cache
+│   │   └── aggregator.py         # Merge, dedup, fallback orchestrator
 │   ├── models/
-│   │   ├── db.py             # SQLite access, Venue entity, seeding
-│   │   └── schemas.py        # Pydantic request/response models
+│   │   ├── db.py                 # SQLite access, Venue entity, seeding
+│   │   └── schemas.py            # Pydantic request/response models
 │   ├── services/
-│   │   ├── scoring.py        # Venue scoring engine
-│   │   ├── routing.py        # Route optimizer
+│   │   ├── scoring.py            # Venue scoring engine
+│   │   ├── routing.py            # Route optimizer
 │   │   └── itinerary_builder.py  # Pipeline orchestrator
 │   └── data/
-│       └── venues.json       # 35 curated Taipei venues (fallback)
+│       └── venues.json           # 35 curated Taipei venues (fallback)
+│
+├── Chat_Agent/                   # LLM Agent orchestration service
+│   └── app/
+│       ├── main.py               # App factory (create_app)
+│       ├── chat/                 # Message handler, trace store, schemas
+│       ├── session/              # Session store + TTL sweeper
+│       └── tools/                # Tool registry, place/route adapters
+│
+├── Chitogo_DataBase/             # Place Data Service (PostgreSQL)
+│   └── app/
+│       ├── main.py
+│       ├── db.py                 # SQLAlchemy engine + base
+│       ├── models/               # ORM models
+│       ├── routers/              # health, places, retrieval
+│       └── services/             # ingestion, category
+│
+├── taiwanese_speech/             # Speech-to-text (Hugging Face Breeze-ASR-26)
+└── scripts/                      # social_crawler.py, test_asrapi.py
+
 frontend/
-├── src/
-│   ├── pages/HomePage.vue    # Main page (form + results)
-│   ├── services/api.ts       # Axios API client
-│   └── types/itinerary.ts    # TypeScript interfaces
-specs/                        # Feature specs and implementation plans
+└── src/
+    ├── App.vue
+    ├── main.ts
+    ├── pages/
+    │   ├── HomePage.vue
+    │   └── TripPage.vue
+    ├── services/api.ts           # Axios API client
+    └── types/
+        ├── itinerary.ts
+        └── chat.ts
+
+specs/                            # Feature specs and implementation plans
 ```
