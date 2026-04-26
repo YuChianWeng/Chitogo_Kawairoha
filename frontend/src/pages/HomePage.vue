@@ -154,11 +154,13 @@ const isMobile = ref(window.innerWidth <= MOBILE_BREAKPOINT)
 const isMobileMapOpen = ref(false)
 
 const weatherDisplay = computed(() => {
-  if (weather.value.loading) return '讀取中...'
+  if (weather.value.loading) return locale.value.nav.weather.loading
   const prob = weather.value.rainProbability
-  const condition = weather.value.isRainingLikely ? '多雲有雨' : (prob !== null && prob > 20) ? '多雲' : '晴朗'
+  const condition = weather.value.isRainingLikely
+    ? locale.value.nav.weather.rainy
+    : (prob !== null && prob > 20) ? locale.value.nav.weather.cloudy : locale.value.nav.weather.sunny
   if (prob === null) return condition
-  return `${condition} • 降雨機率 ${prob}%`
+  return locale.value.nav.weather.format(condition, prob)
 })
 
 const locationDisplay = computed(() => {
@@ -180,11 +182,12 @@ const chatWidth = ref<number>(
 
 const currentTime = computed(() => {
   const now = new Date()
-  const days = ['日', '一', '二', '三', '四', '五', '六']
+  const days = locale.value.nav.time.days
   const day = days[now.getDay()]
   const hh = String(now.getHours()).padStart(2, '0')
   const mm = String(now.getMinutes()).padStart(2, '0')
-  return `星期${day} ${hh}:${mm}`
+  const prefix = locale.value.nav.time.dayPrefix
+  return `${prefix}${day} ${hh}:${mm}`
 })
 
 function clampWidth(w: number): number {

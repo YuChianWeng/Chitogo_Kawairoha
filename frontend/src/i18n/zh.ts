@@ -298,7 +298,17 @@ export const zh = {
       closeMapAria: '返回對話',
     },
     comingSoon: '即將推出',
-    weather: '多雲•降雨機率 30%',
+    weather: {
+      loading: '讀取中...',
+      sunny: '晴朗',
+      cloudy: '多雲',
+      rainy: '多雲有雨',
+      format: (condition: string, prob: number) => `${condition} • 降雨機率 ${prob}%`,
+    },
+    time: {
+      dayPrefix: '星期',
+      days: ['日', '一', '二', '三', '四', '五', '六'],
+    },
     location: '台北市•信義區',
   },
   summary: {

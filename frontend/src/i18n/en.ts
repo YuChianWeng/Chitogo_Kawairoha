@@ -300,7 +300,17 @@ export const en: Locale = {
       closeMapAria: 'Back to Chat',
     },
     comingSoon: 'Coming Soon',
-    weather: 'Cloudy • 30% Rain',
+    weather: {
+      loading: 'Loading...',
+      sunny: 'Sunny',
+      cloudy: 'Cloudy',
+      rainy: 'Cloudy with Rain',
+      format: (condition: string, prob: number) => `${condition} • ${prob}% Rain`,
+    },
+    time: {
+      dayPrefix: '',
+      days: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+    },
     location: 'Taipei • Xinyi District',
   },
   summary: {
