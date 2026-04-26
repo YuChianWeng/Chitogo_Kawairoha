@@ -19,10 +19,11 @@ async def transcribe_audio(file: UploadFile = File(...)):
 
     try:
         audio_bytes = await file.read()
+        content_type = file.content_type or "audio/wav"
         
         headers = {
             "Authorization": f"Bearer {API_KEY}",
-            "Content-Type": "audio/wav" 
+            "Content-Type": content_type
         }
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(ENDPOINT_URL, headers=headers, content=audio_bytes)

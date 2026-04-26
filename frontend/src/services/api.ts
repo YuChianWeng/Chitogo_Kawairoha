@@ -156,10 +156,11 @@ export async function getWeather(): Promise<{ is_raining_likely: boolean; rain_p
 
 export async function transcribeAudio(blob: Blob): Promise<{ text: string }> {
   const form = new FormData()
-  const filename = blob.type.includes('webm') ? 'audio.webm' : 'audio.wav'
+  // Use a generic name if type is not available, but usually we want .wav now
+  const filename = blob.type.includes('wav') ? 'audio.wav' : blob.type.includes('webm') ? 'audio.webm' : 'audio.wav'
   form.append('file', blob, filename)
   const { data } = await client.post<{ text: string }>('/speech/transcribe', form, {
-    headers: { 'Content-Type': 'multipart/form-data' },
+    headers: { 'Content-Type': undefined },
     timeout: 35000,
   })
   return data

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import shutil
 import tempfile
 from pathlib import Path
 
@@ -14,6 +15,9 @@ router = APIRouter(prefix="/speech", tags=["speech"])
 
 async def _to_wav(audio_bytes: bytes, src_mime: str) -> bytes:
     """Convert any browser audio format to 16kHz mono WAV via ffmpeg."""
+    if not shutil.which("ffmpeg"):
+        raise RuntimeError("ffmpeg not found in path")
+
     suffix = ".webm" if "webm" in src_mime else ".wav" if "wav" in src_mime else ".ogg"
     with tempfile.TemporaryDirectory() as tmpdir:
         src = Path(tmpdir) / f"input{suffix}"
@@ -42,16 +46,25 @@ async def transcribe_audio(request: Request, file: UploadFile = File(...)) -> di
 
     audio_bytes = await file.read()
     src_mime = file.content_type or "audio/webm"
-    try:
-        wav_bytes = await _to_wav(audio_bytes, src_mime)
-    except Exception as exc:
-        logger.error("Audio conversion error: %s", exc)
-        raise HTTPException(status_code=422, detail="音頻格式無法處理，請再試一次。")
+    
+    # If it's already WAV, don't convert
+    if src_mime == "audio/wav" or src_mime == "audio/x-wav":
+        payload_bytes = audio_bytes
+        content_type = "audio/wav"
+    else:
+        # Try to convert to WAV for better accuracy
+        try:
+            payload_bytes = await _to_wav(audio_bytes, src_mime)
+            content_type = "audio/wav"
+        except Exception as exc:
+            logger.warning("Audio conversion skipped or failed (falling back to original): %s", exc)
+            payload_bytes = audio_bytes
+            content_type = src_mime
 
-    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "audio/wav"}
+    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": content_type}
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
-            resp = await client.post(endpoint_url, headers=headers, content=wav_bytes)
+            resp = await client.post(endpoint_url, headers=headers, content=payload_bytes)
         if resp.status_code != 200:
             logger.error("HF endpoint error: %s", resp.text)
             raise HTTPException(status_code=502, detail="語音辨識失敗，請再試一次。")

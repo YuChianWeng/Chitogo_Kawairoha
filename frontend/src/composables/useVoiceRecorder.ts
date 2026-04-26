@@ -1,4 +1,5 @@
 import { ref } from 'vue'
+import RecordRTC from 'recordrtc'
 import { transcribeAudio } from '../services/api'
 
 export function useVoiceRecorder() {
@@ -7,12 +8,11 @@ export function useVoiceRecorder() {
   const error = ref<string | null>(null)
 
   let stream: MediaStream | null = null
-  let recorder: MediaRecorder | null = null
-  let chunks: Blob[] = []
+  let rtcRecorder: RecordRTC | null = null
   let autoStopTimer: ReturnType<typeof setTimeout> | null = null
 
   const isSupported =
-    typeof MediaRecorder !== 'undefined' && !!navigator.mediaDevices?.getUserMedia
+    typeof navigator.mediaDevices?.getUserMedia !== 'undefined'
 
   async function start() {
     if (!isSupported) {
@@ -30,13 +30,16 @@ export function useVoiceRecorder() {
       return
     }
 
-    chunks = []
-    const mime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-      ? 'audio/webm;codecs=opus'
-      : undefined
-    recorder = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined)
-    recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data) }
-    recorder.start()
+    // Use StereoAudioRecorder from RecordRTC to produce WAV
+    rtcRecorder = new RecordRTC(stream, {
+      type: 'audio',
+      mimeType: 'audio/wav',
+      recorderType: RecordRTC.StereoAudioRecorder,
+      numberOfAudioChannels: 1,
+      desiredSampRate: 16000,
+    })
+
+    rtcRecorder.startRecording()
     isRecording.value = true
 
     autoStopTimer = setTimeout(() => { void stop() }, 30_000)
@@ -44,43 +47,44 @@ export function useVoiceRecorder() {
 
   async function stop(): Promise<string> {
     if (autoStopTimer) { clearTimeout(autoStopTimer); autoStopTimer = null }
-    if (!recorder || recorder.state === 'inactive') {
+    if (!rtcRecorder) {
       isRecording.value = false
       return ''
     }
+
     return new Promise((resolve) => {
-      recorder!.onstop = async () => {
+      rtcRecorder!.stopRecording(async () => {
         stream?.getTracks().forEach(t => t.stop())
-        const mimeType = recorder!.mimeType || 'audio/webm'
-        const blob = new Blob(chunks, { type: mimeType })
+        const blob = rtcRecorder!.getBlob()
+        
         isRecording.value = false
         isTranscribing.value = true
         try {
           const { text } = await transcribeAudio(blob)
           resolve(text)
-        } catch {
+        } catch (e) {
+          console.error('Transcription error:', e)
           error.value = '語音辨識失敗，請再試一次。'
           resolve('')
         } finally {
           isTranscribing.value = false
           stream = null
-          recorder = null
-          chunks = []
+          rtcRecorder = null
         }
-      }
-      recorder!.stop()
+      })
     })
   }
 
   function cancel() {
     if (autoStopTimer) { clearTimeout(autoStopTimer); autoStopTimer = null }
-    if (recorder && recorder.state !== 'inactive') recorder.stop()
+    if (rtcRecorder) {
+      rtcRecorder.destroy()
+      rtcRecorder = null
+    }
     stream?.getTracks().forEach(t => t.stop())
     isRecording.value = false
     isTranscribing.value = false
     stream = null
-    recorder = null
-    chunks = []
   }
 
   return { isSupported, isRecording, isTranscribing, error, start, stop, cancel }
