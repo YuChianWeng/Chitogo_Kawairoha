@@ -420,7 +420,13 @@ class PlaceToolAdapter:
     @staticmethod
     def _normalize_place(payload: dict[str, Any]) -> ToolPlace | None:
         venue_id = payload.get("id") or payload.get("venue_id") or payload.get("place_id")
-        name = payload.get("display_name") or payload.get("name") or payload.get("venue_name")
+        name = (
+            payload.get("name_zh")
+            or payload.get("display_name")
+            or payload.get("name")
+            or payload.get("name_en")
+            or payload.get("venue_name")
+        )
         if venue_id is None or not isinstance(name, str) or not name.strip():
             return None
         return ToolPlace(

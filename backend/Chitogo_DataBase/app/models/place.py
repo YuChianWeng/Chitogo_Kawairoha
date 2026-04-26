@@ -25,6 +25,8 @@ class Place(Base):
         String(255), unique=True, nullable=False, index=True
     )
     display_name: Mapped[str] = mapped_column(String(512), nullable=False)
+    name_zh: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    name_en: Mapped[str | None] = mapped_column(String(512), nullable=True)
     normalized_name: Mapped[str | None] = mapped_column(String(512), nullable=True)
     primary_type: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True)
     types_json: Mapped[dict | list | None] = mapped_column(JSONB, nullable=True)

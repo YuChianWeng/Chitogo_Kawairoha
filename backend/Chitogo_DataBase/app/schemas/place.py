@@ -35,6 +35,8 @@ class PlaceListItem(BaseModel):
     id: int
     google_place_id: str
     display_name: str
+    name_zh: str | None = None
+    name_en: str | None = None
     primary_type: str | None = None
     district: str | None = None
     formatted_address: str | None = None
@@ -54,6 +56,8 @@ class PlaceDetail(BaseModel):
     id: int
     google_place_id: str
     display_name: str
+    name_zh: str | None = None
+    name_en: str | None = None
     normalized_name: str | None = None
     primary_type: str | None = None
     types_json: dict | list | None = None

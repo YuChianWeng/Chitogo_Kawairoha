@@ -11,11 +11,14 @@ export function useVoiceRecorder() {
   let chunks: Blob[] = []
   let autoStopTimer: ReturnType<typeof setTimeout> | null = null
 
-  const isSupported = typeof MediaRecorder !== 'undefined'
+  const isSupported =
+    typeof MediaRecorder !== 'undefined' && !!navigator.mediaDevices?.getUserMedia
 
   async function start() {
     if (!isSupported) {
-      error.value = '此瀏覽器不支援錄音'
+      error.value = window.isSecureContext
+        ? '此瀏覽器不支援錄音'
+        : '語音需要 HTTPS 才能使用'
       return
     }
     error.value = null
