@@ -19,6 +19,9 @@ _CACHE_TTL_MINUTES = 30
 class WeatherContext:
     is_raining_likely: bool
     rain_probability: int | None
+    condition: str | None = None
+    temperature: int | None = None
+    wind_direction: str | None = None
 
 
 _cached_context: WeatherContext | None = None
@@ -38,57 +41,69 @@ def _set_cache(ctx: WeatherContext) -> None:
 
 
 def _no_rain() -> WeatherContext:
-    return WeatherContext(is_raining_likely=False, rain_probability=None)
+    return WeatherContext(
+        is_raining_likely=False,
+        rain_probability=None,
+        condition=None,
+        temperature=None,
+        wind_direction=None,
+    )
 
 
-def _parse_max_pop(payload: Any) -> int | None:
-    """Extract the maximum PoP12h value across all Taipei districts for the nearest time slot."""
+def _parse_weather_elements(payload: Any) -> dict[str, Any]:
+    """Extract Wx, T, PoP12h, and WD values across Taipei districts for the nearest time slot."""
     try:
         records = payload.get("records", {})
         locations_wrapper = records.get("Locations", [])
         if not locations_wrapper:
-            return None
+            return {}
 
         location_list = locations_wrapper[0].get("Location", [])
         if not location_list:
-            return None
+            return {}
 
-        max_pop: int | None = None
+        # We take the first district's first time slot as representative for Taipei
+        # or we could average/max them. For now, let's take the first one found.
+        first_location = location_list[0]
+        elements = {}
 
-        for location in location_list:
-            for element in location.get("WeatherElement", []):
-                if element.get("ElementName") != "PoP12h":
-                    continue
+        for element in first_location.get("WeatherElement", []):
+            name = element.get("ElementName")
+            time_values = element.get("Time", [])
+            if not time_values:
+                continue
 
-                time_values = element.get("Time", [])
-                if not time_values:
-                    continue
+            # Take the first (nearest) time slot value
+            first_value_set = time_values[0].get("ElementValue", [])
+            if not first_value_set:
+                continue
 
-                # Take the first (nearest) time slot value
-                first_value_set = time_values[0].get("ElementValue", [])
-                for ev in first_value_set:
-                    raw = ev.get("PoP12h") or ev.get("Value")
-                    if raw is None:
-                        continue
-                    try:
-                        pct = int(str(raw).replace("%", "").strip())
-                        if max_pop is None or pct > max_pop:
-                            max_pop = pct
-                    except (ValueError, TypeError):
-                        continue
+            val_obj = first_value_set[0]
+            if name == "PoP12h":
+                raw = val_obj.get("PoP12h") or val_obj.get("Value")
+                if raw is not None:
+                    elements["rain_probability"] = int(str(raw).replace("%", "").strip())
+            elif name == "Wx":
+                elements["condition"] = val_obj.get("Wx") or val_obj.get("Value")
+            elif name == "T":
+                raw = val_obj.get("T") or val_obj.get("Value")
+                if raw is not None:
+                    elements["temperature"] = int(str(raw))
+            elif name == "WD":
+                elements["wind_direction"] = val_obj.get("WD") or val_obj.get("Value")
 
-        return max_pop
+        return elements
 
     except Exception as exc:
-        logger.warning("weather._parse_max_pop failed: %s", exc)
-        return None
+        logger.warning("weather._parse_weather_elements failed: %s", exc)
+        return {}
 
 
 async def get_weather_context() -> WeatherContext:
     """Return current weather context for Taipei, using a 30-minute in-process cache.
 
-    Fetches PoP12h (12-hour precipitation probability) from the CWA open data API.
-    Returns a no-rain context on any error so candidate picking continues unaffected.
+    Fetches weather elements from the CWA open data API.
+    Returns a default context on any error so candidate picking continues unaffected.
     """
     cached = _get_from_cache()
     if cached is not None:
@@ -112,7 +127,7 @@ async def get_weather_context() -> WeatherContext:
                 params={
                     "Authorization": api_key,
                     "locationName": "台北市",
-                    "elementName": "PoP12h",
+                    "elementName": "PoP12h,Wx,T,WD",
                 },
             )
             if response.status_code != 200:
@@ -130,19 +145,25 @@ async def get_weather_context() -> WeatherContext:
         logger.warning("CWA weather API error: %s; skipping weather filter", exc)
         return _no_rain()
 
-    max_pop = _parse_max_pop(data)
-    if max_pop is None:
-        logger.warning("CWA weather API: could not parse PoP12h; skipping weather filter")
+    elements = _parse_weather_elements(data)
+    if not elements:
+        logger.warning("CWA weather API: could not parse elements; skipping weather filter")
         ctx = _no_rain()
     else:
+        rain_prob = elements.get("rain_probability")
         ctx = WeatherContext(
-            is_raining_likely=max_pop >= _RAIN_THRESHOLD_PCT,
-            rain_probability=max_pop,
+            is_raining_likely=rain_prob is not None and rain_prob >= _RAIN_THRESHOLD_PCT,
+            rain_probability=rain_prob,
+            condition=elements.get("condition"),
+            temperature=elements.get("temperature"),
+            wind_direction=elements.get("wind_direction"),
         )
         logger.info(
-            "Weather context: PoP12h=%d%% → is_raining_likely=%s",
-            max_pop,
-            ctx.is_raining_likely,
+            "Weather context: condition=%s, temp=%s, wind=%s, PoP12h=%s",
+            ctx.condition,
+            ctx.temperature,
+            ctx.wind_direction,
+            ctx.rain_probability,
         )
 
     _set_cache(ctx)

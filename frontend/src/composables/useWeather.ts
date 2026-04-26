@@ -2,15 +2,21 @@ import { ref, onMounted } from 'vue'
 import { getWeather } from '../services/api'
 
 export interface WeatherState {
+  loading: boolean
   isRainingLikely: boolean
   rainProbability: number | null
-  loading: boolean
+  condition: string | null
+  temperature: number | null
+  windDirection: string | null
 }
 
 const weather = ref<WeatherState>({
+  loading: false,
   isRainingLikely: false,
   rainProbability: null,
-  loading: true
+  condition: null,
+  temperature: null,
+  windDirection: null,
 })
 
 export function useWeather() {
@@ -20,6 +26,9 @@ export function useWeather() {
       const data = await getWeather()
       weather.value.isRainingLikely = data.is_raining_likely
       weather.value.rainProbability = data.rain_probability
+      weather.value.condition = data.condition
+      weather.value.temperature = data.temperature
+      weather.value.windDirection = data.wind_direction
     } catch (err) {
       console.error('Failed to fetch weather:', err)
     } finally {

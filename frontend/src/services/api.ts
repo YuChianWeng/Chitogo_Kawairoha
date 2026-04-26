@@ -149,7 +149,13 @@ export async function getSummary(sessionId: string): Promise<JourneySummary> {
   return data
 }
 
-export async function getWeather(): Promise<{ is_raining_likely: boolean; rain_probability: number | null }> {
+export async function getWeather(): Promise<{
+  is_raining_likely: boolean;
+  rain_probability: number | null;
+  condition: string | null;
+  temperature: number | null;
+  wind_direction: string | null;
+}> {
   const { data } = await client.get('/weather')
   return data
 }
