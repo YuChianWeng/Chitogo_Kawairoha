@@ -44,6 +44,9 @@ export interface TripSetup {
   accommodation?: AccommodationInput
   return_time?: string
   return_destination?: string
+  return_dest_lat?: number
+  return_dest_lng?: number
+  return_dest_place_id?: string
 }
 
 export interface HotelRecommendationCard {
@@ -91,6 +94,10 @@ export interface CandidateCard {
   distance_min: number
   why_recommended: string
   rain_note?: string | null
+  vibe_tags?: string[]
+  mention_count?: number | null
+  sentiment_score?: number | null
+  trend_score?: number | null
 }
 
 export interface CandidatesResult {

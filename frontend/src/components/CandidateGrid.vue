@@ -8,15 +8,42 @@
         type="button"
         @click="$emit('select', card.venue_id)"
       >
+        <!-- Top row: category badge + distance -->
         <div class="card-header">
           <span class="category-badge" :class="card.category">
-            {{ card.category === 'restaurant' ? '美食' : (card.category === 'go_home' ? '回程' : '景點') }}
+            {{ card.category === 'restaurant' ? '美食' : card.category === 'go_home' ? '回程' : '景點' }}
           </span>
-          <span class="distance">{{ card.distance_min }} 分鐘</span>
+          <div class="card-header-right">
+            <span v-if="isTrending(card)" class="trend-badge">🔥 熱門</span>
+            <span class="distance">{{ card.distance_min }} 分鐘</span>
+          </div>
         </div>
+
+        <!-- Venue name -->
         <h3 class="venue-name">{{ card.name }}</h3>
         <p class="address">{{ card.address || '台北市' }}</p>
-        <div v-if="card.rating" class="rating">★ {{ card.rating.toFixed(1) }}</div>
+
+        <!-- Rating + social stats row -->
+        <div class="stats-row">
+          <span v-if="card.rating" class="stat rating">
+            ★ {{ card.rating.toFixed(1) }}
+          </span>
+          <span v-if="card.mention_count && card.mention_count > 0" class="stat mentions">
+            💬 {{ formatMentions(card.mention_count) }}
+          </span>
+          <span v-if="card.sentiment_score != null" class="stat sentiment" :class="sentimentClass(card.sentiment_score)">
+            {{ sentimentLabel(card.sentiment_score) }}
+          </span>
+        </div>
+
+        <!-- Vibe tags -->
+        <div v-if="card.vibe_tags && card.vibe_tags.length > 0" class="vibe-tags">
+          <span v-for="tag in card.vibe_tags.slice(0, 4)" :key="tag" class="vibe-tag">
+            #{{ tag }}
+          </span>
+        </div>
+
+        <!-- Why recommended -->
         <p class="why">{{ card.why_recommended }}</p>
       </button>
     </div>
@@ -46,7 +73,17 @@
           </div>
           <h3 class="venue-name rain-venue-name">{{ card.name }}</h3>
           <p class="address">{{ card.address || '台北市' }}</p>
-          <div v-if="card.rating" class="rating rain-rating">★ {{ card.rating.toFixed(1) }}</div>
+          <div class="stats-row">
+            <span v-if="card.rating" class="stat rating rain-rating">★ {{ card.rating.toFixed(1) }}</span>
+            <span v-if="card.mention_count && card.mention_count > 0" class="stat mentions">
+              💬 {{ formatMentions(card.mention_count) }}
+            </span>
+          </div>
+          <div v-if="card.vibe_tags && card.vibe_tags.length > 0" class="vibe-tags">
+            <span v-for="tag in card.vibe_tags.slice(0, 3)" :key="tag" class="vibe-tag">
+              #{{ tag }}
+            </span>
+          </div>
         </div>
       </div>
     </details>
@@ -65,6 +102,28 @@ defineEmits<{
   select: [venueId: string | number]
   demand: []
 }>()
+
+function formatMentions(count: number): string {
+  if (count >= 1000) return `${(count / 1000).toFixed(1)}k 則討論`
+  return `${count} 則討論`
+}
+
+function isTrending(card: CandidateCard): boolean {
+  return (card.trend_score != null && card.trend_score > 0.6) ||
+    (card.mention_count != null && card.mention_count >= 50)
+}
+
+function sentimentClass(score: number): string {
+  if (score >= 0.7) return 'sentiment-positive'
+  if (score >= 0.4) return 'sentiment-neutral'
+  return 'sentiment-negative'
+}
+
+function sentimentLabel(score: number): string {
+  if (score >= 0.7) return '好評'
+  if (score >= 0.4) return '普通'
+  return '評價不一'
+}
 </script>
 
 <style scoped>
@@ -83,14 +142,6 @@ defineEmits<{
   .grid {
     grid-template-columns: 1fr;
     gap: 10px;
-  }
-
-  .candidate-card {
-    padding: 12px;
-  }
-
-  .venue-name {
-    font-size: 15px;
   }
 
   .none-btn {
@@ -123,6 +174,12 @@ defineEmits<{
   margin-bottom: 8px;
 }
 
+.card-header-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .category-badge {
   font-size: 11px;
   padding: 3px 8px;
@@ -145,17 +202,28 @@ defineEmits<{
   color: #dc2626;
 }
 
+.trend-badge {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 5px;
+  background: #fff7ed;
+  color: #c2410c;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 .distance {
   font-size: 12px;
   color: #64748b;
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .venue-name {
   font-size: 16px;
   font-weight: 600;
   color: #1e293b;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .address {
@@ -164,10 +232,65 @@ defineEmits<{
   margin-bottom: 8px;
 }
 
-.rating {
-  font-size: 12px;
-  color: #f59e0b;
+/* Stats row */
+.stats-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
   margin-bottom: 8px;
+}
+
+.stat {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.rating {
+  color: #f59e0b;
+}
+
+.mentions {
+  color: #6366f1;
+}
+
+.sentiment {
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.sentiment-positive {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.sentiment-neutral {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.sentiment-negative {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+/* Vibe tags */
+.vibe-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.vibe-tag {
+  font-size: 11px;
+  color: #6366f1;
+  background: #eef2ff;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-weight: 500;
 }
 
 .why {
@@ -195,8 +318,7 @@ defineEmits<{
   background: #eff6ff;
 }
 
-/* ── Rain-filtered section ── */
-
+/* Rain section */
 .rain-section {
   margin-top: 20px;
   border-top: 1.5px dashed #bfdbfe;
@@ -274,5 +396,4 @@ defineEmits<{
 .rain-rating {
   color: #93c5fd;
 }
-
 </style>

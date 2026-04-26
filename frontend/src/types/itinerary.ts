@@ -12,6 +12,9 @@ export interface ChatCandidate {
   rating?: number
   budget_level?: string
   why_recommended?: string
+  vibe_tags?: string[] | null
+  mention_count?: number | null
+  sentiment_score?: number | null
 }
 
 export interface ItineraryLeg {
