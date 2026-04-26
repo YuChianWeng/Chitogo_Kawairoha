@@ -15,7 +15,7 @@
           </span>
           <div class="card-header-right">
             <span v-if="isTrending(card)" class="trend-badge">🔥 熱門</span>
-            <span class="distance">{{ locale.common.minutes(card.distance_min) }}</span>
+            <span v-if="card.distance_min > 0" class="distance">{{ locale.common.minutes(card.distance_min) }}</span>
           </div>
         </div>
 

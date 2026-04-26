@@ -229,44 +229,7 @@
                 </template>
                 <p v-else>{{ msg.text }}</p>
               </div>
-              <div v-if="!msg.pending && msg.candidates?.length" class="message-surface chat-candidates-surface">
-                <button
-                  v-for="c in msg.candidates"
-                  :key="c.place_id"
-                  class="chat-candidate-card"
-                  :class="{ 'chat-candidate-card--loading': chatSelectingId === c.place_id }"
-                  type="button"
-                  :disabled="chatSelectingId !== null"
-                  @click.stop="onChatVenueSelected(c)"
-                >
-                  <div class="chat-card-header">
-                    <span class="chat-card-name">{{ c.name }}</span>
-                    <span v-if="c.rating" class="chat-card-rating">★ {{ c.rating.toFixed(1) }}</span>
-                  </div>
-                  <div class="chat-card-meta">
-                    <span v-if="c.district">{{ c.district }}</span>
-                    <span v-if="c.category">· {{ c.category }}</span>
-                    <span v-if="c.budget_level">· {{ c.budget_level }}</span>
-                  </div>
-                  <div v-if="c.vibe_tags && c.vibe_tags.length" class="chat-card-vibes">
-                    <span v-for="tag in c.vibe_tags.slice(0, 3)" :key="tag" class="chat-vibe-tag"># {{ tag }}</span>
-                  </div>
-                  <div v-if="c.mention_count && c.mention_count > 0" class="chat-card-social">
-                    <span class="social-mention">💬 {{ c.mention_count }} 則討論</span>
-                    <span
-                      v-if="c.sentiment_score != null"
-                      class="social-sentiment"
-                      :class="sentimentClass(c.sentiment_score)"
-                    >{{ sentimentLabel(c.sentiment_score) }}</span>
-                  </div>
-                  <p v-if="c.why_recommended" class="chat-card-why">{{ c.why_recommended }}</p>
-                  <span class="chat-card-action">
-                    <span v-if="chatSelectingId === c.place_id" class="chat-card-spinner" />
-                    <template v-else>{{ locale.trip.goThere }}</template>
-                  </span>
-                </button>
-                <div v-if="chatSelectError" class="chat-select-error">{{ chatSelectError }}</div>
-              </div>
+              <div v-if="chatSelectError && !msg.pending" class="chat-select-error">{{ chatSelectError }}</div>
               <div v-if="msg.widget?.kind === 'navigation'" class="message-surface nav-surface">
                 <NavigationPanel
                   :venue="msg.widget.data.venue"
@@ -324,7 +287,7 @@
                   </button>
                 </Transition>
               </div>
-              <div v-if="msg.widget?.kind === 'selecting'" class="message-surface candidate-surface">
+              <div v-if="msg.widget?.kind === 'selecting' && !msg.widget.submitted" class="message-surface candidate-surface">
                 <div class="surface-header">
                   <p>我先幫你挑了 {{ msg.widget.data.candidates.length }} 個選項，你可以直接點卡片決定這一站。</p>
                   <button class="secondary-btn" type="button" @click="reopenTransportPrompt">改交通</button>
@@ -379,7 +342,7 @@ import NavigationPanel from '../components/NavigationPanel.vue'
 import RatingCard from '../components/RatingCard.vue'
 import { useSimLocation } from '../composables/useSimLocation'
 import { useSimTime } from '../composables/useSimTime'
-import { checkGoHome, getCandidates, getSummary, selectVenue, sendMessage, snoozeGoHome } from '../services/api'
+import { checkGoHome, getCandidates, getSummary, selectVenue, sendMessage, snoozeGoHome, submitDemand } from '../services/api'
 import type { ChatMessage, ChatWidget } from '../types/chat'
 import type { ChatCandidate } from '../types/itinerary'
 import { useLocale } from '../composables/useLocale'
@@ -949,11 +912,44 @@ async function handleComposerSubmit(text: string) {
       message: text,
       user_context: { lat: effectiveLat.value, lng: effectiveLng.value },
     })
-    messages.value = messages.value.map(m =>
-      m.id === pendingId
-        ? { ...m, text: res.message, pending: false, candidates: res.candidates?.length ? res.candidates : undefined }
-        : m
-    )
+
+    if (res.candidates?.length) {
+      // Backend signalled recommendation intent — collapse old grids and fetch text-aware results
+      messages.value = messages.value.map(m =>
+        m.widget?.kind === 'selecting' ? { ...m, widget: { ...m.widget, submitted: true } } : m
+      )
+      candidatesResult.value = null
+      chatFlowActive.value = true
+
+      let widget: ChatWidget | undefined
+      try {
+        const demand = await submitDemand(sessionId, text, effectiveLat.value, effectiveLng.value)
+        const result = {
+          session_id: demand.session_id,
+          candidates: demand.alternatives,
+          rain_filtered: demand.rain_filtered ?? [],
+          partial: false,
+          fallback_reason: demand.fallback_reason,
+          restaurant_count: demand.alternatives.filter(c => c.category === 'restaurant').length,
+          attraction_count: demand.alternatives.filter(c => c.category === 'attraction').length,
+        }
+        setSpotCandidates(result.candidates)
+        widget = { kind: 'selecting', data: result }
+      } catch {
+        // Fall through: show text reply without candidate grid
+      }
+      messages.value = messages.value.map(m =>
+        m.id === pendingId
+          ? { ...m, text: res.message, pending: false, ...(widget ? { widget } : {}) }
+          : m
+      )
+    } else {
+      messages.value = messages.value.map(m =>
+        m.id === pendingId
+          ? { ...m, text: res.message, pending: false }
+          : m
+      )
+    }
   } catch {
     messages.value = messages.value.map(m =>
       m.id === pendingId
@@ -1012,18 +1008,6 @@ watch(simTimeHHMM, async () => {
   }
   await runGoHomeCheck()
 })
-
-function sentimentClass(score: number): string {
-  if (score >= 0.6) return 'sentiment--positive'
-  if (score <= 0.35) return 'sentiment--negative'
-  return 'sentiment--neutral'
-}
-
-function sentimentLabel(score: number): string {
-  if (score >= 0.6) return '好評'
-  if (score <= 0.35) return '評價偏低'
-  return '評價中性'
-}
 
 async function dismissBanner() {
   const sessionId = localStorage.getItem('chitogo_session_id')
@@ -1678,152 +1662,11 @@ async function dismissBanner() {
   }
 }
 
-.chat-candidates-surface {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 12px;
-  background: var(--surface-2, #f5f5f5);
-  border-radius: 12px;
-}
-
-.chat-candidate-card {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 12px 14px;
-  background: #fff;
-  border: 1px solid var(--border, #e0e0e0);
-  border-radius: 10px;
-  text-align: left;
-  cursor: pointer;
-  transition: border-color 0.15s, box-shadow 0.15s, opacity 0.15s;
-
-  &:hover:not(:disabled) {
-    border-color: var(--accent, #5b8dee);
-    box-shadow: 0 2px 8px rgba(91, 141, 238, 0.15);
-  }
-
-  &:disabled {
-    cursor: not-allowed;
-    opacity: 0.6;
-  }
-
-  &.chat-candidate-card--loading {
-    opacity: 1;
-    border-color: var(--accent, #5b8dee);
-    box-shadow: 0 2px 8px rgba(91, 141, 238, 0.2);
-  }
-}
-
-.chat-card-spinner {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border: 1.5px solid rgba(91, 141, 238, 0.35);
-  border-top-color: var(--accent, #5b8dee);
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-  vertical-align: middle;
-}
-
 .chat-select-error {
   font-size: 0.78rem;
   color: #ef4444;
   padding: 6px 4px 2px;
   line-height: 1.4;
-}
-
-.chat-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 8px;
-}
-
-.chat-card-name {
-  font-weight: 600;
-  font-size: 0.95rem;
-  color: var(--text-primary, #111);
-}
-
-.chat-card-rating {
-  font-size: 0.8rem;
-  color: #f59e0b;
-  white-space: nowrap;
-}
-
-.chat-card-meta {
-  font-size: 0.75rem;
-  color: var(--text-secondary, #666);
-}
-
-.chat-card-why {
-  font-size: 0.8rem;
-  color: var(--text-secondary, #555);
-  margin: 0;
-  line-height: 1.4;
-}
-
-.chat-card-vibes {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin-top: 2px;
-}
-
-.chat-vibe-tag {
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: #4f46e5;
-  background: #ede9fe;
-  border-radius: 999px;
-  padding: 2px 8px;
-  white-space: nowrap;
-}
-
-.chat-card-social {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 2px;
-}
-
-.social-mention {
-  font-size: 0.72rem;
-  color: #64748b;
-  font-weight: 500;
-}
-
-.social-sentiment {
-  font-size: 0.72rem;
-  font-weight: 700;
-  border-radius: 999px;
-  padding: 1px 8px;
-}
-
-.sentiment--positive {
-  color: #15803d;
-  background: #dcfce7;
-}
-
-.sentiment--neutral {
-  color: #92400e;
-  background: #fef3c7;
-}
-
-.sentiment--negative {
-  color: #b91c1c;
-  background: #fee2e2;
-}
-
-.chat-card-action {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--accent, #5b8dee);
-  margin-top: 2px;
 }
 
 /* ═══════════════════════════════════════════
