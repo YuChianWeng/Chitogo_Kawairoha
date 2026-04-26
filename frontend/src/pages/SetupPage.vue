@@ -12,17 +12,10 @@
       <section class="section">
         <h3 class="section-title">{{ locale.setup.returnTimeSection }}</h3>
         <input v-model="returnTime" type="time" class="text-input" />
-<<<<<<< HEAD
         <ReturnDestinationPicker
           v-model="returnPlace"
           class="mt-8"
           placeholder="返回地點（從建議選一個，或直接輸入）"
-=======
-        <input
-          v-model="returnDestination"
-          class="text-input mt-8"
-          :placeholder="locale.setup.returnDestPlaceholder"
->>>>>>> origin/diff-language
         />
       </section>
 
@@ -41,12 +34,9 @@ import { useRouter } from 'vue-router'
 import { submitSetup } from '../services/api'
 import type { SetupResult } from '../types/trip'
 import { readAccommodationState } from '../utils/accommodation'
-<<<<<<< HEAD
 import ReturnDestinationPicker from '../components/setup/ReturnDestinationPicker.vue'
 import type { PlaceValue } from '../components/setup/ReturnDestinationPicker.vue'
-=======
 import { useLocale } from '../composables/useLocale'
->>>>>>> origin/diff-language
 
 const router = useRouter()
 const { locale } = useLocale()
