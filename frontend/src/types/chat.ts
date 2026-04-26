@@ -1,0 +1,11 @@
+import type { ChatCandidate } from './itinerary'
+
+export type ChatRole = 'user' | 'assistant'
+
+export interface ChatMessage {
+  id: string
+  role: ChatRole
+  text: string
+  pending?: boolean
+  candidates?: ChatCandidate[]
+}

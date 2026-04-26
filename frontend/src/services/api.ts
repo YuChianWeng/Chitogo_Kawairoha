@@ -63,7 +63,8 @@ export async function getCandidates(
   sessionId: string,
   lat: number,
   lng: number,
-  transport: CandidateTransportInput
+  transport: CandidateTransportInput,
+  simTime?: string,
 ): Promise<CandidatesResult> {
   const params = new URLSearchParams()
   params.set('session_id', sessionId)
@@ -71,6 +72,7 @@ export async function getCandidates(
   params.set('lng', String(lng))
   params.set('mode', transport.mode)
   params.set('max_minutes_per_leg', String(transport.max_minutes_per_leg))
+  if (simTime) params.set('sim_time', simTime)
 
   const { data } = await client.get<CandidatesResult>('/trip/candidates', {
     params,
@@ -124,10 +126,18 @@ export async function submitDemand(
 export async function checkGoHome(
   sessionId: string,
   lat: number,
-  lng: number
+  lng: number,
+  simTime?: string,
 ): Promise<GoHomeStatus> {
-  const { data } = await client.get<GoHomeStatus>('/trip/should_go_home', {
-    params: { session_id: sessionId, lat, lng },
+  const params: Record<string, string | number> = { session_id: sessionId, lat, lng }
+  if (simTime) params.sim_time = simTime
+  const { data } = await client.get<GoHomeStatus>('/trip/should_go_home', { params })
+  return data
+}
+
+export async function snoozeGoHome(sessionId: string): Promise<{ snoozed: boolean }> {
+  const { data } = await client.post<{ snoozed: boolean }>('/trip/snooze', {
+    session_id: sessionId,
   })
   return data
 }
@@ -135,6 +145,17 @@ export async function checkGoHome(
 export async function getSummary(sessionId: string): Promise<JourneySummary> {
   const { data } = await client.get<JourneySummary>('/trip/summary', {
     params: { session_id: sessionId },
+  })
+  return data
+}
+
+export async function transcribeAudio(blob: Blob): Promise<{ text: string }> {
+  const form = new FormData()
+  const filename = blob.type.includes('webm') ? 'audio.webm' : 'audio.wav'
+  form.append('file', blob, filename)
+  const { data } = await client.post<{ text: string }>('/speech/transcribe', form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: 35000,
   })
   return data
 }

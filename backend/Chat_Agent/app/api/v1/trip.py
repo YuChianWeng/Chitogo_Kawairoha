@@ -148,6 +148,11 @@ class DemandRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
+class SnoozeRequest(BaseModel):
+    session_id: str
+    model_config = ConfigDict(extra="forbid")
+
+
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 
 async def _get_session(session_id: str) -> Session:
@@ -180,7 +185,77 @@ def _card_to_dict(card: TripCandidateCard) -> dict[str, Any]:
         "rating": card.rating,
         "distance_min": card.distance_min,
         "why_recommended": card.why_recommended,
+        "rain_note": card.rain_note,
     }
+
+
+async def _geocode_return_destination(address: str) -> tuple[float | None, float | None]:
+    q = address.strip()
+    if not q:
+        return None, None
+    from app.core.config import get_settings
+    settings = get_settings()
+    full = q if "台北" in q or "Taipei" in q else f"{q}, 台北市, 台灣"
+    url = "https://maps.googleapis.com/maps/api/geocode/json"
+    params = {"address": full, "key": settings.google_maps_api_key, "region": "tw"}
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(
+                url,
+                params=params,
+                timeout=float(settings.route_service_timeout_sec),
+            )
+    except httpx.HTTPError:
+        return None, None
+    if resp.status_code != 200:
+        return None, None
+    data = resp.json()
+    if data.get("status") != "OK" or not data.get("results"):
+        return None, None
+    loc = data["results"][0]["geometry"]["location"]
+    la, ln = loc.get("lat"), loc.get("lng")
+    if la is None or ln is None:
+        return None, None
+    return float(la), float(ln)
+
+
+async def _apply_return_dest_coords(session: Session) -> None:
+    session.return_dest_lat = None
+    session.return_dest_lng = None
+    if (
+        session.accommodation
+        and session.accommodation.hotel_lat is not None
+        and session.accommodation.hotel_lng is not None
+    ):
+        session.return_dest_lat = float(session.accommodation.hotel_lat)
+        session.return_dest_lng = float(session.accommodation.hotel_lng)
+        return
+    if session.return_destination and session.return_destination.strip():
+        la, ln = await _geocode_return_destination(session.return_destination)
+        if la is not None and ln is not None:
+            session.return_dest_lat = la
+            session.return_dest_lng = ln
+
+
+def _resolved_return_dest(
+    session: Session,
+    fallback_lat: float,
+    fallback_lng: float,
+) -> tuple[float, float]:
+    if session.return_dest_lat is not None and session.return_dest_lng is not None:
+        return session.return_dest_lat, session.return_dest_lng
+    if session.accommodation and session.accommodation.hotel_lat and session.accommodation.hotel_lng:
+        return float(session.accommodation.hotel_lat), float(session.accommodation.hotel_lng)
+    return fallback_lat, fallback_lng
+
+
+def _homing_dest_coords(session: Session) -> tuple[float | None, float | None]:
+    """Coordinates for return destination; None if unknown (homing off for ranking)."""
+    if session.return_dest_lat is not None and session.return_dest_lng is not None:
+        return session.return_dest_lat, session.return_dest_lng
+    if session.accommodation and session.accommodation.hotel_lat and session.accommodation.hotel_lng:
+        return float(session.accommodation.hotel_lat), float(session.accommodation.hotel_lng)
+    return None, None
 
 
 def _normalize_mode(mode: str | None, *, error_prefix: str) -> str:
@@ -673,6 +748,7 @@ async def post_setup(payload: SetupRequest) -> SetupResponse:
         next_step = "trip"
         setup_complete = True
 
+    await _apply_return_dest_coords(session)
     await _save_session(session)
 
     return SetupResponse(
@@ -695,6 +771,7 @@ async def get_candidates(
     lat: float = Query(...),
     lng: float = Query(...),
     max_minutes_per_leg: int = Query(..., ge=1, le=120),
+    sim_time: str | None = Query(None, description="Demo only: HH:MM simulated Taipei time"),
 ) -> JSONResponse:
     if not (-90 <= lat <= 90 and -180 <= lng <= 180):
         raise HTTPException(status_code=400, detail="candidates_error:invalid_coordinates")
@@ -710,12 +787,21 @@ async def get_candidates(
         max_minutes_per_leg=max_minutes_per_leg,
     )
 
+    now_override = go_home_advisor.parse_sim_time(sim_time)
+    urgency = go_home_advisor.time_urgency(session, now_override)
+    h_lat, h_lng = _homing_dest_coords(session)
+    homing_active = h_lat is not None and h_lng is not None and urgency > 0.0
+    urgency_level = go_home_advisor.urgency_level(urgency)
+
     try:
-        cards, partial, fallback_reason = await picker.pick_candidates(
+        cards, rain_cards, partial, fallback_reason = await picker.pick_candidates(
             session,
             lat,
             lng,
             transport_config=transport_config,
+            urgency=urgency,
+            dest_lat=h_lat,
+            dest_lng=h_lng,
         )
     except ValueError as exc:
         detail = str(exc)
@@ -728,16 +814,47 @@ async def get_candidates(
     # Persist updated session (reachable_cache + last_candidate_ids updated in picker)
     await _save_session(session)
 
+    # Check for go-home reminder
+    go_home_reminder = None
+    if session.return_time:
+        dest_lat, dest_lng = _resolved_return_dest(session, lat, lng)
+
+        dist_km = haversine_distance(lat, lng, dest_lat, dest_lng)
+        transit_min = max(1, int(dist_km / 12.0 * 60))
+
+        # Proactive reminder (banner/message)
+        if go_home_advisor.should_remind(session, transit_min, now_override):
+            go_home_reminder = f"距離回程的時間快到了（預計 {session.return_time}）"
+
+        # Candidate card visibility
+        if go_home_advisor.is_in_window(session, now_override):
+            # Add a Go Home card
+            go_home_card = TripCandidateCard(
+                venue_id="GO_HOME",
+                name="回家去 (飯店/車站)",
+                category="go_home",
+                address="回程目的地",
+                lat=dest_lat,
+                lng=dest_lng,
+                distance_min=transit_min,
+                why_recommended="時間差不多囉，該準備回程了。",
+            )
+            cards.insert(0, go_home_card)
+
     restaurants = [c for c in cards if c.category == "restaurant"]
     attractions = [c for c in cards if c.category == "attraction"]
 
     return JSONResponse({
         "session_id": session_id,
         "candidates": [_card_to_dict(c) for c in cards],
+        "rain_filtered": [_card_to_dict(c) for c in rain_cards],
         "partial": partial,
         "fallback_reason": fallback_reason,
         "restaurant_count": len(restaurants),
         "attraction_count": len(attractions),
+        "go_home_reminder": go_home_reminder,
+        "homing_active": homing_active,
+        "urgency_level": urgency_level,
     })
 
 
@@ -751,37 +868,60 @@ async def post_select(payload: SelectRequest) -> JSONResponse:
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
-    # Check venue is in last candidate set
+    # Check venue is in last candidate set or is special GO_HOME
     venue_id_str = str(payload.venue_id)
     candidate_ids = [str(cid) for cid in session.last_candidate_ids]
-    if venue_id_str not in candidate_ids:
-        raise HTTPException(status_code=400, detail="select_error:venue_not_in_candidates")
-    if session.last_transport_config is None:
-        raise HTTPException(status_code=400, detail="select_error:missing_transport_context")
+
+    is_go_home = venue_id_str == "GO_HOME"
+
+    # Allow chat-originated candidates (not in last_candidate_ids) — the data-service
+    # lookup below validates the venue exists, so no hard rejection here.
+    if not is_go_home and venue_id_str not in candidate_ids:
+        logger.info("venue %s not in last_candidate_ids; proceeding via data-service lookup", venue_id_str)
+
+    # Use default transport when none is set (e.g. first selection from a chat card).
+    transport_config = session.last_transport_config or TransportConfig()
 
     # Find the candidate from the reachable cache (rebuild minimal card from last known data)
     # We need to fetch the venue details from the Data Service
     card: TripCandidateCard | None = None
-    try:
-        result = await place_tool_adapter.batch_get_places(
-            place_ids=[int(payload.venue_id)] if str(payload.venue_id).isdigit() else []
+    if is_go_home:
+        dest_lat, dest_lng = payload.current_lat, payload.current_lng
+        if session.accommodation and session.accommodation.hotel_lat and session.accommodation.hotel_lng:
+            dest_lat = session.accommodation.hotel_lat
+            dest_lng = session.accommodation.hotel_lng
+        
+        card = TripCandidateCard(
+            venue_id="GO_HOME",
+            name="回家去 (飯店/車站)",
+            category="go_home",
+            address="回程目的地",
+            lat=dest_lat,
+            lng=dest_lng,
+            distance_min=0,
+            why_recommended="辛苦了，準備回程吧！",
         )
-        if result.items:
-            v = result.items[0]
-            card = TripCandidateCard(
-                venue_id=v.venue_id,
-                name=v.name,
-                category="restaurant" if _is_food(v) else "attraction",
-                primary_type=getattr(v, "primary_type", None),
-                address=getattr(v, "formatted_address", None),
-                lat=v.lat or 0.0,
-                lng=v.lng or 0.0,
-                rating=getattr(v, "rating", None),
-                distance_min=0,
-                why_recommended="",
+    else:
+        try:
+            result = await place_tool_adapter.batch_get_places(
+                place_ids=[int(payload.venue_id)] if str(payload.venue_id).isdigit() else []
             )
-    except Exception:
-        pass
+            if result.items:
+                v = result.items[0]
+                card = TripCandidateCard(
+                    venue_id=v.venue_id,
+                    name=v.name,
+                    category="restaurant" if _is_food(v) else "attraction",
+                    primary_type=getattr(v, "primary_type", None),
+                    address=getattr(v, "formatted_address", None),
+                    lat=v.lat or 0.0,
+                    lng=v.lng or 0.0,
+                    rating=getattr(v, "rating", None),
+                    distance_min=0,
+                    why_recommended="",
+                )
+        except Exception:
+            pass
 
     if card is None:
         # Fallback: minimal card from payload
@@ -798,7 +938,7 @@ async def post_select(payload: SelectRequest) -> JSONResponse:
     session.pending_venue = card
 
     # Build navigation URLs
-    primary_mode = session.last_transport_config.mode
+    primary_mode = transport_config.mode
     google_mode = {"walk": "walking", "transit": "transit", "drive": "driving"}.get(primary_mode, "transit")
     google_url = f"https://maps.google.com/?daddr={card.lat},{card.lng}&travelmode={google_mode}"
     apple_url = f"maps://maps.apple.com/?daddr={card.lat},{card.lng}"
@@ -837,6 +977,7 @@ async def post_select(payload: SelectRequest) -> JSONResponse:
             "google_maps_url": google_url,
             "apple_maps_url": apple_url,
             "estimated_travel_min": est_min,
+            "transport_mode": primary_mode,
         },
         "encouragement_message": encouragement,
     })
@@ -913,7 +1054,7 @@ async def post_demand(payload: DemandRequest) -> JSONResponse:
         raise HTTPException(status_code=400, detail="demand_error:missing_transport_context")
 
     try:
-        cards, fallback_reason = await picker.demand_mode(
+        cards, rain_cards, fallback_reason = await picker.demand_mode(
             session,
             payload.demand_text,
             payload.lat,
@@ -931,6 +1072,7 @@ async def post_demand(payload: DemandRequest) -> JSONResponse:
     return JSONResponse({
         "session_id": payload.session_id,
         "alternatives": [_card_to_dict(c) for c in cards],
+        "rain_filtered": [_card_to_dict(c) for c in rain_cards],
         "fallback_reason": fallback_reason,
     })
 
@@ -942,6 +1084,7 @@ async def get_should_go_home(
     session_id: str = Query(...),
     lat: float = Query(...),
     lng: float = Query(...),
+    sim_time: str | None = Query(None, description="Demo only: HH:MM simulated Taipei time"),
 ) -> JSONResponse:
     session = await _get_session(session_id)
     try:
@@ -957,6 +1100,8 @@ async def get_should_go_home(
             "time_remaining_min": None,
         })
 
+    now_override = go_home_advisor.parse_sim_time(sim_time)
+
     # Estimate transit time to return destination using haversine
     dest_lat, dest_lng = lat, lng  # fallback: use current location
     if session.accommodation and session.accommodation.hotel_lat and session.accommodation.hotel_lng:
@@ -966,23 +1111,25 @@ async def get_should_go_home(
     dist_km = haversine_distance(lat, lng, dest_lat, dest_lng)
     transit_min = max(1, int(dist_km / 12.0 * 60))  # transit ~12 km/h
 
-    should = go_home_advisor.should_remind(session, transit_min)
+    should = go_home_advisor.should_remind(session, transit_min, now_override)
 
     if should:
         go_home_advisor.record_reminded(session)
         await _save_session(session)
 
-        # Calculate time remaining
+        from zoneinfo import ZoneInfo
+        taipei_tz = ZoneInfo("Asia/Taipei")
+
         hh, mm = map(int, session.return_time.split(":"))
-        today = datetime.now(UTC).date()
-        from datetime import timezone
-        return_dt = datetime(today.year, today.month, today.day, hh, mm, tzinfo=UTC)
-        time_remaining = max(0, int((return_dt - datetime.now(UTC)).total_seconds() / 60))
+        now_taipei = go_home_advisor._now_taipei(now_override)
+        return_dt = now_taipei.replace(hour=hh, minute=mm, second=0, microsecond=0)
+
+        time_remaining = max(0, int((return_dt - now_taipei).total_seconds() / 60))
 
         return JSONResponse({
             "session_id": session_id,
             "remind": True,
-            "message": f"該回家啦！距離預定返回時間還有 {time_remaining} 分鐘，現在出發剛好！",
+            "message": f"該回家啦！距離回程的時間還有 {time_remaining} 分鐘，現在出發剛好！",
             "time_remaining_min": time_remaining,
         })
 
@@ -992,6 +1139,14 @@ async def get_should_go_home(
         "message": None,
         "time_remaining_min": None,
     })
+
+
+@router.post("/snooze")
+async def post_snooze(payload: SnoozeRequest) -> JSONResponse:
+    session = await _get_session(payload.session_id)
+    go_home_advisor.snooze(session)
+    await _save_session(session)
+    return JSONResponse({"session_id": payload.session_id, "snoozed": True})
 
 
 # ─── GET /summary ─────────────────────────────────────────────────────────────

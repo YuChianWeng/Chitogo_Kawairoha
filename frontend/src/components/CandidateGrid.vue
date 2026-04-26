@@ -10,7 +10,7 @@
       >
         <div class="card-header">
           <span class="category-badge" :class="card.category">
-            {{ card.category === 'restaurant' ? '美食' : '景點' }}
+            {{ card.category === 'restaurant' ? '美食' : (card.category === 'go_home' ? '回程' : '景點') }}
           </span>
           <span class="distance">{{ card.distance_min }} 分鐘</span>
         </div>
@@ -24,6 +24,32 @@
     <button class="none-btn" type="button" @click="$emit('demand')">
       這些都還好，換一種條件幫我找
     </button>
+
+    <details v-if="rainFiltered && rainFiltered.length > 0" class="rain-section">
+      <summary class="rain-section-summary">
+        <span class="rain-icon" aria-hidden="true">🌧️</span>
+        <span class="rain-section-title">雨天備選</span>
+        <span class="rain-section-hint">（因預報降雨，戶外點改列於此）</span>
+      </summary>
+      <div class="rain-grid">
+        <div
+          v-for="card in rainFiltered"
+          :key="card.venue_id"
+          class="rain-card"
+        >
+          <div class="card-header">
+            <span class="category-badge" :class="card.category">
+              {{ card.category === 'restaurant' ? '美食' : '景點' }}
+            </span>
+            <span v-if="card.rain_note" class="rain-badge">{{ card.rain_note }}</span>
+            <span v-else class="rain-badge">🌧 戶外</span>
+          </div>
+          <h3 class="venue-name rain-venue-name">{{ card.name }}</h3>
+          <p class="address">{{ card.address || '台北市' }}</p>
+          <div v-if="card.rating" class="rating rain-rating">★ {{ card.rating.toFixed(1) }}</div>
+        </div>
+      </div>
+    </details>
   </div>
 </template>
 
@@ -32,6 +58,7 @@ import type { CandidateCard } from '../types/trip'
 
 defineProps<{
   candidates: CandidateCard[]
+  rainFiltered?: CandidateCard[]
 }>()
 
 defineEmits<{
@@ -52,9 +79,23 @@ defineEmits<{
   margin-bottom: 16px;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 767px) {
   .grid {
     grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .candidate-card {
+    padding: 12px;
+  }
+
+  .venue-name {
+    font-size: 15px;
+  }
+
+  .none-btn {
+    min-height: 48px;
+    font-size: 14px;
   }
 }
 
@@ -97,6 +138,11 @@ defineEmits<{
 .category-badge.attraction {
   background: #e0f2fe;
   color: #0369a1;
+}
+
+.category-badge.go_home {
+  background: #fee2e2;
+  color: #dc2626;
 }
 
 .distance {
@@ -148,4 +194,85 @@ defineEmits<{
   color: #1d4ed8;
   background: #eff6ff;
 }
+
+/* ── Rain-filtered section ── */
+
+.rain-section {
+  margin-top: 20px;
+  border-top: 1.5px dashed #bfdbfe;
+  padding-top: 8px;
+}
+
+.rain-section-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 4px 12px;
+  cursor: pointer;
+  list-style: none;
+  font-weight: 600;
+  color: #1d4ed8;
+}
+
+.rain-section-summary::-webkit-details-marker {
+  display: none;
+}
+
+.rain-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.rain-section-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #3b82f6;
+  letter-spacing: 0.01em;
+}
+
+.rain-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+@media (max-width: 480px) {
+  .rain-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.rain-card {
+  background: linear-gradient(180deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 1.5px solid #bfdbfe;
+  border-radius: 14px;
+  padding: 12px 14px;
+  text-align: left;
+  opacity: 0.62;
+  cursor: default;
+  position: relative;
+}
+
+.rain-venue-name {
+  color: #475569;
+}
+
+.rain-badge {
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-weight: 600;
+  max-width: 12rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rain-rating {
+  color: #93c5fd;
+}
+
 </style>

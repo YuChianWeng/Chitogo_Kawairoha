@@ -82,7 +82,7 @@ export interface SetupResult {
 export interface CandidateCard {
   venue_id: string | number
   name: string
-  category: 'restaurant' | 'attraction'
+  category: 'restaurant' | 'attraction' | 'go_home'
   primary_type: string | null
   address: string | null
   lat: number
@@ -90,15 +90,20 @@ export interface CandidateCard {
   rating: number | null
   distance_min: number
   why_recommended: string
+  rain_note?: string | null
 }
 
 export interface CandidatesResult {
   session_id: string
   candidates: CandidateCard[]
+  rain_filtered?: CandidateCard[]
   partial: boolean
   fallback_reason: string | null
   restaurant_count: number
   attraction_count: number
+  go_home_reminder?: string | null
+  homing_active?: boolean
+  urgency_level?: string
 }
 
 export interface SelectResult {
@@ -108,6 +113,7 @@ export interface SelectResult {
     google_maps_url: string
     apple_maps_url: string
     estimated_travel_min: number
+    transport_mode: TransportMode
   }
   encouragement_message: string
 }
@@ -122,6 +128,7 @@ export interface RateResult {
 export interface DemandResult {
   session_id: string
   alternatives: CandidateCard[]
+  rain_filtered?: CandidateCard[]
   fallback_reason: string | null
 }
 

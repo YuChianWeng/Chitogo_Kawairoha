@@ -159,6 +159,10 @@ class FakeSession:
 
 
 def _matches_condition(item: object, condition) -> bool:
+    clauses = getattr(condition, "clauses", None)
+    if clauses is not None and condition.operator == operators.or_:
+        return any(_matches_condition(item, clause) for clause in clauses)
+
     left = condition.left
     right = condition.right
     operator = condition.operator

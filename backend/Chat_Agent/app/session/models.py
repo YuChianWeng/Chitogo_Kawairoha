@@ -244,6 +244,7 @@ class TripCandidateCard(BaseModel):
     distance_min: int = 0
     why_recommended: str = ""
     partial: bool = False
+    rain_note: str | None = None
 
     model_config = ConfigDict(extra="forbid")
 
@@ -277,12 +278,16 @@ class Session(BaseModel):
     accommodation: AccommodationConfig | None = None
     return_time: str | None = None
     return_destination: str | None = None
+    return_dest_lat: float | None = None
+    return_dest_lng: float | None = None
     last_transport_config: TransportConfig | None = None
     visited_stops: list[VisitedStop] = Field(default_factory=list)
     gene_affinity_weights: dict[str, float] = Field(default_factory=dict)
     go_home_reminded_at: datetime | None = None
+    go_home_snooze_mins: int = 0
     pending_venue: TripCandidateCard | None = None
     reachable_cache: ReachableCache | None = None
     last_candidate_ids: list[str | int] = Field(default_factory=list)
+    user_location: dict[str, float] | None = None
 
     model_config = ConfigDict(extra="forbid")

@@ -117,7 +117,6 @@ CATEGORY_MAP: dict[str, str] = {
     "scenic_viewpoint": "attraction",
     "hot_spring": "attraction",
     "cultural_center": "attraction",
-    "point_of_interest": "attraction",
 }
 
 BUDGET_RANK = {
