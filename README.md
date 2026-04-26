@@ -179,70 +179,344 @@ Browser (Vue 3 SPA :5173)
 
 ## Prerequisites
 
-- Python 3.11+
-- Node.js 20+
-- Google Places API key ([Google Cloud Console](https://console.cloud.google.com/apis/credentials)) — enable "Places API (New)"
-- OpenWeatherMap API key ([get one free](https://openweathermap.org/api)) — optional, for weather integration
-- Gemini / Anthropic / OpenRouter API key — for the Chat Agent LLM layer
+### 1. Python 3.11
+
+**Linux (Ubuntu/Debian):**
+```bash
+sudo apt update
+sudo apt install -y python3.11 python3.11-venv python3.11-dev
+python3.11 --version
+```
+
+**Linux (Fedora/RHEL):**
+```bash
+sudo dnf install python3.11
+```
+
+> If `python3.11` is not available on your distro, add the deadsnakes PPA first:
+> ```bash
+> sudo add-apt-repository ppa:deadsnakes/ppa && sudo apt update
+> sudo apt install python3.11 python3.11-venv
+> ```
+
+**Windows:**
+1. Download Python **3.11.x** from https://www.python.org/downloads/ (do not use 3.12+)
+2. Run the installer — **check "Add Python to PATH"** before clicking Install
+3. Open a new terminal and verify:
+```cmd
+python --version
+```
+> If `python` is not found, try `py -3.11 --version`
+
+---
+
+### 2. Node.js 20
+
+**Linux:**
+```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+source ~/.bashrc        # or ~/.zshrc
+nvm install 20
+nvm use 20
+node --version          # should print v20.x.x
+```
+
+**Windows:**
+1. Download the Node.js 20 LTS installer from https://nodejs.org/
+2. Run the installer (accept defaults)
+3. Verify in a new terminal:
+```cmd
+node --version
+npm --version
+```
+
+---
+
+### 3. PostgreSQL (required for the Place Data Service)
+
+**Linux:**
+```bash
+sudo apt install -y postgresql postgresql-contrib
+sudo systemctl start postgresql
+sudo systemctl enable postgresql
+```
+
+**Windows:**
+1. Download the PostgreSQL 15+ installer from https://www.postgresql.org/download/windows/
+2. Run the installer with default settings — **remember the password** you set for the `postgres` superuser
+3. PostgreSQL starts automatically as a Windows service
+
+**Both — create the application user and database:**
+
+```bash
+# Linux: switch to the postgres system user first
+sudo -u postgres psql
+
+# Windows: open pgAdmin, or launch from Start > PostgreSQL > SQL Shell (psql)
+# then connect as the postgres superuser
+```
+
+Inside the psql prompt, run:
+```sql
+CREATE USER chitogo_user WITH PASSWORD 'kawairoha';
+CREATE DATABASE chitogo OWNER chitogo_user;
+GRANT ALL PRIVILEGES ON DATABASE chitogo TO chitogo_user;
+\q
+```
+
+---
+
+### 4. API Keys
+
+Obtain the following keys before starting the services:
+
+| Key | Where to get it | Required for |
+|-----|----------------|--------------|
+| `GEMINI_API_KEY` | https://aistudio.google.com/app/apikey | Chat Agent (primary LLM) |
+| `GOOGLE_PLACES_API_KEY` | https://console.cloud.google.com/apis/credentials — enable **Places API** | Itinerary Planner |
+| `GOOGLE_MAPS_API_KEY` | Same GCP project — enable **Maps JavaScript API** + **Directions API** | Chat Agent routing + frontend |
+| `OPENWEATHER_API_KEY` | https://openweathermap.org/api (free tier) | Itinerary Planner weather |
+| `CWA_API_KEY` | https://opendata.cwa.gov.tw/devManual/insrtuction | Chat Agent weather |
+| `ANTHROPIC_API_KEY` | https://console.anthropic.com/ | Chat Agent (optional fallback) |
+| `OPENROUTER_API_KEY` | https://openrouter.ai/ | Chat Agent (optional fallback) |
 
 ---
 
 ## Setup
 
-Each service has its own `.env.example`. Copy and fill in the relevant keys:
+### Step 1 — Clone the repository
 
+```bash
+git clone https://github.com/YuChianWeng/Chitogo_Kawairoha.git
+cd Chitogo_Kawairoha
+```
+
+---
+
+### Step 2 — Copy environment files
+
+**Linux:**
 ```bash
 cp backend/.env.example            backend/.env
 cp backend/Chat_Agent/.env.example backend/Chat_Agent/.env
 cp backend/Chitogo_DataBase/.env.example backend/Chitogo_DataBase/.env
 cp backend/taiwanese_speech/.env.example backend/taiwanese_speech/.env
+cp frontend/.env.example           frontend/.env
 ```
 
-### Backend (Itinerary Planner)
+**Windows (CMD):**
+```cmd
+copy backend\.env.example            backend\.env
+copy backend\Chat_Agent\.env.example backend\Chat_Agent\.env
+copy backend\Chitogo_DataBase\.env.example backend\Chitogo_DataBase\.env
+copy backend\taiwanese_speech\.env.example backend\taiwanese_speech\.env
+copy frontend\.env.example           frontend\.env
+```
 
+---
+
+### Step 3 — Fill in the `.env` files
+
+**`backend/.env`** (Itinerary Planner):
+```env
+OPENWEATHER_API_KEY=your_openweathermap_key
+GOOGLE_PLACES_API_KEY=your_google_places_key
+GEMINI_API_KEY=your_gemini_key
+USE_LLM=false
+DB_PATH=./taipei.db
+WEATHER_CACHE_TTL_MINUTES=30
+CANDIDATE_CACHE_TTL_MINUTES=5
+# For demos without a real weather API: MOCK_WEATHER=rain
+```
+
+**`backend/Chat_Agent/.env`** (LLM Agent):
+```env
+LLM_PROVIDER=gemini
+GEMINI_API_KEY=your_gemini_key
+GEMINI_MODEL=gemini-2.5-flash
+ANTHROPIC_API_KEY=optional_anthropic_key
+OPENROUTER_API_KEY=optional_openrouter_key
+GOOGLE_MAPS_API_KEY=your_google_maps_key
+DATA_SERVICE_BASE_URL=http://localhost:8000
+CWA_API_KEY=your_cwa_key
+```
+
+**`backend/Chitogo_DataBase/.env`** (Place Data Service):
+```env
+DATABASE_URL=postgresql://chitogo_user:kawairoha@localhost:5432/chitogo
+```
+
+**`frontend/.env`**:
+```env
+VITE_GOOGLE_MAPS_API_KEY=your_google_maps_browser_key
+```
+
+---
+
+### Step 4 — Create the Python virtual environment and install dependencies
+
+**Linux:**
 ```bash
 cd backend
 python3.11 -m venv .venv
-source .venv/bin/activate       # Windows: .venv\Scripts\activate
+source .venv/bin/activate
+pip install --upgrade pip
 pip install -r requirements.txt
-# Edit backend/.env and add your API keys
+pip install -r Chat_Agent/requirements.txt
+pip install -r Chitogo_DataBase/requirements.txt
+cd ..
 ```
 
-### Frontend
+**Windows (PowerShell):**
+```powershell
+cd backend
+py -3.11 -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install --upgrade pip
+pip install -r requirements.txt
+pip install -r Chat_Agent\requirements.txt
+pip install -r Chitogo_DataBase\requirements.txt
+cd ..
+```
+
+> If PowerShell blocks the activate script, run this once in an admin terminal:
+> `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`
+
+---
+
+### Step 5 — Install frontend dependencies
 
 ```bash
 cd frontend
 npm install
+cd ..
 ```
 
 ---
 
 ## Running
 
-**Using Make (recommended — starts Itinerary Planner + Frontend concurrently):**
+You need **4 separate terminals**, all opened from the repo root.
 
+---
+
+### Terminal 1 — Place Data Service (PostgreSQL, port 8000)
+
+**Linux:**
+```bash
+cd backend/Chitogo_DataBase
+source ../.venv/bin/activate
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+**Windows:**
+```powershell
+cd backend\Chitogo_DataBase
+..\.venv\Scripts\Activate.ps1
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+Verify: http://localhost:8000/api/v1/health/db — should return `{"status":"ok"}`
+
+---
+
+### Terminal 2 — Chat Agent (LLM orchestration, port 8100)
+
+**Linux:**
+```bash
+cd backend/Chat_Agent
+source ../.venv/bin/activate
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8100
+```
+
+**Windows:**
+```powershell
+cd backend\Chat_Agent
+..\.venv\Scripts\Activate.ps1
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8100
+```
+
+Verify: http://localhost:8100/docs — should show the Swagger UI.
+
+---
+
+### Terminal 3 — Itinerary Planner (SQLite, port 8001)
+
+> The Itinerary Planner and the Place Data Service both default to port `8000`. Since Terminal 1 already uses `8000`, start this service on `8001`.
+
+**Linux:**
+```bash
+cd backend
+source .venv/bin/activate
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8001
+```
+
+**Windows:**
+```powershell
+cd backend
+.venv\Scripts\Activate.ps1
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8001
+```
+
+Verify: http://localhost:8001/docs
+
+---
+
+### Terminal 4 — Frontend (Vue 3, port 5173)
+
+```bash
+cd frontend
+npm run dev
+```
+
+Open http://localhost:5173 in your browser.
+
+---
+
+### Quick-start (Itinerary Planner + Frontend only, no PostgreSQL needed)
+
+If you only want the standalone trip-planning form without the Chat Agent or PostgreSQL, the Makefile starts both with one command:
+
+**Linux:**
 ```bash
 make dev
 ```
 
-**Running all services manually:**
+**Windows:** Install `make` first, then run `make dev`:
+```powershell
+# Option A — winget
+winget install GnuWin32.Make
 
-```bash
-# Terminal 1 — Itinerary Planner (http://localhost:8000)
-cd backend && source .venv/bin/activate
-uvicorn app.main:app --reload --port 8000
-
-# Terminal 2 — Chat Agent (http://localhost:8100)
-cd backend/Chat_Agent && source ../.venv/bin/activate
-uvicorn app.main:app --reload --port 8100
-
-# Terminal 3 — Place Data Service (http://localhost:8000, or a different port)
-cd backend/Chitogo_DataBase && source ../.venv/bin/activate
-uvicorn app.main:app --reload --port 8001
-
-# Terminal 4 — Frontend (http://localhost:5173)
-cd frontend && npm run dev
+# Option B — Chocolatey
+choco install make
 ```
+
+---
+
+### Verify everything is running
+
+| URL | Expected response |
+|-----|-------------------|
+| http://localhost:5173 | Vue frontend — main app UI |
+| http://localhost:8000/api/v1/health/db | `{"status":"ok"}` (Place Data Service) |
+| http://localhost:8001/api/v1/health | `{"status":"ok"}` (Itinerary Planner) |
+| http://localhost:8100/docs | Chat Agent Swagger UI |
+
+---
+
+### Common issues
+
+**`python3.11: command not found` (Linux)** — Install via the deadsnakes PPA (see Prerequisites above).
+
+**`ModuleNotFoundError` when starting a service** — The virtualenv is not activated in that terminal. Re-run the `source .venv/bin/activate` (Linux) or `.venv\Scripts\Activate.ps1` (Windows) command.
+
+**PostgreSQL connection refused** — Check the service is running:
+- Linux: `sudo systemctl status postgresql`
+- Windows: open Services (`services.msc`) and look for `postgresql-x64-15` (or your installed version)
+
+**Port already in use** — Another process is occupying that port. Either stop it or change the `--port` value when starting uvicorn.
+
+**Windows `Activate.ps1` is blocked** — Run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` once in an admin PowerShell window.
 
 Open http://localhost:5173 in your browser.
 
