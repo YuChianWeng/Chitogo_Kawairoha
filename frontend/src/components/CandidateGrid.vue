@@ -10,26 +10,26 @@
       >
         <div class="card-header">
           <span class="category-badge" :class="card.category">
-            {{ card.category === 'restaurant' ? '美食' : (card.category === 'go_home' ? '回程' : '景點') }}
+            {{ locale.trip.categories[card.category as keyof typeof locale.trip.categories] ?? card.category }}
           </span>
-          <span class="distance">{{ card.distance_min }} 分鐘</span>
+          <span class="distance">{{ locale.common.minutes(card.distance_min) }}</span>
         </div>
-        <h3 class="venue-name">{{ card.name }}</h3>
-        <p class="address">{{ card.address || '台北市' }}</p>
+        <h3 class="venue-name">{{ cardName(card) }}</h3>
+        <p class="address">{{ card.address || locale.common.defaultAddress }}</p>
         <div v-if="card.rating" class="rating">★ {{ card.rating.toFixed(1) }}</div>
         <p class="why">{{ card.why_recommended }}</p>
       </button>
     </div>
 
     <button class="none-btn" type="button" @click="$emit('demand')">
-      這些都還好，換一種條件幫我找
+      {{ locale.trip.demand.none }}
     </button>
 
     <details v-if="rainFiltered && rainFiltered.length > 0" class="rain-section">
       <summary class="rain-section-summary">
         <span class="rain-icon" aria-hidden="true">🌧️</span>
-        <span class="rain-section-title">雨天備選</span>
-        <span class="rain-section-hint">（因預報降雨，戶外點改列於此）</span>
+        <span class="rain-section-title">{{ locale.trip.rain.section }}</span>
+        <span class="rain-section-hint">{{ locale.trip.rain.hint }}</span>
       </summary>
       <div class="rain-grid">
         <div
@@ -39,13 +39,13 @@
         >
           <div class="card-header">
             <span class="category-badge" :class="card.category">
-              {{ card.category === 'restaurant' ? '美食' : '景點' }}
+              {{ locale.trip.categories[card.category as keyof typeof locale.trip.categories] ?? card.category }}
             </span>
             <span v-if="card.rain_note" class="rain-badge">{{ card.rain_note }}</span>
-            <span v-else class="rain-badge">🌧 戶外</span>
+            <span v-else class="rain-badge">{{ locale.trip.rain.badge }}</span>
           </div>
-          <h3 class="venue-name rain-venue-name">{{ card.name }}</h3>
-          <p class="address">{{ card.address || '台北市' }}</p>
+          <h3 class="venue-name rain-venue-name">{{ cardName(card) }}</h3>
+          <p class="address">{{ card.address || locale.common.defaultAddress }}</p>
           <div v-if="card.rating" class="rating rain-rating">★ {{ card.rating.toFixed(1) }}</div>
         </div>
       </div>
@@ -55,6 +55,7 @@
 
 <script setup lang="ts">
 import type { CandidateCard } from '../types/trip'
+import { useLocale } from '../composables/useLocale'
 
 defineProps<{
   candidates: CandidateCard[]
@@ -65,6 +66,12 @@ defineEmits<{
   select: [venueId: string | number]
   demand: []
 }>()
+
+const { lang, locale } = useLocale()
+
+function cardName(card: { name: string; name_en?: string | null }) {
+  return (lang.value === 'en' && card.name_en) ? card.name_en : card.name
+}
 </script>
 
 <style scoped>

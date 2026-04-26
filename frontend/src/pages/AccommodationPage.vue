@@ -1,8 +1,8 @@
 <template>
   <div class="setup-container">
     <div class="setup-card">
-      <h1 class="title">住宿安排</h1>
-      <p class="subtitle">先確認今天的住宿狀態，再進入返回設定</p>
+      <h1 class="title">{{ locale.accommodation.title }}</h1>
+      <p class="subtitle">{{ locale.accommodation.subtitle }}</p>
 
       <div class="mode-grid">
         <button
@@ -19,19 +19,19 @@
       </div>
 
       <section v-if="mode === 'booked'" class="section">
-        <h3 class="section-title">檢查已預訂飯店</h3>
+        <h3 class="section-title">{{ locale.accommodation.sections.booked }}</h3>
         <input
           :value="hotelName"
           class="text-input"
-          placeholder="輸入飯店名稱"
+          :placeholder="locale.accommodation.hotelInput"
           @input="onBookedHotelInput"
         />
 
         <div v-if="validationResult && !validationResult.valid" class="warning-box">
-          <div class="warning-title">查無此合法旅宿</div>
+          <div class="warning-title">{{ locale.accommodation.warnings.notFound }}</div>
 
           <div v-if="validationResult.alternatives.length" class="result-block">
-            <div class="result-label">你是不是要找：</div>
+            <div class="result-label">{{ locale.accommodation.warnings.didYouMean }}</div>
             <HotelRecommendationGrid
               :cards="validationResult.alternatives"
               :selected-name="hotelName"
@@ -40,7 +40,7 @@
           </div>
 
           <div v-if="hotelRecommendations.length" class="result-block">
-            <div class="result-label">可改訂以下合法旅宿：</div>
+            <div class="result-label">{{ locale.accommodation.warnings.alternatives }}</div>
             <HotelRecommendationGrid
               :cards="hotelRecommendations"
               :selected-name="hotelName"
@@ -51,13 +51,13 @@
       </section>
 
       <section v-else-if="mode === 'need_hotel'" class="section">
-        <h3 class="section-title">推薦合法飯店</h3>
+        <h3 class="section-title">{{ locale.accommodation.sections.need_hotel }}</h3>
         <select
           v-model="district"
           class="select-input"
           @change="resetHotelRecommendations(true)"
         >
-          <option value="">不限地區</option>
+          <option value="">{{ locale.accommodation.allDistricts }}</option>
           <option v-for="item in DISTRICTS" :key="item" :value="item">{{ item }}</option>
         </select>
 
@@ -74,7 +74,7 @@
         </div>
 
         <div v-if="hotelName" class="selection-banner">
-          已選擇：{{ hotelName }}
+          {{ locale.accommodation.selected(hotelName) }}
         </div>
 
         <div v-if="recommendationMessage" class="info-box">
@@ -82,7 +82,7 @@
         </div>
 
         <div v-if="hotelRecommendations.length" class="result-block">
-          <div class="result-label">推薦清單</div>
+          <div class="result-label">{{ locale.accommodation.recommendList }}</div>
           <HotelRecommendationGrid
             :cards="hotelRecommendations"
             :selected-name="hotelName"
@@ -92,16 +92,16 @@
       </section>
 
       <section v-else class="section">
-        <h3 class="section-title">今天不住宿</h3>
+        <h3 class="section-title">{{ locale.accommodation.sections.no_stay }}</h3>
         <div class="info-box">
-          這個選項會直接跳到下一步，只填返回時間與返回地點。
+          {{ locale.accommodation.noStayNote }}
         </div>
       </section>
 
       <div v-if="errorText" class="error">{{ errorText }}</div>
 
       <button class="submit-btn" :disabled="loading" @click="handleSubmit">
-        {{ loading ? '處理中…' : submitLabel }}
+        {{ loading ? locale.accommodation.loading : submitLabel }}
       </button>
     </div>
   </div>
@@ -120,20 +120,22 @@ import type {
   SetupResult,
 } from '../types/trip'
 import { clearAccommodationState, saveAccommodationState } from '../utils/accommodation'
+import { useLocale } from '../composables/useLocale'
 
 const router = useRouter()
+const { locale } = useLocale()
 
 const DISTRICTS = ['大安區', '信義區', '中山區', '松山區', '中正區', '萬華區', '士林區', '北投區', '內湖區', '南港區', '文山區', '大同區']
-const budgetOptions = [
-  { value: 'budget', label: '平價' },
-  { value: 'mid', label: '中價' },
-  { value: 'luxury', label: '高價' },
-] as const
-const modeOptions = [
-  { value: 'booked', label: '有訂飯店', description: '檢查是否為合法旅宿' },
-  { value: 'need_hotel', label: '尚未預訂', description: '依地區與預算推薦飯店' },
-  { value: 'no_stay', label: '不住宿', description: '直接進下一步填返回資訊' },
-] as const
+const budgetOptions = computed(() => [
+  { value: 'budget' as const, label: locale.value.accommodation.budgetTiers.budget },
+  { value: 'mid' as const, label: locale.value.accommodation.budgetTiers.mid },
+  { value: 'luxury' as const, label: locale.value.accommodation.budgetTiers.luxury },
+])
+const modeOptions = computed(() => [
+  { value: 'booked' as const, label: locale.value.accommodation.modes.booked.label, description: locale.value.accommodation.modes.booked.description },
+  { value: 'need_hotel' as const, label: locale.value.accommodation.modes.need_hotel.label, description: locale.value.accommodation.modes.need_hotel.description },
+  { value: 'no_stay' as const, label: locale.value.accommodation.modes.no_stay.label, description: locale.value.accommodation.modes.no_stay.description },
+])
 
 const mode = ref<AccommodationMode>('booked')
 const hotelName = ref('')
@@ -146,17 +148,17 @@ const loading = ref(false)
 const errorText = ref('')
 
 const submitLabel = computed(() => {
-  if (mode.value === 'booked') return '檢查合法旅宿'
-  if (mode.value === 'need_hotel') return hotelName.value ? '使用這間飯店' : '推薦飯店'
-  return '不住宿，下一步'
+  if (mode.value === 'booked') return locale.value.accommodation.submitLabels.booked
+  if (mode.value === 'need_hotel') return hotelName.value ? locale.value.accommodation.submitLabels.need_hotel_selected : locale.value.accommodation.submitLabels.need_hotel_unselected
+  return locale.value.accommodation.submitLabels.no_stay
 })
 
 const recommendationMessage = computed(() => {
-  if (recommendationStatus.value === 'matched_preferences') return '以下清單符合你目前的地區與預算偏好。'
-  if (recommendationStatus.value === 'relaxed_budget') return '符合地區的合法旅宿較少，已先放寬預算條件。'
-  if (recommendationStatus.value === 'expanded_citywide') return '指定地區房源較少，已擴大到全台北幫你找。'
-  if (recommendationStatus.value === 'expanded_citywide_and_budget') return '條件較嚴格，已擴大到全台北並放寬預算。'
-  if (recommendationStatus.value === 'no_results') return '目前找不到符合條件的合法旅宿，請調整地區或預算再試一次。'
+  if (recommendationStatus.value === 'matched_preferences') return locale.value.accommodation.recommendations.matched
+  if (recommendationStatus.value === 'relaxed_budget') return locale.value.accommodation.recommendations.relaxedBudget
+  if (recommendationStatus.value === 'expanded_citywide') return locale.value.accommodation.recommendations.expandedCitywide
+  if (recommendationStatus.value === 'expanded_citywide_and_budget') return locale.value.accommodation.recommendations.expandedCitywideAndBudget
+  if (recommendationStatus.value === 'no_results') return locale.value.accommodation.recommendations.noResults
   return ''
 })
 
@@ -232,7 +234,7 @@ async function handleSubmit() {
     clearAccommodationState()
   } catch (err: unknown) {
     const e = err as { response?: { data?: { detail?: string } } }
-    errorText.value = e?.response?.data?.detail ?? '設定失敗，請重試。'
+    errorText.value = e?.response?.data?.detail ?? locale.value.setup.error
   } finally {
     loading.value = false
   }

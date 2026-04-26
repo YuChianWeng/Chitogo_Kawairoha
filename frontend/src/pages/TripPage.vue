@@ -3,8 +3,8 @@
     <div v-if="showGoHomeBanner" class="go-home-banner">
       <p>{{ goHomeMessage }}</p>
       <div class="banner-actions">
-        <button class="banner-btn continue" type="button" @click="dismissBanner">再玩一下</button>
-        <button class="banner-btn gohome" type="button" @click="triggerSummary">回家去</button>
+        <button class="banner-btn continue" type="button" @click="dismissBanner">{{ locale.trip.goHome.continue }}</button>
+        <button class="banner-btn gohome" type="button" @click="triggerSummary">{{ locale.trip.goHome.goHome }}</button>
       </div>
     </div>
 
@@ -15,17 +15,14 @@
           <div class="message-stack">
             <div class="message-bubble assistant hero-bubble">
               <div class="hero-topline">
-                <span class="message-label">Chitogo 景點小幫手</span>
-                <span class="gene-badge">{{ userGene || '旅人模式' }}</span>
+                <span class="message-label">{{ locale.trip.heroBubble.label }}</span>
+                <span class="gene-badge">{{ (locale.quiz.genes[userGene] || locale.trip.heroBubble.geneDefault) }}</span>
                 <span class="time-badge" :class="{ 'time-badge--sim': isSimulating }">
                   {{ isSimulating ? '⏱ ' : '' }}{{ currentTime }}
                 </span>
               </div>
-              <h1>這一輪想怎麼玩？</h1>
-              <p>
-                我會先用你現在的移動方式幫你挑幾個候選景點，你只要從卡片裡選一個最有感覺的，
-                接著我再一路陪你到評價完這一站。
-              </p>
+              <h1>{{ locale.trip.heroBubble.title }}</h1>
+              <p>{{ locale.trip.heroBubble.body }}</p>
             </div>
           </div>
         </div>
@@ -34,12 +31,12 @@
           <div class="assistant-avatar">旅</div>
           <div class="message-stack">
             <div class="message-bubble assistant warning-bubble">
-              <p>我現在拿不到你的位置，先告訴我你在台北哪一區，我一樣可以照附近幫你推薦。</p>
+              <p>{{ locale.trip.locationDenied.message }}</p>
             </div>
             <div class="message-surface location-surface">
-              <label class="field-label" for="district-select">目前所在區域</label>
+              <label class="field-label" for="district-select">{{ locale.trip.locationDenied.label }}</label>
               <select id="district-select" v-model="selectedDistrict" class="district-select" @change="applyDistrictFallback">
-                <option value="">選擇地區</option>
+                <option value="">{{ locale.trip.locationDenied.placeholder }}</option>
                 <option v-for="d in DISTRICT_CENTROIDS" :key="d.name" :value="d.name">{{ d.name }}</option>
               </select>
             </div>
@@ -57,7 +54,7 @@
 
         <div v-if="showTransportReply" class="message-row user">
           <div class="message-bubble user">
-            這一輪我想用 {{ transportSummary }} 找景點。
+            {{ locale.trip.transportSummary.userReply(transportSummary) }}
           </div>
         </div>
 
@@ -66,8 +63,8 @@
             <div class="assistant-avatar">旅</div>
             <div class="message-stack">
               <div class="message-bubble assistant">
-                <p class="message-kicker">本輪設定</p>
-                <p>這一輪你想怎麼移動？我會照這個方式幫你推薦景點，之後每一輪都還可以再調整。</p>
+                <p class="message-kicker">{{ locale.trip.transportPrompt.kicker }}</p>
+                <p>{{ locale.trip.transportPrompt.body }}</p>
               </div>
               <div v-if="candidatesError" class="message-bubble assistant error-bubble">
                 <p>{{ candidatesError }}</p>
@@ -92,8 +89,8 @@
 
                 <div class="slider-group">
                   <div class="slider-header">
-                    <span>每段最長時間</span>
-                    <strong>{{ maxMinutesPerLeg }} 分鐘</strong>
+                    <span>{{ locale.trip.transportPrompt.sliderLabel }}</span>
+                    <strong>{{ maxMinutesPerLeg }} {{ locale.trip.transportPrompt.sliderUnit }}</strong>
                   </div>
                   <input
                     v-model.number="maxMinutesPerLeg"
@@ -105,7 +102,7 @@
                   />
                 </div>
 
-                <p class="transport-hint">你一送出，我就會依這組交通條件重新整理這一輪的候選景點。</p>
+                <p class="transport-hint">{{ locale.trip.transportPrompt.hint }}</p>
 
                 <Transition name="loading-swap" mode="out-in">
                   <div v-if="loadingCandidates" class="loading-panel" key="loading">
@@ -125,7 +122,7 @@
                     </div>
                   </div>
                   <button v-else class="primary-btn" type="button" key="btn" @click="submitTransport">
-                    開始聽推薦
+                    {{ locale.trip.transportPrompt.submit }}
                   </button>
                 </Transition>
               </div>
@@ -138,7 +135,7 @@
             <div class="assistant-avatar">旅</div>
             <div class="message-stack">
               <div class="message-bubble assistant">
-                <p class="message-kicker">推薦候選</p>
+                <p class="message-kicker">{{ locale.trip.selecting.kicker }}</p>
                 <p>{{ recommendationLead }}</p>
               </div>
               <div v-if="candidatesResult?.fallback_reason" class="message-bubble assistant subtle-bubble">
@@ -148,12 +145,12 @@
                 <p>{{ candidatesError }}</p>
               </div>
               <div v-if="loadingCandidates" class="message-surface status-surface">
-                <p>我正在幫你整理附近適合的點，稍等一下。</p>
+                <p>{{ locale.trip.selecting.loading }}</p>
               </div>
               <div v-else-if="candidatesResult" class="message-surface candidate-surface">
                 <div class="surface-header">
-                  <p>我先幫你挑了 {{ candidatesResult.candidates.length }} 個選項，你可以直接點卡片決定這一站。</p>
-                  <button class="secondary-btn" type="button" @click="reopenTransportPrompt">改交通</button>
+                  <p>{{ locale.trip.selecting.countLabel(candidatesResult.candidates.length) }}</p>
+                  <button class="secondary-btn" type="button" @click="reopenTransportPrompt">{{ locale.trip.selecting.changeTransport }}</button>
                 </div>
 
                 <CandidateGrid
@@ -163,8 +160,8 @@
                 />
               </div>
               <div v-else class="message-surface status-surface status-surface--error">
-                <p>{{ candidatesError || '這一輪還沒有整理出候選景點。' }}</p>
-                <button class="retry-btn" type="button" @click="retryCurrentRound">重新整理推薦</button>
+                <p>{{ candidatesError || locale.trip.selecting.noResults }}</p>
+                <button class="retry-btn" type="button" @click="retryCurrentRound">{{ locale.trip.selecting.retry }}</button>
               </div>
             </div>
           </div>
@@ -173,7 +170,7 @@
         <template v-else-if="tripPhase === 'NAVIGATING' && selectResult">
           <div class="message-row user">
             <div class="message-bubble user">
-              那就去 {{ currentVenueName }}。
+              {{ locale.trip.navigating.userBubble(currentVenueName) }}
             </div>
           </div>
 
@@ -181,7 +178,7 @@
             <div class="assistant-avatar">旅</div>
             <div class="message-stack">
               <div class="message-bubble assistant">
-                <p>好，我把路線整理好了。到了之後按一下「我到了，繼續」，我再接著問你感受。</p>
+                <p>{{ locale.trip.navigating.assistantBubble }}</p>
               </div>
               <div class="message-surface nav-surface">
                 <NavigationPanel
@@ -198,7 +195,7 @@
         <template v-else-if="tripPhase === 'RATING' && selectResult">
           <div class="message-row user">
             <div class="message-bubble user">
-              我到 {{ currentVenueName }} 了。
+              {{ locale.trip.rating.userBubble(currentVenueName) }}
             </div>
           </div>
 
@@ -206,7 +203,7 @@
             <div class="assistant-avatar">旅</div>
             <div class="message-stack">
               <div class="message-bubble assistant">
-                <p>這一站走完了，你覺得 {{ currentVenueName }} 怎麼樣？給我一個評價，我下一輪會更懂你的口味。</p>
+                <p>{{ locale.trip.rating.assistantBubble(currentVenueName) }}</p>
               </div>
               <div class="message-surface rating-surface">
                 <RatingCard :venue="selectResult.venue" @rated="onRated" />
@@ -254,7 +251,7 @@
                   <p v-if="c.why_recommended" class="chat-card-why">{{ c.why_recommended }}</p>
                   <span class="chat-card-action">
                     <span v-if="chatSelectingId === c.place_id" class="chat-card-spinner" />
-                    <template v-else>去這裡 →</template>
+                    <template v-else>{{ locale.trip.goThere }}</template>
                   </span>
                 </button>
                 <div v-if="chatSelectError" class="chat-select-error">{{ chatSelectError }}</div>
@@ -265,18 +262,18 @@
 
         <div v-if="tripPhase !== 'ENDED'" class="global-actions">
           <button class="go-home-inline" type="button" @click="showGoHomeConfirm = true">
-            我想回家
+            {{ locale.trip.goHome.goHome }}
           </button>
         </div>
       </section>
     </div>
 
     <dialog ref="goHomeDialog" class="confirm-dialog">
-      <p>確定要結束旅程嗎？</p>
+      <p>{{ locale.trip.dialog.endTripConfirm }}</p>
       <div class="dialog-actions">
-        <button class="dialog-btn cancel" type="button" @click="closeGoHomeDialog">取消</button>
+        <button class="dialog-btn cancel" type="button" @click="closeGoHomeDialog">{{ locale.trip.dialog.cancel }}</button>
         <button class="dialog-btn confirm" type="button" @click="triggerSummary" :disabled="summaryLoading">
-          {{ summaryLoading ? '結束中…' : '確定' }}
+          {{ summaryLoading ? locale.trip.dialog.ending : locale.trip.dialog.confirm }}
         </button>
       </div>
     </dialog>
@@ -306,14 +303,7 @@ import { useSimTime } from '../composables/useSimTime'
 import { checkGoHome, getCandidates, getSummary, selectVenue, sendMessage, snoozeGoHome } from '../services/api'
 import type { ChatMessage } from '../types/chat'
 import type { ChatCandidate } from '../types/itinerary'
-
-const LOADING_STEPS = [
-  '找到你附近的地圖…',
-  'AI 正在篩選景點…',
-  '計算交通時間中…',
-  '整理最適合的推薦…',
-  '快好了，再等一下…',
-]
+import { useLocale } from '../composables/useLocale'
 import type {
   CandidateTransportInput,
   CandidatesResult,
@@ -324,6 +314,9 @@ import type {
 import { useMapState } from '../composables/useMapState'
 
 const router = useRouter()
+const { lang, locale } = useLocale()
+
+const LOADING_STEPS = computed(() => locale.value.trip.loadingSteps)
 const {
   setSpotCandidates,
   clearSpotCandidates,
@@ -368,11 +361,11 @@ const DISTRICT_CENTROIDS = [
   { name: '大同區', lat: 25.0633, lng: 121.5131 },
 ]
 
-const transportOptions: Array<{ value: TransportMode; label: string }> = [
-  { value: 'walk', label: '步行' },
-  { value: 'transit', label: '大眾運輸' },
-  { value: 'drive', label: '開車' },
-]
+const transportOptions = computed<Array<{ value: TransportMode; label: string }>>(() => [
+  { value: 'walk', label: locale.value.trip.transport.walk },
+  { value: 'transit', label: locale.value.trip.transport.transit },
+  { value: 'drive', label: locale.value.trip.transport.drive },
+])
 
 const tripPhase = ref<TripPhase>('TRANSPORT_PROMPT')
 const candidatesResult = ref<CandidatesResult | null>(null)
@@ -413,25 +406,28 @@ const userGene = localStorage.getItem('chitogo_gene') || ''
 
 const transportSummary = computed(() => {
   const currentTransport = lastRequestedTransport.value
-  if (!currentTransport) return '尚未選擇交通'
-  return `${transportLabel(currentTransport.mode)}，每段 ${currentTransport.max_minutes_per_leg} 分鐘內`
+  if (!currentTransport) return locale.value.trip.transportSummary.notSelected
+  return locale.value.trip.transportSummary.summary(transportLabel(currentTransport.mode), currentTransport.max_minutes_per_leg)
 })
 
 const showTransportReply = computed(() => (
   ['SELECTING', 'NAVIGATING', 'RATING'].includes(tripPhase.value) && Boolean(lastRequestedTransport.value)
 ))
 
-const currentVenueName = computed(() => (
-  selectResult.value?.venue.name || selectedVenueName.value || '這個地方'
-))
+const currentVenueName = computed(() => {
+  const v = selectResult.value?.venue
+  if (v) return (lang.value === 'en' && v.name_en) ? v.name_en : v.name
+  return selectedVenueName.value || locale.value.common.defaultAddress
+})
 
 const recommendationLead = computed(() => {
+  const rl = locale.value.trip.recommendLead
   if (loadingCandidates.value) {
-    return `收到，我正用 ${transportSummary.value} 幫你整理附近的候選景點。`
+    return rl.loading(transportSummary.value)
   }
 
   if (!candidatesResult.value) {
-    return `我會依 ${transportSummary.value} 幫你找幾個適合這一輪的地方。`
+    return rl.noResult(transportSummary.value)
   }
 
   const cr = candidatesResult.value
@@ -440,18 +436,18 @@ const recommendationLead = computed(() => {
     lead = cr.go_home_reminder + '。'
   }
   if ((cr.rain_filtered?.length ?? 0) > 0) {
-    lead += '氣象預報可能降雨，戶外點幫你另列在下方「雨天備選」。'
+    lead += rl.rain
   }
   if (cr.homing_active) {
-    lead += '離回程時間近了，我幫你挑了順路的選項。'
+    lead += rl.homing
   }
 
   if (cr.restaurant_count > 0 && cr.attraction_count > 0) {
-    lead += '我推薦以下幾個景點和美食，你先挑一張最有感覺的卡片。'
+    lead += rl.both
   } else if (cr.restaurant_count > 0) {
-    lead += '我推薦以下幾個適合這一輪的美食選項，你先挑一張最有感覺的卡片。'
+    lead += rl.restaurantsOnly
   } else {
-    lead += '我推薦以下幾個適合這一輪的景點，你先挑一張最有感覺的卡片。'
+    lead += rl.attractionsOnly
   }
 
   return lead
@@ -459,10 +455,11 @@ const recommendationLead = computed(() => {
 
 const lastRoundFeedbackMessage = computed(() => {
   if (!lastRoundFeedback.value) return ''
+  const t = locale.value.trip
   const tagSummary = lastRoundFeedback.value.tags.length
-    ? `，也提到 ${lastRoundFeedback.value.tags.join('、')}`
+    ? t.feedbackTags(lastRoundFeedback.value.tags.join('、'))
     : ''
-  return `收到，你剛剛給 ${lastRoundFeedback.value.venueName} ${lastRoundFeedback.value.stars} 星${tagSummary}。下一輪我會照這個感受繼續推薦。`
+  return t.feedbackMessage(lastRoundFeedback.value.venueName, lastRoundFeedback.value.stars, tagSummary)
 })
 
 onMounted(() => {
@@ -512,7 +509,7 @@ watch(
 )
 
 function transportLabel(mode: TransportMode) {
-  return transportOptions.find(option => option.value === mode)?.label || mode
+  return transportOptions.value.find(option => option.value === mode)?.label || mode
 }
 
 function applyDistrictFallback() {
@@ -716,7 +713,7 @@ function onArrived() {
 
 function onRated(payload: RatingPayload) {
   lastRoundFeedback.value = {
-    venueName: selectResult.value?.venue.name || selectedVenueName.value || '這一站',
+    venueName: currentVenueName.value,
     stars: payload.stars,
     tags: payload.tags,
   }

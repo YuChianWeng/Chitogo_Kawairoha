@@ -1,9 +1,9 @@
 <template>
   <div class="rating-card">
     <div class="rating-header">
-      <p class="rating-kicker">這站感受</p>
+      <p class="rating-kicker">{{ locale.rating.kicker }}</p>
       <h2 class="venue-name">{{ venue.name }}</h2>
-      <p class="rating-label">用星等和幾個關鍵字告訴我你的感覺。</p>
+      <p class="rating-label">{{ locale.rating.label }}</p>
     </div>
 
     <div class="stars">
@@ -20,7 +20,7 @@
 
     <div class="tags">
       <button
-        v-for="tag in QUICK_TAGS"
+        v-for="tag in quickTags"
         :key="tag"
         class="tag-btn"
         :class="{ selected: selectedTags.includes(tag) }"
@@ -30,10 +30,10 @@
         {{ tag }}
       </button>
     </div>
-    <p class="tag-hint">標籤可選填，不選也可以直接送出。</p>
+    <p class="tag-hint">{{ locale.rating.hint }}</p>
 
     <button class="submit-btn" type="button" :disabled="selectedStars === 0 || loading" @click="submitRating">
-      {{ loading ? '提交中…' : '繼續探索' }}
+      {{ loading ? locale.rating.loading : locale.rating.submit }}
     </button>
     <div v-if="errorText" class="error">{{ errorText }}</div>
   </div>
@@ -43,6 +43,7 @@
 import { computed, ref } from 'vue'
 import { submitRating as apiSubmitRating } from '../services/api'
 import type { RateResult } from '../types/trip'
+import { useLocale } from '../composables/useLocale'
 
 const props = defineProps<{
   venue: { venue_id: string | number; name: string }
@@ -52,7 +53,9 @@ const emit = defineEmits<{
   rated: [payload: { result: RateResult; stars: number; tags: string[] }]
 }>()
 
-const QUICK_TAGS = ['食物很好吃', '人太多了', '值得再來', '服務很好', '環境很棒']
+const { locale } = useLocale()
+
+const quickTags = computed(() => [...locale.value.rating.quickTags])
 
 const selectedStars = ref(0)
 const selectedTags = ref<string[]>([])
@@ -60,12 +63,8 @@ const loading = ref(false)
 const errorText = ref('')
 
 const starCaption = computed(() => {
-  if (selectedStars.value === 0) return '先選一個星等'
-  if (selectedStars.value === 1) return '這站不太對味'
-  if (selectedStars.value === 2) return '有點普通'
-  if (selectedStars.value === 3) return '還不錯'
-  if (selectedStars.value === 4) return '很喜歡'
-  return '這站超對味'
+  if (selectedStars.value === 0) return locale.value.rating.selectStar
+  return locale.value.rating.starCaptions[selectedStars.value] ?? ''
 })
 
 function toggleTag(tag: string) {
@@ -92,7 +91,7 @@ async function submitRating() {
     })
   } catch (err: unknown) {
     const e = err as { response?: { data?: { detail?: string } } }
-    errorText.value = e?.response?.data?.detail ?? '提交失敗，請重試。'
+    errorText.value = e?.response?.data?.detail ?? locale.value.rating.error
   } finally {
     loading.value = false
   }

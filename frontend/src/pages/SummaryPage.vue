@@ -1,7 +1,7 @@
 <template>
   <div class="summary-container">
     <div v-if="loading" class="loading">
-      <p>載入旅程總結中…</p>
+      <p>{{ locale.summary.loading }}</p>
     </div>
 
     <div v-else-if="summary" class="summary-content">
@@ -14,8 +14,8 @@
           @error="onMascotImgError"
         />
         <div class="gene-info">
-          <p class="gene-label">旅遊基因</p>
-          <p class="gene-name">{{ summary.travel_gene }}</p>
+          <p class="gene-label">{{ locale.summary.geneLabel }}</p>
+          <p class="gene-name">{{ locale.quiz.genes[summary.travel_gene] || summary.travel_gene }}</p>
         </div>
       </div>
 
@@ -25,20 +25,20 @@
       <div class="stats-row">
         <div class="stat-card">
           <span class="stat-value">{{ summary.total_stops }}</span>
-          <span class="stat-label">個景點</span>
+          <span class="stat-label">{{ locale.summary.stopsUnit }}</span>
         </div>
         <div class="stat-card">
           <span class="stat-value">{{ formatTime(summary.total_elapsed_min) }}</span>
-          <span class="stat-label">旅遊時間</span>
+          <span class="stat-label">{{ locale.summary.timeLabel }}</span>
         </div>
         <div class="stat-card">
           <span class="stat-value">{{ (summary.total_distance_m / 1000).toFixed(1) }}</span>
-          <span class="stat-label">公里</span>
+          <span class="stat-label">{{ locale.summary.kmUnit }}</span>
         </div>
       </div>
 
       <!-- Timeline -->
-      <h3 class="timeline-title">今日足跡</h3>
+      <h3 class="timeline-title">{{ locale.summary.timelineTitle }}</h3>
       <div class="timeline">
         <div v-for="stop in summary.stops" :key="stop.stop_number" class="stop-item">
           <div class="stop-num">{{ stop.stop_number }}</div>
@@ -58,12 +58,12 @@
       </div>
 
       <!-- Share button -->
-      <button class="share-btn" @click="shareJourney">分享我的旅程</button>
+      <button class="share-btn" @click="shareJourney">{{ locale.summary.share }}</button>
     </div>
 
     <div v-else class="error-state">
-      <p>無法載入旅程總結。</p>
-      <button class="retry-btn" @click="loadSummary">重試</button>
+      <p>{{ locale.summary.error }}</p>
+      <button class="retry-btn" @click="loadSummary">{{ locale.summary.retry }}</button>
     </div>
   </div>
 </template>
@@ -72,7 +72,9 @@
 import { ref, onMounted } from 'vue'
 import { getSummary } from '../services/api'
 import type { JourneySummary } from '../types/trip'
+import { useLocale } from '../composables/useLocale'
 
+const { locale } = useLocale()
 const loading = ref(true)
 const summary = ref<JourneySummary | null>(null)
 

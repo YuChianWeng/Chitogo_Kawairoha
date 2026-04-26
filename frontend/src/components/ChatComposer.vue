@@ -10,7 +10,7 @@
         ref="textareaEl"
         v-model="text"
         class="composer-textarea"
-        :placeholder="placeholder || '輸入訊息或使用語音…'"
+        :placeholder="placeholder || locale.common.composerPlaceholder"
         :disabled="disabled || sending"
         rows="1"
         enterkeyhint="send"
@@ -38,6 +38,7 @@
 <script setup lang="ts">
 import { nextTick, ref } from 'vue'
 import MicButton from './MicButton.vue'
+import { useLocale } from '../composables/useLocale'
 
 const props = defineProps<{
   disabled?: boolean
@@ -47,6 +48,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{ submit: [text: string] }>()
 
+const { locale } = useLocale()
 const text = ref('')
 const micError = ref<string | null>(null)
 const textareaEl = ref<HTMLTextAreaElement | null>(null)
