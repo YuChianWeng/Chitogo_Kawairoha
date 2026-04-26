@@ -38,7 +38,7 @@ export function loadGoogleMapsApi(): Promise<GoogleMapsApi> {
     const script = document.createElement('script')
     script.src =
       `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}` +
-      '&language=zh-TW&region=TW&callback=__chitogoGoogleMapsInit__'
+      '&libraries=places&language=zh-TW&region=TW&callback=__chitogoGoogleMapsInit__'
     script.async = true
     script.defer = true
     script.dataset.googleMapsLoader = 'chitogo'

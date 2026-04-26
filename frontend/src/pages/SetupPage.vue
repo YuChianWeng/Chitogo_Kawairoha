@@ -12,10 +12,10 @@
       <section class="section">
         <h3 class="section-title">預計返回時間（選填）</h3>
         <input v-model="returnTime" type="time" class="text-input" />
-        <input
-          v-model="returnDestination"
-          class="text-input mt-8"
-          placeholder="返回地點（如：飯店、台北車站）"
+        <ReturnDestinationPicker
+          v-model="returnPlace"
+          class="mt-8"
+          placeholder="返回地點（從建議選一個，或直接輸入）"
         />
       </section>
 
@@ -34,11 +34,13 @@ import { useRouter } from 'vue-router'
 import { submitSetup } from '../services/api'
 import type { SetupResult } from '../types/trip'
 import { readAccommodationState } from '../utils/accommodation'
+import ReturnDestinationPicker from '../components/setup/ReturnDestinationPicker.vue'
+import type { PlaceValue } from '../components/setup/ReturnDestinationPicker.vue'
 
 const router = useRouter()
 
 const returnTime = ref('')
-const returnDestination = ref('')
+const returnPlace = ref<PlaceValue | null>(null)
 const loading = ref(false)
 const errorText = ref('')
 
@@ -62,7 +64,10 @@ async function handleSubmit() {
   try {
     const result: SetupResult = await submitSetup(sessionId, {
       return_time: returnTime.value || undefined,
-      return_destination: returnDestination.value || undefined,
+      return_destination: returnPlace.value?.name || undefined,
+      return_dest_lat: returnPlace.value?.lat ?? undefined,
+      return_dest_lng: returnPlace.value?.lng ?? undefined,
+      return_dest_place_id: returnPlace.value?.place_id ?? undefined,
     })
 
     if (result.next_step === 'trip') {
