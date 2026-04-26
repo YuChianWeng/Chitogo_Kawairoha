@@ -33,7 +33,7 @@
           <div class="info-bar">
             <div class="info-item">
               <img src="/images/111_361.svg" alt="Weather">
-              <span>{{ locale.nav.weather }}</span>
+              <span>{{ weatherDisplay }}</span>
             </div>
             <div class="info-item">
               <img src="/images/111_363.svg" alt="Time">
@@ -41,7 +41,7 @@
             </div>
             <div class="info-item">
               <img src="/images/111_362.svg" alt="Location">
-              <span>{{ locale.nav.location }}</span>
+              <span>{{ locationDisplay }}</span>
             </div>
           </div>
         </header>
@@ -124,8 +124,12 @@ import { RouterView } from 'vue-router'
 import MapPanel from '../components/MapPanel.vue'
 import LangToggle from '../components/LangToggle.vue'
 import { useLocale } from '../composables/useLocale'
+import { useWeather } from '../composables/useWeather'
+import { useMapState } from '../composables/useMapState'
 
 const { locale } = useLocale()
+const { weather } = useWeather()
+const { currentLocation } = useMapState()
 
 type TabKey = 'home' | 'attractions' | 'agent' | 'profile' | 'settings'
 
@@ -149,6 +153,20 @@ const activeTab = ref<TabKey>('agent')
 const isMobile = ref(window.innerWidth <= MOBILE_BREAKPOINT)
 const isMobileMapOpen = ref(false)
 
+const weatherDisplay = computed(() => {
+  if (weather.value.loading) return locale.value.nav.weather.loading
+  const prob = weather.value.rainProbability
+  const condition = weather.value.isRainingLikely
+    ? locale.value.nav.weather.rainy
+    : (prob !== null && prob > 20) ? locale.value.nav.weather.cloudy : locale.value.nav.weather.sunny
+  if (prob === null) return condition
+  return locale.value.nav.weather.format(condition, prob)
+})
+
+const locationDisplay = computed(() => {
+  return currentLocation.value?.label || locale.value.nav.location
+})
+
 function onResize() {
   isMobile.value = window.innerWidth <= MOBILE_BREAKPOINT
   if (!isMobile.value) isMobileMapOpen.value = false
@@ -164,11 +182,12 @@ const chatWidth = ref<number>(
 
 const currentTime = computed(() => {
   const now = new Date()
-  const days = ['日', '一', '二', '三', '四', '五', '六']
+  const days = locale.value.nav.time.days
   const day = days[now.getDay()]
   const hh = String(now.getHours()).padStart(2, '0')
   const mm = String(now.getMinutes()).padStart(2, '0')
-  return `星期${day} ${hh}:${mm}`
+  const prefix = locale.value.nav.time.dayPrefix
+  return `${prefix}${day} ${hh}:${mm}`
 })
 
 function clampWidth(w: number): number {
