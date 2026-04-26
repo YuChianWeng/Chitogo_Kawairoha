@@ -514,6 +514,10 @@ async def _build_rain_cards(
                 distance_min=item.travel_min,
                 why_recommended="",
                 rain_note=rain_note,
+                vibe_tags=getattr(venue, "vibe_tags", None) or [],
+                mention_count=getattr(venue, "mention_count", None),
+                sentiment_score=getattr(venue, "sentiment_score", None),
+                trend_score=getattr(venue, "trend_score", None),
             )
         )
     return cards
@@ -696,6 +700,10 @@ async def _build_cards_from_ranked(
                 distance_min=item.travel_min,
                 why_recommended=why_reasons[idx] if idx < len(why_reasons) else "",
                 partial=partial,
+                vibe_tags=getattr(venue, "vibe_tags", None) or [],
+                mention_count=getattr(venue, "mention_count", None),
+                sentiment_score=getattr(venue, "sentiment_score", None),
+                trend_score=getattr(venue, "trend_score", None),
             )
         )
     return cards

@@ -444,6 +444,7 @@ class PlaceToolAdapter:
             vibe_tags=payload.get("vibe_tags"),
             mention_count=payload.get("mention_count"),
             sentiment_score=payload.get("sentiment_score"),
+            trend_score=payload.get("trend_score"),
             raw_payload=payload,
         )
 

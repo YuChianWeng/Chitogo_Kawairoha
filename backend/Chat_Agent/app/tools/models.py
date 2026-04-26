@@ -52,6 +52,7 @@ class ToolPlace(BaseModel):
     vibe_tags: list[str] | None = None
     mention_count: int | None = None
     sentiment_score: float | None = None
+    trend_score: float | None = None
     raw_payload: dict[str, Any] = Field(default_factory=dict)
 
     model_config = ConfigDict(extra="forbid")

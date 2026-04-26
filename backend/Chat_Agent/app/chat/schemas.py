@@ -52,6 +52,9 @@ class ChatCandidate(BaseModel):
     rating: float | None = None
     budget_level: str | None = None
     why_recommended: str | None = None
+    vibe_tags: list[str] | None = None
+    mention_count: int | None = None
+    sentiment_score: float | None = None
 
     model_config = ConfigDict(extra="forbid")
 
@@ -66,6 +69,9 @@ class ChatCandidate(BaseModel):
             rating=place.rating,
             budget_level=place.budget_level,
             why_recommended=why_recommended,
+            vibe_tags=place.vibe_tags or None,
+            mention_count=place.mention_count,
+            sentiment_score=float(place.sentiment_score) if place.sentiment_score is not None else None,
         )
 
 

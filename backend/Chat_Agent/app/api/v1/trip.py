@@ -8,7 +8,7 @@ from typing import Any, Literal
 import httpx
 from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.orchestration.gene_classifier import (
     GENE_BASE_AFFINITY,
@@ -89,7 +89,18 @@ class SetupRequest(BaseModel):
     accommodation: AccommodationInput | None = None
     return_time: str | None = None
     return_destination: str | None = None
+    return_dest_lat: float | None = Field(default=None, ge=-90, le=90)
+    return_dest_lng: float | None = Field(default=None, ge=-180, le=180)
+    return_dest_place_id: str | None = None
     model_config = ConfigDict(extra="forbid")
+
+    @model_validator(mode="after")
+    def _check_lat_lng_pair(self) -> "SetupRequest":
+        lat_set = self.return_dest_lat is not None
+        lng_set = self.return_dest_lng is not None
+        if lat_set != lng_set:
+            raise ValueError("return_dest_lat and return_dest_lng must both be set or both be null")
+        return self
 
 
 class HotelRecommendationCard(BaseModel):
@@ -186,6 +197,10 @@ def _card_to_dict(card: TripCandidateCard) -> dict[str, Any]:
         "distance_min": card.distance_min,
         "why_recommended": card.why_recommended,
         "rain_note": card.rain_note,
+        "vibe_tags": card.vibe_tags,
+        "mention_count": card.mention_count,
+        "sentiment_score": card.sentiment_score,
+        "trend_score": card.trend_score,
     }
 
 
@@ -219,9 +234,25 @@ async def _geocode_return_destination(address: str) -> tuple[float | None, float
     return float(la), float(ln)
 
 
-async def _apply_return_dest_coords(session: Session) -> None:
+async def _apply_return_dest_coords(
+    session: Session,
+    *,
+    lat: float | None = None,
+    lng: float | None = None,
+    place_id: str | None = None,
+) -> None:
     session.return_dest_lat = None
     session.return_dest_lng = None
+    session.return_dest_place_id = None
+
+    # Caller-supplied coords (from Places Autocomplete picker) take highest priority.
+    if lat is not None and lng is not None:
+        session.return_dest_lat = lat
+        session.return_dest_lng = lng
+        session.return_dest_place_id = place_id
+        return
+
+    # Hotel coordinates are the next fallback when accommodation is booked.
     if (
         session.accommodation
         and session.accommodation.hotel_lat is not None
@@ -230,6 +261,8 @@ async def _apply_return_dest_coords(session: Session) -> None:
         session.return_dest_lat = float(session.accommodation.hotel_lat)
         session.return_dest_lng = float(session.accommodation.hotel_lng)
         return
+
+    # Legacy path: geocode the raw return_destination string.
     if session.return_destination and session.return_destination.strip():
         la, ln = await _geocode_return_destination(session.return_destination)
         if la is not None and ln is not None:
@@ -748,7 +781,12 @@ async def post_setup(payload: SetupRequest) -> SetupResponse:
         next_step = "trip"
         setup_complete = True
 
-    await _apply_return_dest_coords(session)
+    await _apply_return_dest_coords(
+        session,
+        lat=payload.return_dest_lat,
+        lng=payload.return_dest_lng,
+        place_id=payload.return_dest_place_id,
+    )
     await _save_session(session)
 
     return SetupResponse(

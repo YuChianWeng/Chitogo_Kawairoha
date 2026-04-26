@@ -40,6 +40,7 @@ from app.api.v1.trip import (
     DemandRequest,
     SelectRequest,
     SetupRequest,
+    _apply_return_dest_coords,
     get_candidates,
     place_tool_adapter,
     post_demand,
@@ -543,3 +544,162 @@ class CandidatePickerDemandTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(session.last_candidate_ids, [303])
         self.assertIsNotNone(session.reachable_cache)
         self.assertEqual(session.reachable_cache.venue_ids, [303])
+
+
+class ReturnDestCoordsTests(unittest.IsolatedAsyncioTestCase):
+    """Tests for _apply_return_dest_coords resolution priority and SetupRequest validation."""
+
+    # ── SetupRequest validator ─────────────────────────────────────────────────
+
+    def test_setup_request_rejects_only_lat(self) -> None:
+        with self.assertRaises(ValidationError):
+            SetupRequest.model_validate(
+                {"session_id": "s1", "return_dest_lat": 25.04}
+            )
+
+    def test_setup_request_rejects_only_lng(self) -> None:
+        with self.assertRaises(ValidationError):
+            SetupRequest.model_validate(
+                {"session_id": "s1", "return_dest_lng": 121.5}
+            )
+
+    def test_setup_request_rejects_out_of_range_lat(self) -> None:
+        with self.assertRaises(ValidationError):
+            SetupRequest.model_validate(
+                {"session_id": "s1", "return_dest_lat": 200.0, "return_dest_lng": 121.5}
+            )
+
+    def test_setup_request_rejects_out_of_range_lng(self) -> None:
+        with self.assertRaises(ValidationError):
+            SetupRequest.model_validate(
+                {"session_id": "s1", "return_dest_lat": 25.04, "return_dest_lng": 300.0}
+            )
+
+    def test_setup_request_accepts_both_null(self) -> None:
+        req = SetupRequest.model_validate({"session_id": "s1"})
+        self.assertIsNone(req.return_dest_lat)
+        self.assertIsNone(req.return_dest_lng)
+
+    def test_setup_request_accepts_valid_coords(self) -> None:
+        req = SetupRequest.model_validate(
+            {"session_id": "s1", "return_dest_lat": 25.04, "return_dest_lng": 121.5}
+        )
+        self.assertEqual(req.return_dest_lat, 25.04)
+        self.assertEqual(req.return_dest_lng, 121.5)
+
+    # ── _apply_return_dest_coords priority ────────────────────────────────────
+
+    async def test_caller_coords_win_over_geocoding(self) -> None:
+        session = Session(session_id="s2")
+        session.return_destination = "台北車站"
+
+        geocode_called = False
+
+        async def fake_geocode(_dest: str):
+            nonlocal geocode_called
+            geocode_called = True
+            return (25.1, 121.6)
+
+        with patch("app.api.v1.trip._geocode_return_destination", side_effect=fake_geocode):
+            await _apply_return_dest_coords(session, lat=25.04, lng=121.5, place_id="ChIJtest")
+
+        self.assertFalse(geocode_called)
+        self.assertEqual(session.return_dest_lat, 25.04)
+        self.assertEqual(session.return_dest_lng, 121.5)
+        self.assertEqual(session.return_dest_place_id, "ChIJtest")
+
+    async def test_caller_coords_win_over_hotel_coords(self) -> None:
+        session = Session(session_id="s3")
+        session.accommodation = AccommodationConfig(
+            mode="booked", booked=True, hotel_valid=True,
+            hotel_lat=25.0, hotel_lng=121.0,
+        )
+
+        await _apply_return_dest_coords(session, lat=25.04, lng=121.5)
+
+        self.assertEqual(session.return_dest_lat, 25.04)
+        self.assertEqual(session.return_dest_lng, 121.5)
+
+    async def test_hotel_coords_used_when_no_caller_coords(self) -> None:
+        session = Session(session_id="s4")
+        session.accommodation = AccommodationConfig(
+            mode="booked", booked=True, hotel_valid=True,
+            hotel_lat=25.0, hotel_lng=121.0,
+        )
+
+        geocode_called = False
+
+        async def fake_geocode(_dest: str):
+            nonlocal geocode_called
+            geocode_called = True
+            return (25.1, 121.6)
+
+        with patch("app.api.v1.trip._geocode_return_destination", side_effect=fake_geocode):
+            await _apply_return_dest_coords(session)
+
+        self.assertFalse(geocode_called)
+        self.assertEqual(session.return_dest_lat, 25.0)
+        self.assertEqual(session.return_dest_lng, 121.0)
+
+    async def test_geocoding_fallback_fires_for_free_text(self) -> None:
+        session = Session(session_id="s5")
+        session.return_destination = "台北101"
+
+        async def fake_geocode(_dest: str):
+            return (25.033, 121.565)
+
+        with patch("app.api.v1.trip._geocode_return_destination", side_effect=fake_geocode):
+            await _apply_return_dest_coords(session)
+
+        self.assertEqual(session.return_dest_lat, 25.033)
+        self.assertEqual(session.return_dest_lng, 121.565)
+
+    async def test_no_coords_when_geocoding_fails(self) -> None:
+        session = Session(session_id="s6")
+        session.return_destination = "家"
+
+        async def fake_geocode(_dest: str):
+            return (None, None)
+
+        with patch("app.api.v1.trip._geocode_return_destination", side_effect=fake_geocode):
+            await _apply_return_dest_coords(session)
+
+        self.assertIsNone(session.return_dest_lat)
+        self.assertIsNone(session.return_dest_lng)
+
+    async def test_post_setup_stores_caller_coords_without_geocoding(self) -> None:
+        session_id = str(uuid4())
+        await session_store.set(
+            Session(
+                session_id=session_id,
+                flow_state=FlowState.TRANSPORT,
+                accommodation=AccommodationConfig(mode="no_stay", booked=False),
+            )
+        )
+
+        geocode_called = False
+
+        async def fake_geocode(_dest: str):
+            nonlocal geocode_called
+            geocode_called = True
+            return (None, None)
+
+        with patch("app.api.v1.trip._geocode_return_destination", side_effect=fake_geocode):
+            response = await post_setup(
+                SetupRequest(
+                    session_id=session_id,
+                    return_destination="台北車站",
+                    return_dest_lat=25.0478,
+                    return_dest_lng=121.5170,
+                    return_dest_place_id="ChIJRVY_etDXaDQRGp-7HaLOM8s",
+                )
+            )
+
+        self.assertFalse(geocode_called)
+        self.assertTrue(response.setup_complete)
+
+        session = await session_store.get(session_id)
+        self.assertIsNotNone(session)
+        self.assertAlmostEqual(session.return_dest_lat, 25.0478)
+        self.assertAlmostEqual(session.return_dest_lng, 121.5170)
+        self.assertEqual(session.return_dest_place_id, "ChIJRVY_etDXaDQRGp-7HaLOM8s")

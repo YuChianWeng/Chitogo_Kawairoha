@@ -245,6 +245,10 @@ class TripCandidateCard(BaseModel):
     why_recommended: str = ""
     partial: bool = False
     rain_note: str | None = None
+    vibe_tags: list[str] = Field(default_factory=list)
+    mention_count: int | None = None
+    sentiment_score: float | None = None
+    trend_score: float | None = None
 
     model_config = ConfigDict(extra="forbid")
 
@@ -280,6 +284,7 @@ class Session(BaseModel):
     return_destination: str | None = None
     return_dest_lat: float | None = None
     return_dest_lng: float | None = None
+    return_dest_place_id: str | None = None
     last_transport_config: TransportConfig | None = None
     visited_stops: list[VisitedStop] = Field(default_factory=list)
     gene_affinity_weights: dict[str, float] = Field(default_factory=dict)
