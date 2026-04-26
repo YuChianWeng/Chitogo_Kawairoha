@@ -214,6 +214,7 @@ export const zh = {
       changeTransport: '改交通',
       loading: '我正在幫你整理附近適合的點，稍等一下。',
       noResults: '這一輪還沒有整理出候選景點。',
+      chatFallback: '順路排序暫時沒拿到，我先把可直接前往的推薦卡整理給你。',
       retry: '重新整理推薦',
     },
     navigating: {

@@ -32,15 +32,12 @@
           <h2 class="chat-title">𨑨迌迌 <span class="chat-title-accent">Chito-Go</span></h2>
           <div class="info-bar">
             <div class="info-item">
-              <img src="/images/111_361.svg" alt="Weather">
               <span>{{ weatherDisplay }}</span>
             </div>
             <div class="info-item">
-              <img src="/images/111_363.svg" alt="Time">
               <span>{{ currentTime }}</span>
             </div>
             <div class="info-item">
-              <img src="/images/111_362.svg" alt="Location">
               <span>{{ locationDisplay }}</span>
             </div>
           </div>
@@ -155,12 +152,24 @@ const isMobileMapOpen = ref(false)
 
 const weatherDisplay = computed(() => {
   if (weather.value.loading) return locale.value.nav.weather.loading
+  const cond = weather.value.condition
+  const temp = weather.value.temperature
   const prob = weather.value.rainProbability
-  const condition = weather.value.isRainingLikely
+
+  if (cond && temp !== null) {
+    return `${cond} • ${temp}°C`
+  }
+
+  const fallbackCondition = weather.value.isRainingLikely
     ? locale.value.nav.weather.rainy
     : (prob !== null && prob > 20) ? locale.value.nav.weather.cloudy : locale.value.nav.weather.sunny
-  if (prob === null) return condition
-  return locale.value.nav.weather.format(condition, prob)
+  
+  if (prob === null) return fallbackCondition
+  return locale.value.nav.weather.format(fallbackCondition, prob)
+})
+
+const directionDisplay = computed(() => {
+  return weather.value.windDirection || '微風'
 })
 
 const locationDisplay = computed(() => {

@@ -216,6 +216,7 @@ export const en: Locale = {
       changeTransport: 'Change Transport',
       loading: 'Finding the best spots nearby for you, just a moment.',
       noResults: 'No candidate spots have been prepared for this round.',
+      chatFallback: 'I couldn\'t get the route-aware ranking just now, so I\'m showing the best direct recommendation cards first.',
       retry: 'Refresh Recommendations',
     },
     navigating: {

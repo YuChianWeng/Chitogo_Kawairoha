@@ -7,7 +7,7 @@ export type ChatWidget =
   | { kind: 'navigation'; data: SelectResult }
   | { kind: 'rating'; data: SelectResult }
   | { kind: 'transport_prompt'; submitted?: boolean }
-  | { kind: 'selecting'; data: CandidatesResult; submitted?: boolean }
+  | { kind: 'selecting'; data: CandidatesResult; submitted?: boolean; note?: string | null }
 
 export interface ChatMessage {
   id: string

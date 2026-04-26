@@ -14,10 +14,13 @@ def build_place(venue_id: int, name: str) -> ToolPlace:
         district="中山區",
         category="food",
         primary_type="ramen_restaurant",
+        formatted_address="台北市中山區測試路 1 號",
         rating=4.6,
         budget_level="mid",
         lat=25.05,
         lng=121.52,
+        trend_score=0.72,
+        raw_payload={"name_en": f"{name} EN"},
     )
 
 
@@ -63,3 +66,16 @@ class ResponseComposerTests(unittest.TestCase):
         self.assertIn("Ramen One", reply)
         self.assertIn("Ramen Two", reply)
         self.assertIn("Ramen Three", reply)
+
+    def test_compose_recommendation_exposes_card_fields(self) -> None:
+        _, candidates = self.composer.compose_recommendation(
+            places=self.places,
+            preferences=Preferences(language="zh-TW"),
+        )
+
+        first = candidates[0]
+        self.assertEqual(first.name_en, "Ramen One EN")
+        self.assertEqual(first.address, "台北市中山區測試路 1 號")
+        self.assertEqual(first.lat, 25.05)
+        self.assertEqual(first.lng, 121.52)
+        self.assertEqual(first.trend_score, 0.72)

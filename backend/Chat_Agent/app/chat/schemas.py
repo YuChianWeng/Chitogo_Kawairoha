@@ -46,15 +46,20 @@ class ChatMessageRequest(BaseModel):
 class ChatCandidate(BaseModel):
     place_id: int | str
     name: str
+    name_en: str | None = None
     district: str | None = None
     category: str | None = None
     primary_type: str | None = None
+    address: str | None = None
+    lat: float | None = None
+    lng: float | None = None
     rating: float | None = None
     budget_level: str | None = None
     why_recommended: str | None = None
     vibe_tags: list[str] | None = None
     mention_count: int | None = None
     sentiment_score: float | None = None
+    trend_score: float | None = None
 
     model_config = ConfigDict(extra="forbid")
 
@@ -63,15 +68,20 @@ class ChatCandidate(BaseModel):
         return cls(
             place_id=place.venue_id,
             name=place.name,
+            name_en=(place.raw_payload or {}).get("name_en"),
             district=place.district,
             category=place.category,
             primary_type=place.primary_type,
+            address=place.formatted_address,
+            lat=place.lat,
+            lng=place.lng,
             rating=place.rating,
             budget_level=place.budget_level,
             why_recommended=why_recommended,
             vibe_tags=place.vibe_tags or None,
             mention_count=place.mention_count,
             sentiment_score=float(place.sentiment_score) if place.sentiment_score is not None else None,
+            trend_score=float(place.trend_score) if place.trend_score is not None else None,
         )
 
 
