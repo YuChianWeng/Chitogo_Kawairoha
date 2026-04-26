@@ -73,33 +73,60 @@ backend/
 │   ├── main.py             # FastAPI app + lifespan
 │   ├── api/v1/router.py    # Route definitions
 │   ├── models/             # SQLAlchemy models + Pydantic schemas
-│   ├── services/           # Itinerary builder, scoring, routing
+│   ├── services/           # itinerary_builder, scoring, routing
 │   ├── providers/          # Google Places, crawler, cache aggregator
 │   └── data/venues.json    # Seed data for local DB
 ├── Chat_Agent/             # LLM Agent orchestration service
 │   └── app/
 │       ├── main.py         # App factory (create_app)
-│       ├── chat/           # Message handler, trace store
-│       ├── session/        # Session store + TTL sweeper
-│       └── tools/          # Tool registry, place/route adapters
+│       ├── api/v1/         # chat, trip, weather, speech routes
+│       ├── chat/           # message_handler (agent loop), trace_store
+│       ├── session/        # in-memory store, manager, TTL sweeper
+│       ├── tools/          # registry, place_adapter, route_adapter
+│       ├── llm/            # provider abstraction (Gemini/Anthropic/OpenRouter)
+│       └── core/           # config (pydantic-settings), logging
 ├── Chitogo_DataBase/       # Place Data Service (PostgreSQL)
 │   └── app/
 │       ├── main.py
 │       ├── db.py           # SQLAlchemy engine + base
-│       ├── models/         # ORM models
-│       ├── routers/        # health, places, retrieval
-│       └── services/       # ingestion, category
+│       ├── models/         # ORM models (Place, social tables)
+│       ├── routers/        # health, places, lodgings
+│       ├── schemas/        # Pydantic schemas
+│       └── services/       # ingestion, category, social_aggregation
 ├── taiwanese_speech/       # Speech-to-text module (Hugging Face)
-└── scripts/                # social_crawler.py, test_asrapi.py
+└── social_crawler_scripts/ # Social post crawling scripts
 
 frontend/
 └── src/
     ├── App.vue
     ├── main.ts
-    ├── pages/HomePage.vue
-    ├── services/api.ts     # Axios API client
-    └── types/itinerary.ts
+    ├── pages/              # QuizPage, SetupPage, AccommodationPage,
+    │                       # TripPage, SummaryPage
+    ├── components/         # CandidateGrid, ChatComposer, MapPanel,
+    │                       # MicButton, RatingCard, NavigationPanel, …
+    ├── router/index.ts     # Route guards (requireSession, requireSessionAndGene)
+    ├── services/api.ts     # All Axios calls to Chat Agent
+    ├── types/              # itinerary.ts, trip.ts, chat.ts
+    ├── composables/        # Vue composables
+    └── i18n/               # zh-TW / en translations
 ```
+
+## Request Lifecycle (Trip Flow)
+
+```
+/quiz → POST /trip/quiz   → session created, preferences extracted
+      → POST /trip/setup  → trip config stored
+      → GET  /trip/candidates (lat/lng) → scored venues returned
+      → POST /trip/select → venue chosen, itinerary updated
+      → GET  /trip/should_go_home → time-aware check
+      → POST /trip/rate   → stars + vibe tags recorded
+      → POST /trip/demand → mid-trip LLM replanning
+      → GET  /trip/summary → final itinerary
+```
+
+AI chat messages: `POST /chat/message` → `MessageHandler` → LLM tool loop → place/route adapters.
+
+Session identity is stored in `localStorage` as `chitogo_session_id`. Router guards in `frontend/src/router/index.ts` redirect to `/quiz` when missing. A 404 `session_not_found` from the API triggers an Axios interceptor that clears `localStorage` and redirects.
 
 ## Code Style
 
@@ -120,6 +147,28 @@ frontend/
 - Branch naming: `NNN-feature-description` (e.g. `005-fix-district-extraction`)
 - Commit style: imperative short description (no conventional-commit prefix enforced)
 - PRs merged from feature branches into `main`
+
+## Key Conventions
+
+- **LLM provider**: set `LLM_PROVIDER=gemini|anthropic|openrouter` in `backend/Chat_Agent/.env`. `Settings` validates that the matching API key is present.
+- **Error pattern (Python)**: raise `ValueError("code: description")` in services; the `main.py` exception handler converts it to HTTP 400 `{"status": "error", "code": "...", "message": "..."}`.
+- **No `print()`**: use Python `logging` module throughout.
+- **Frontend i18n**: `src/i18n/` — `LangToggle.vue` switches between `zh-TW` and `en`.
+- **Maps**: Leaflet (`leaflet` + `@types/leaflet`) — `MapPanel.vue`.
+- **Audio**: RecordRTC for browser mic capture → `POST /speech/transcribe`.
+
+## Where to Look
+
+| I want to… | Look at… |
+|-----------|----------|
+| Change LLM prompts / agent loop | `backend/Chat_Agent/app/chat/message_handler.py` |
+| Add an agent tool | `backend/Chat_Agent/app/tools/` + `registry.py` |
+| Add a trip API endpoint | `backend/Chat_Agent/app/api/v1/` |
+| Change itinerary scoring | `backend/app/services/scoring.py` |
+| Add a venue data field | `backend/Chitogo_DataBase/app/models/` + migration script |
+| Add a frontend page | `frontend/src/pages/` + `router/index.ts` |
+| Add a frontend API call | `frontend/src/services/api.ts` |
+| Change session TTL | `SESSION_TTL_MINUTES` in `backend/Chat_Agent/.env` |
 
 ## Active Technologies
 - Python 3.11 (backend), TypeScript 5.x (frontend) + FastAPI 0.111, Pydantic v2, httpx, Gemini 2.5 Flash / Claude Sonnet 4.6, Vue 3 + Vite 5, vue-router 4 (011-chitogo-prd-wizard)
