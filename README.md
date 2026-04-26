@@ -45,9 +45,8 @@
 - **🧭 專屬人格化行程 (Personality-Based Routing)**：基於獨創的「城市靈魂探測器」測驗，為不同類型的旅客量身打造專屬行程。
 - **動態景點獲取 (Dynamic venue fetching)**：在請求時從 Google Places API 和我們的社群爬蟲資料庫中提取候選名單。
 - **天氣感知評分 (Weather-aware scoring)**：雨天優先推薦室內或是具備遮雨功能的半戶外景點，晴天則按使用者類型推薦戶外室內活動。
-- **路線最佳化 (Route optimization)**：採用貪婪最近鄰居演算法 (Greedy nearest-neighbor) 最小化交通時間。
 - **智慧合併與去重 (Smart merge & dedup)**：將來自多個資料源的結果進行標準化、合併及去重複處理。
-- **極速回應 (Fast & Resilient)**：內建 TTL 快取機制與優雅降級 (Graceful fallback) 策略，確保行程在 10 秒內生成。
+
 
 ---
 
