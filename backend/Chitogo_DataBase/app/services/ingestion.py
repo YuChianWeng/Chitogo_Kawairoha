@@ -1,3 +1,4 @@
+import re
 import unicodedata
 from datetime import datetime, timezone
 
@@ -70,6 +71,22 @@ def _safe_get(d: dict, *keys, default=None):
     return current
 
 
+_CJK_RE = re.compile(r'[一-鿿㐀-䶿豈-﫿　-〿]')
+
+
+def _has_chinese(text: str) -> bool:
+    return bool(_CJK_RE.search(text))
+
+
+def _split_name_by_lang(text: str, lang_code: str) -> tuple[str | None, str | None]:
+    """Return (name_zh, name_en) based on languageCode or character detection."""
+    if lang_code.startswith("zh"):
+        return text, None
+    if lang_code.startswith("en"):
+        return None, text
+    return (text, None) if _has_chinese(text) else (None, text)
+
+
 def _normalize_name(name: str) -> str:
     return unicodedata.normalize("NFKC", name).lower().strip()
 
@@ -129,6 +146,11 @@ def ingest_google_place(
             "action": "raw_only",
         }
 
+    lang_code = (_safe_get(payload, "displayName", "languageCode") or "").lower()
+    name_zh, name_en = _split_name_by_lang(display_name, lang_code)
+    # Prefer Chinese as the canonical display name
+    display_name = name_zh or name_en or display_name
+
     district = _extract_district(payload)
     if district not in TAIPEI_ALLOWED_DISTRICTS:
         # Nearby Search can return cross-boundary results, so non-Taipei places are
@@ -178,6 +200,8 @@ def ingest_google_place(
     place_data = {
         "google_place_id": google_place_id,
         "display_name": display_name,
+        "name_zh": name_zh,
+        "name_en": name_en,
         "normalized_name": _normalize_name(display_name),
         "primary_type": payload.get("primaryType"),
         "types_json": payload.get("types"),

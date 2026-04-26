@@ -729,12 +729,19 @@ function onRated(payload: RatingPayload) {
   tripPhase.value = 'TRANSPORT_PROMPT'
 }
 
+function generateId(): string {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2)
+}
+
 async function handleComposerSubmit(text: string) {
   const sessionId = localStorage.getItem('chitogo_session_id')
-  if (!sessionId) return
+  if (!sessionId) {
+    router.push('/quiz')
+    return
+  }
 
-  const userMsgId = crypto.randomUUID()
-  const pendingId = crypto.randomUUID()
+  const userMsgId = generateId()
+  const pendingId = generateId()
 
   messages.value = [...messages.value, { id: userMsgId, role: 'user', text }]
   messages.value = [...messages.value, { id: pendingId, role: 'assistant', text: '', pending: true }]
