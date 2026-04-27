@@ -402,6 +402,27 @@ You need **4 separate terminals**, all opened from the repo root.
 
 ---
 
+### Optional — Load the exported PostgreSQL snapshot
+
+If you want to run the Place Data Service with the exported project dataset, import `chitogo_full.sql` from the repo root into a fresh `chitogo` database before starting Terminal 1. If `chitogo` already contains tables or data from a previous run, recreate the database first so the import can apply cleanly.
+
+**Linux:**
+```bash
+psql postgresql://chitogo_user:kawairoha@localhost:5432/chitogo -f chitogo_full.sql
+```
+
+**Windows:**
+```powershell
+psql "postgresql://chitogo_user:kawairoha@localhost:5432/chitogo" -f .\chitogo_full.sql
+```
+
+Verify:
+```bash
+psql postgresql://chitogo_user:kawairoha@localhost:5432/chitogo -c "\dt"
+```
+
+---
+
 ### Terminal 1 — Place Data Service (PostgreSQL, port 8000)
 
 **Linux:**
